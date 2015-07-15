@@ -10,6 +10,10 @@ include (${project_cmake_dir}/Ronn2Man.cmake)
 add_manpage_target()
 
 #################################################
+# Gazebo
+find_package(gazebo REQUIRED)
+
+#################################################
 # Macro to check for visibility capability in compiler
 # Original idea from: https://gitorious.org/ferric-cmake-stuff/
 macro (check_gcc_visibility)

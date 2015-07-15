@@ -1,7 +1,7 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
-  swarm.hh
+  SwarmPlugin.hh
 )
 
 #################################################

@@ -1,11 +1,11 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (sources
-  swarm.cc
+  SwarmPlugin.cc
 )
 
 set (gtest_sources
-  swarm_TEST.cc
+  SwarmPlugin_TEST.cc
 )
 
 include_directories(${CMAKE_BINARY_DIR})
