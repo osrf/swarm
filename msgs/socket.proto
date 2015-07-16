@@ -1,0 +1,10 @@
+package gazebo.swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Socket
+/// \brief A message representing a UDP socket.
+message Socket
+{
+  required string address = 1;
+  required uint32 port    = 2;
+}

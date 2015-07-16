@@ -15,17 +15,26 @@
  *
 */
 
-#include "swarm/swarm.hh"
+/// \file SwarmBrokerPlugin.hh
+/// \brief Structures and functions for the SWARM API.
 
-using namespace gazebo;
-using namespace swarm;
+#ifndef __SWARM_BROKER_PLUGIN_HH__
+#define __SWARM_BROKER_PLUGIN_HH__
 
-//////////////////////////////////////////////////
-Swarm::Swarm()
+namespace gazebo
 {
+  namespace swarm
+  {
+    /// \brief
+    class SwarmBrokerPlugin
+    {
+      /// \brief
+      public: SwarmBrokerPlugin();
+
+      /// \brief
+      public: virtual ~SwarmBrokerPlugin();
+    };
+  }
 }
 
-//////////////////////////////////////////////////
-Swarm::~Swarm()
-{
-}
+#endif

@@ -15,19 +15,26 @@
  *
 */
 
-#include "gtest/gtest.h"
-#include "swarm/swarm.hh"
+#include <iostream>
+#include <string>
+#include "msgs/socket.pb.h"
+#include "swarm/Socket.hh"
+
+using namespace gazebo;
+using namespace swarm;
+
+const std::string Socket::Broadcast = "broadcast";
 
 //////////////////////////////////////////////////
-/// \brief
-TEST(Swarmest, aTest)
+Socket::Socket(const std::string &_addr, const int _port)
 {
-  SUCCEED();
+  this->internalSocket = "";
+  std::cout << "New socket [" << _addr << ":" << _port << "]" << std::endl;
 }
 
 //////////////////////////////////////////////////
-int main(int argc, char **argv)
+bool Socket::SendTo(const std::string &/*_data*/) const
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  std::cout << "Sending data" << std::endl;
+  return true;
 }

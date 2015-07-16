@@ -1,0 +1,15 @@
+package gazebo.swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Datagram
+/// \brief A message containing some payload to communicate among one or
+/// multiple teammates.
+
+import "socket.proto";
+
+message Datagram
+{
+  required Socket socket    = 1;
+  repeated string neighbors = 2
+  required string data      = 3;
+}

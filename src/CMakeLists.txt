@@ -1,16 +1,21 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (sources
-  SwarmPlugin.cc
+  Socket.cc
+  SwarmBrokerPlugin.cc
 )
 
 set (gtest_sources
-  SwarmPlugin_TEST.cc
+  SwarmBrokerPlugin_TEST.cc
 )
 
-include_directories(${CMAKE_BINARY_DIR})
+set_source_files_properties(${PROTO_SRC} ${PROTO_HEADER} PROPERTIES
+                            GENERATED TRUE)
+include_directories(${CMAKE_BINARY_DIR}/)
+include_directories(${CMAKE_BINARY_DIR}/test/)
 
 ign_build_tests(${gtest_sources})
+
 if (UNIX)
   ign_add_library(${PROJECT_NAME_LOWER} ${sources})
 elseif(WIN32)
@@ -19,14 +24,23 @@ elseif(WIN32)
   # on Windows
   add_library(${PROJECT_NAME_LOWER} STATIC ${sources})
 endif()
-target_link_libraries(${PROJECT_NAME_LOWER} ${IGNITION-TRANSPORT_LIBRARIES}
+
+# Protobuf module does not have LIBRARIES but LIBRARY
+message("ZeroMQ_LIBRARIES: ${ZeroMQ_LIBRARIES}")
+target_link_libraries(${PROJECT_NAME_LOWER}
+                      ${ZeroMQ_LIBRARIES}
+                      ${uuid_LIBRARIES}
                       ${PROJECT_MSGS_NAME})
 
 if(WIN32)
   target_link_libraries(${PROJECT_NAME_LOWER} ws2_32 Iphlpapi)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY_DEBUG})
+  else()
+    target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY})
+  endif()
+else()
+  target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY})
 endif()
-ign_install_library(${PROJECT_NAME_LOWER})
 
-add_dependencies(${PROJECT_NAME_LOWER}
-  gtest gtest_main
-)
+ign_install_library(${PROJECT_NAME_LOWER})
