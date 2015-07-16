@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef __IGN_TRANSPORT_HELPERS_HH_INCLUDED__
-#define __IGN_TRANSPORT_HELPERS_HH_INCLUDED__
+#ifndef __SWARM_HELPERS_HH_INCLUDED__
+#define __SWARM_HELPERS_HH_INCLUDED__
 
 /// \def IGNITION_VISIBLE
 /// Use to represent "symbol visible" if supported
@@ -81,5 +81,5 @@
 // BUILDING_STATIC_LIBS
 #endif
 
-// __IGN_TRANSPORT_HELPERS_HH_INCLUDED__
+// __SWARM_HELPERS_HH_INCLUDED__
 #endif

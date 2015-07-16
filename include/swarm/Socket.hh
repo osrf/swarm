@@ -15,11 +15,11 @@
  *
 */
 
-/// \file Swarm.hh
+/// \file Socket.hh
 /// \brief Structures and functions for the SWARM API.
 
-#ifndef __SWARM_HH__
-#define __SWARM_HH__
+#ifndef __SWARM_SOCKET_HH__
+#define __SWARM_SOCKET_HH__
 
 #include <string>
 #include "msgs/socket.pb.h"
