@@ -12,7 +12,7 @@
    <h4>C++-API</h4>
      The C++-API contains a single header:
 
-     - swarn.h : The Swarm interface
+     - Socket.hh : The Swarm socket interface
 
      Important functions:
 */
