@@ -21,18 +21,54 @@
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
+#include <mutex>
+#include <queue>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/transport/TransportTypes.hh>
+#include <sdf/sdf.hh>
+#include "msgs/datagram.pb.h"
+
 namespace gazebo
 {
   namespace swarm
   {
     /// \brief
-    class SwarmBrokerPlugin
+    class IGNITION_VISIBLE SwarmBrokerPlugin : public WorldPlugin
     {
       /// \brief
       public: SwarmBrokerPlugin();
 
       /// \brief
       public: virtual ~SwarmBrokerPlugin();
+
+      // Documentation Inherited.
+      public: virtual void Load(physics::WorldPtr _world, sdf::ElementPtr _sdf);
+
+      /// \brief Update the plugin.
+      /// \param[in] _info Update information provided by the server.
+      private: void Update(const common::UpdateInfo &_info);
+
+      private: void OnMsgReceived(ConstDatagramPtr &_msg);
+
+      /// \brief World pointer.
+      private: physics::WorldPtr world;
+
+      /// \brief SDF for this plugin.
+      private: sdf::ElementPtr sdf;
+
+      /// \brief Pointer to a node for communication.
+      private: transport::NodePtr node;
+
+      /// \brief
+      private: transport::SubscriberPtr brokerSub;
+
+      /// \brief
+      private: std::queue<msgs::Datagram> incomingMsgs;
+
+      /// \brief
+      private: std::mutex mutex;
     };
   }
 }

@@ -2,7 +2,7 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
   Helpers.hh
-  Socket.hh
+  SwarmRobotPlugin.hh
   SwarmBrokerPlugin.hh
 )
 

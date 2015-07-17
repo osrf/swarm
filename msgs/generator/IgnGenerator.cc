@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/algorithm/string/replace.hpp>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/io/printer.h>
@@ -28,123 +29,105 @@
 
 #include "IgnGenerator.hh"
 
-namespace google
+namespace google {
+namespace protobuf {
+namespace compiler {
+namespace cpp {
+
+//////////////////////////////////////////////////
+bool IgnGenerator::Generate(const FileDescriptor *_file,
+    const std::string &/*_parameter*/,
+    OutputDirectory *_generatorContext,
+    std::string * /*_error*/) const
 {
-  namespace protobuf
+  std::string headerFilename = _file->name();
+  boost::replace_last(headerFilename, ".proto", ".pb.h");
+
+  std::string sourceFilename = _file->name();
+  boost::replace_last(sourceFilename, ".proto", ".pb.cc");
+
+  // GCC system_header pragma:
+  // treat the rest of this file as a system header
   {
-    namespace compiler
-    {
-      namespace cpp
-      {
-        //////////////////////////////////////////////////
-        void replaceAll(std::string &_src, const std::string &_oldValue,
-          const std::string &_newValue)
-        {
-          for (size_t i = 0;
-            (i = _src.find(_oldValue, i)) != std::string::npos;)
-          {
-            _src.replace(i, _oldValue.length(), _newValue);
-            i += _newValue.length() - _oldValue.length() + 1;
-          }
-        }
+    std::unique_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(headerFilename, "includes"));
+    io::Printer printer(output.get(), '$');
 
-        //////////////////////////////////////////////////
-        bool IgnGenerator::Generate(const FileDescriptor *_file,
-            const std::string &/*_parameter*/,
-            OutputDirectory *_generatorContext,
-            std::string * /*_error*/) const
-        {
-          std::string headerFilename = _file->name();
-          std::string delim = ".proto";
-          size_t pos = headerFilename.rfind(delim);
-          headerFilename.replace(pos, delim.size(), ".pb.h");
-
-          std::string sourceFilename = _file->name();
-          pos = sourceFilename.rfind(delim);
-          sourceFilename.replace(pos, delim.size(), ".pb.cc");
-
-          // GCC system_header pragma:
-          // treat the rest of this file as a system header
-          {
-            std::unique_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(headerFilename, "includes"));
-            io::Printer printer(output.get(), '$');
-
-            printer.Print("#pragma GCC system_header", "name", "includes");
-          }
-
-          // Ignore -Wshadow diagnostic
-          {
-            scoped_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(sourceFilename, "includes"));
-            io::Printer printer(output.get(), '$');
-
-            printer.Print("#pragma GCC diagnostic ignored \"-Wshadow\"",
-                "name", "includes");
-          }
-
-          // Ignore -Wswitch-default diagnostic
-          {
-            scoped_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(sourceFilename, "includes"));
-            io::Printer printer(output.get(), '$');
-
-            printer.Print("#pragma GCC diagnostic ignored \"-Wswitch-default\"",
-                "name", "includes");
-          }
-
-          // Add <memory> include
-          {
-            scoped_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(headerFilename, "includes"));
-            io::Printer printer(output.get(), '$');
-
-            printer.Print("#include <memory>\n", "name", "includes");
-            printer.Print("#include <swarm/Helpers.hh>\n", "name", "includes");
-          }
-
-          // Add std::shared_ptr typedef
-          {
-            std::unique_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(headerFilename,
-                  "namespace_scope"));
-            io::Printer printer(output.get(), '$');
-
-            std::string package = _file->package();
-            replaceAll(package, ".", "::");
-
-            std::string ptrType = "typedef std::shared_ptr<" + package
-              + "::" + _file->message_type(0)->name() + "> "
-              + _file->message_type(0)->name() + "Ptr;\n";
-
-            printer.Print(ptrType.c_str(), "name", "namespace_scope");
-          }
-
-          // Add const std::shared_ptr typedef
-          {
-            std::unique_ptr<io::ZeroCopyOutputStream> output(
-                _generatorContext->OpenForInsert(headerFilename,
-                  "global_scope"));
-
-            io::Printer printer(output.get(), '$');
-
-            std::string package = _file->package();
-            replaceAll(package, ".", "::");
-
-            std::string constType = "typedef const std::shared_ptr<"
-              + package + "::" + _file->message_type(0)->name()
-              + " const> Const" + _file->message_type(0)->name() + "Ptr;";
-
-            printer.Print(constType.c_str(), "name", "global_scope");
-          }
-
-          return true;
-        }
-      // namespace cpp
-      }
-    // namespace compiler
-    }
-  // namespace protobuf
+    printer.Print("#pragma GCC system_header", "name", "includes");
   }
+
+  // Ignore -Wshadow diagnostic
+  {
+    scoped_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(sourceFilename, "includes"));
+    io::Printer printer(output.get(), '$');
+
+    printer.Print("#pragma GCC diagnostic ignored \"-Wshadow\"",
+        "name", "includes");
+  }
+
+  // Ignore -Wswitch-default diagnostic
+  {
+    scoped_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(sourceFilename, "includes"));
+    io::Printer printer(output.get(), '$');
+
+    printer.Print("#pragma GCC diagnostic ignored \"-Wswitch-default\"",
+        "name", "includes");
+  }
+
+  // Add boost shared point include
+  {
+    scoped_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(headerFilename, "includes"));
+    io::Printer printer(output.get(), '$');
+
+    printer.Print("#include <boost/shared_ptr.hpp>\n", "name", "includes");
+    printer.Print("#include <swarm/Helpers.hh>\n", "name", "includes");
+  }
+
+  // Add boost shared typedef
+  {
+    std::unique_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(headerFilename,
+          "namespace_scope"));
+    io::Printer printer(output.get(), '$');
+
+    std::string package = _file->package();
+    boost::replace_all(package, ".", "::");
+
+    std::string ptrType = "typedef boost::shared_ptr<" + package
+      + "::" + _file->message_type(0)->name() + "> "
+      + _file->message_type(0)->name() + "Ptr;\n";
+
+    printer.Print(ptrType.c_str(), "name", "namespace_scope");
+  }
+
+  // Add const boost shared typedef
+  {
+    std::unique_ptr<io::ZeroCopyOutputStream> output(
+        _generatorContext->OpenForInsert(headerFilename,
+          "global_scope"));
+
+    io::Printer printer(output.get(), '$');
+
+    std::string package = _file->package();
+    boost::replace_all(package, ".", "::");
+
+    std::string constType = "typedef const boost::shared_ptr<"
+      + package + "::" + _file->message_type(0)->name()
+      + " const> Const" + _file->message_type(0)->name() + "Ptr;";
+
+    printer.Print(constType.c_str(), "name", "global_scope");
+  }
+
+  return true;
+}
+// namespace cpp
+}
+// namespace compiler
+}
+// namespace protobuf
+}
 // namespace google
 }

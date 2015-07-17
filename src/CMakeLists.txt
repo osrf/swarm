@@ -1,8 +1,11 @@
 include (${project_cmake_dir}/Utils.cmake)
 
-set (sources
-  Socket.cc
+set (broker_plugin_sources
   SwarmBrokerPlugin.cc
+)
+
+set (robot_plugin_sources
+  SwarmRobotPlugin.cc
 )
 
 set (gtest_sources
@@ -16,31 +19,16 @@ include_directories(${CMAKE_BINARY_DIR}/test/)
 
 ign_build_tests(${gtest_sources})
 
-if (UNIX)
-  ign_add_library(${PROJECT_NAME_LOWER} ${sources})
-elseif(WIN32)
-  # Probotuf compilation is recommended and configured for a STATIC .lib
-  # Not mixing static and shared and just build ignition transport as STATIC
-  # on Windows
-  add_library(${PROJECT_NAME_LOWER} STATIC ${sources})
-endif()
+# Create the libSwarmBrokerPlugin.so library.
+ign_add_library(${PROJECT_LIB_BROKER_NAME} ${broker_plugin_sources})
+target_link_libraries(${PROJECT_LIB_BROKER_NAME}
+                      ${PROJECT_LIB_MSGS_NAME}
+                      ${PROTOBUF_LIBRARY})
+ign_install_library(${PROJECT_LIB_BROKER_NAME})
 
-# Protobuf module does not have LIBRARIES but LIBRARY
-message("ZeroMQ_LIBRARIES: ${ZeroMQ_LIBRARIES}")
-target_link_libraries(${PROJECT_NAME_LOWER}
-                      ${ZeroMQ_LIBRARIES}
-                      ${uuid_LIBRARIES}
-                      ${PROJECT_MSGS_NAME})
-
-if(WIN32)
-  target_link_libraries(${PROJECT_NAME_LOWER} ws2_32 Iphlpapi)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY_DEBUG})
-  else()
-    target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY})
-  endif()
-else()
-  target_link_libraries(${PROJECT_NAME_LOWER} ${PROTOBUF_LIBRARY})
-endif()
-
-ign_install_library(${PROJECT_NAME_LOWER})
+# Create the libSwarmRobotPlugin.so library.
+ign_add_library(${PROJECT_LIB_ROBOT_NAME} ${robot_plugin_sources})
+target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
+                      ${PROJECT_LIB_MSGS_NAME}
+                      ${PROTOBUF_LIBRARY})
+ign_install_library(${PROJECT_LIB_ROBOT_NAME})

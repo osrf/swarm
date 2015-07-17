@@ -6,7 +6,9 @@ project (${IGN_PROJECT_NAME})
 string (TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 string (TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 
-set (PROJECT_MSGS_NAME swarm-msgs)
+set (PROJECT_LIB_MSGS_NAME SwarmMsgs)
+set (PROJECT_LIB_BROKER_NAME SwarmBrokerPlugin)
+set (PROJECT_LIB_ROBOT_NAME SwarmRobotPlugin)
 
 set (PROJECT_MAJOR_VERSION 0)
 set (PROJECT_MINOR_VERSION 1)
@@ -264,6 +266,7 @@ else (build_errors)
     add_subdirectory(msgs)
     add_subdirectory(src)
     add_subdirectory(include)
+    add_subdirectory(worlds)
     add_subdirectory(test)
   endif (BUILD_IGNITION)
 
@@ -278,7 +281,9 @@ else (build_errors)
   ########################################
   # Make the cmake config files
   set(PKG_NAME ${PROJECT_NAME_UPPER})
-  set(PKG_LIBRARIES ${PROJECT_NAME_LOWER} ${PROJECT_MSGS_NAME})
+  set(PKG_LIBRARIES ${PROJECT_LIB_MSGS_NAME}
+                    ${PROJECT_LIB_BROKER_NAME}
+                    ${PROJECT_LIB_ROBOT_NAME})
 
   set(PKG_DEPENDS)
 

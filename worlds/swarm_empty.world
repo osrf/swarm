@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Robot #1-->
+    <model name="robot1">
+      <pose>0 1 0 0 0 0</pose>
+      <include>
+        <uri>model://cinder_block</uri>
+      </include>
+
+      <!-- Load the plugin to control this robot -->
+      <plugin name="swarm_controller_1" filename="libTeamControllerPlugin.so">
+        <address>192.168.2.1</address>
+      </plugin>
+    </model>
+
+    <!-- Robot #2-->
+    <model name="robot2">
+      <pose>0 2 0 0 0 0</pose>
+      <include>
+        <uri>model://cinder_block</uri>
+      </include>
+
+      <!-- Load the plugin to control this robot -->
+      <plugin name="swarm_controller_2" filename="libTeamControllerPlugin.so">
+        <address>192.168.2.2</address>
+      </plugin>
+    </model>
+
+    <!-- Load the plugin to deliver all the messages inside the swarm -->
+    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
+
+  </world>
+</sdf>

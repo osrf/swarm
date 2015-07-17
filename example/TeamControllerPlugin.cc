@@ -16,53 +16,58 @@
 */
 
 #include <iostream>
-#include "SwarmRobotPlugin.hh"
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
+#include <sdf/sdf.hh>
 #include <swarm/msgs/socket.pb.h>
+#include "TeamControllerPlugin.hh"
+
 
 using namespace gazebo;
 using namespace swarm;
 
+GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
+
 //////////////////////////////////////////////////
-SwarmRobotPlugin::SwarmRobotPlugin()
+TeamControllerPlugin::TeamControllerPlugin()
+  : SwarmRobotPlugin()
 {
-  // Create a unicast socket.
-  this->socket = new swarm::Socket("192.1.68.1.2", 4000);
-  this->socket->Bind(&SwarmRobotPlugin::OnDataReceived, this);
+}
+
+//////////////////////////////////////////////////
+TeamControllerPlugin::~TeamControllerPlugin()
+{
+}
+
+//////////////////////////////////////////////////
+void TeamControllerPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+{
+  // Call Load() on the base Swarm plugin.
+  SwarmRobotPlugin::Load(_model, _sdf);
+
+  // Create a unicast socket and bind our local address.
+  this->socket.set_address(this->GetHost());
+  this->socket.set_port(4000);
+  this->Bind(this->socket, &TeamControllerPlugin::OnDataReceived, this);
 
   // Create a broadcast socket.
-  this->bcastSocket = new swarm::Socket(Socket::Broadcast, 4100);
+  this->bcastSocket.set_address(swarm::kBroadcast);
+  this->bcastSocket.set_port(4100);
 }
 
 //////////////////////////////////////////////////
-SwarmRobotPlugin::~SwarmRobotPlugin()
-{
-  delete this->socket;
-  delete this->bcastSocket;
-}
-
-//////////////////////////////////////////////////
-void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
-{
-}
-
-//////////////////////////////////////////////////
-std::string SwarmRobotPlugin::GetHost() const
-{
-  return "local IP";
-}
-
-//////////////////////////////////////////////////
-void SwarmRobotPlugin::Update(const common::UpdateInfo &_info)
+void TeamControllerPlugin::Update(const common::UpdateInfo &_info)
 {
   // Send some data via the unicast socket.
-  auto res = this->socket->SendTo("some data");
+  auto res = this->SendTo(this->socket, "some data on the unicast socket" );
 
   // Send some data via the broadcast socket.
-  res = this->bcastSocket->SendTo("more data");
+  res = this->SendTo(this->bcastSocket, "more data on the broadcast socket");
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::OnDataReceived(const msgs::Socket &_socket,
+void TeamControllerPlugin::OnDataReceived(const msgs::Socket &_socket,
     const std::string &_data)
 {
   std::cout << "\n---\n" << std::endl;

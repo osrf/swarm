@@ -15,10 +15,18 @@
  *
 */
 
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/transport/transport.hh>
+#include <sdf/sdf.hh>
+#include "msgs/datagram.pb.h"
 #include "swarm/SwarmBrokerPlugin.hh"
 
 using namespace gazebo;
 using namespace swarm;
+
+GZ_REGISTER_WORLD_PLUGIN(SwarmBrokerPlugin)
 
 //////////////////////////////////////////////////
 SwarmBrokerPlugin::SwarmBrokerPlugin()
@@ -28,4 +36,40 @@ SwarmBrokerPlugin::SwarmBrokerPlugin()
 //////////////////////////////////////////////////
 SwarmBrokerPlugin::~SwarmBrokerPlugin()
 {
+}
+
+//////////////////////////////////////////////////
+void SwarmBrokerPlugin::Load(physics::WorldPtr /*_world*/,
+    sdf::ElementPtr /*_sdf*/)
+{
+  // Initialize transport.
+  this->node = transport::NodePtr(new transport::Node());
+  this->node->Init();
+
+  const std::string kBrokerIncomingTopic = "~/swarm/broker/incoming";
+
+  this->brokerSub = this->node->Subscribe(kBrokerIncomingTopic,
+      &SwarmBrokerPlugin::OnMsgReceived, this);
+}
+
+//////////////////////////////////////////////////
+void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+
+  // Dispatch all incoming messages.
+  while (!this->incomingMsgs.empty())
+  {
+    auto msg = this->incomingMsgs.front();
+    this->incomingMsgs.pop();
+  }
+}
+
+//////////////////////////////////////////////////
+void SwarmBrokerPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+
+  // Queue the new message.
+  this->incomingMsgs.push(*_msg);
 }

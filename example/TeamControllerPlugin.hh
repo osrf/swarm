@@ -18,14 +18,13 @@
 /// \file SwarmRobotPlugin.hh
 /// \brief An example of a Gazebo plugin for controlling a member of the swarm.
 
-#ifndef __SWARM_ROBOT_PLUGIN_HH__
-#define __SWARM_ROBOT_PLUGIN_HH__
+#ifndef __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
+#define __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 
 #include <memory>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/transport/transport.hh>
-#include <swarm/Socket.hh>
+#include <swarm/SwarmRobotPlugin.hh>
 #include <swarm/msgs/socket.pb.h>
 
 namespace gazebo
@@ -33,19 +32,16 @@ namespace gazebo
   namespace swarm
   {
     /// \brief
-    class SwarmRobotPlugin : public gazebo::ModelPlugin
+    class TeamControllerPlugin : public gazebo::swarm::SwarmRobotPlugin
     {
       /// \brief
-      public: SwarmRobotPlugin();
+      public: TeamControllerPlugin();
 
       /// \brief
-      public: virtual ~SwarmRobotPlugin();
+      public: virtual ~TeamControllerPlugin();
 
       // Documentation Inherited.
       public: virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-
-      /// \brief
-      public: std::string GetHost() const;
 
       /// \brief Update the robot controller.
       /// \param[in] _info Update information provided by the server.
@@ -58,17 +54,14 @@ namespace gazebo
       /// \brief Pointer to the update event connection.
       private: event::ConnectionPtr updateConnection;
 
-      /// \brief Node used for using Gazebo communications.
-      private: transport::NodePtr node;
-
       /// \brief Pointer to the model;
       private: physics::ModelPtr model;
 
       /// \brief
-      private: swarm::Socket *socket;
+      private: msgs::Socket socket;
 
       /// \brief
-      private: swarm::Socket *bcastSocket;
+      private: msgs::Socket bcastSocket;
     };
   }
 }
