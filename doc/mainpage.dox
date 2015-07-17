@@ -1,6 +1,6 @@
 /** \mainpage Swarm API Reference
 
- This site provides useful information about the SWARM API (C++). Should you
+ This site provides useful information about the Swarm API (C++). Should you
  find problems with this documentation - typos, unclear phrases, or insufficient detail - please create a <a
    href="https://bitbucket.org/osrf/swarm/issues/new">new bitbucket issue</a>.
  Include sufficient detail to quickly locate the problematic documentation,
@@ -12,7 +12,7 @@
    <h4>C++-API</h4>
      The C++-API contains a single header:
 
-     - swarn.h : The Swarm interface
+     - SwarmPlugin.hh : The Swarm interface
 
      Important functions:
 */
