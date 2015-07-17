@@ -57,11 +57,12 @@ else
 fi
 
 SUPPRESS=/tmp/cpp_check.suppress
-touch $SUPPRESS
+
 # The follow suppression is useful when checking for missing includes.
 # It's disable for now because checking for missing includes is very
 # time consuming. See CPPCHECK_CMD3.
 #echo "missingIncludeSystem" >> $SUPPRESS
+echo "" >> $SUPPRESS
 
 #cppcheck
 CPPCHECK_BASE="cppcheck -q --suppressions-list=$SUPPRESS"
@@ -69,7 +70,7 @@ if [ $CPPCHECK_LT_157 -eq 0 ]; then
   # use --language argument if 1.57 or greater (issue #907)
   CPPCHECK_BASE="$CPPCHECK_BASE --language=c++"
 fi
-CPPCHECK_INCLUDES="-I . -I $builddir -I test"
+CPPCHECK_INCLUDES="-I ./include -I $builddir -I test -I ./include/ignition/math"
 CPPCHECK_RULES="-DIGNITION_VISIBLE"
 CPPCHECK_CMD1A="-j 4 --enable=style,performance,portability,information"
 CPPCHECK_CMD1B="$CPPCHECK_RULES $CPPCHECK_FILES"
@@ -79,7 +80,7 @@ CPPCHECK_CMD2="--enable=unusedFunction $CPPCHECK_FILES"
 # Checking for missing includes is very time consuming. This is disabled
 # for now
 CPPCHECK_CMD3="-j 4 --enable=missingInclude $CPPCHECK_FILES $CPPCHECK_INCLUDES"
-#CPPCHECK_CMD3=""
+# CPPCHECK_CMD3=""
 
 if [ $xmlout -eq 1 ]; then
   # Performance, style, portability, and information
@@ -104,7 +105,7 @@ elif [ $QUICK_CHECK -eq 1 ]; then
       DO_CPPCHECK=1
     elif [ $CPPCHECK_LT_157 -eq 0 ]; then
       DO_CPPCHECK=1
-    fi
+    fi 
 
     if [ $DO_CPPCHECK -eq 1 ]; then
       $CPPCHECK_BASE $CPPCHECK_CMD1A $CPPCHECK_RULES $tmp2 2>&1 \
@@ -125,7 +126,7 @@ elif [ $QUICK_CHECK -eq 1 ]; then
   rm $QUICK_TMP
 else
   # Performance, style, portability, and information
-  $CPPCHECK_BASE $CPPCHECK_CMD1 2>&1
+  $CPPCHECK_BASE $CPPCHECK_INCLUDES $CPPCHECK_CMD1 2>&1
 
   # Check the configuration
   $CPPCHECK_BASE $CPPCHECK_CMD3 2>&1
@@ -133,8 +134,8 @@ fi
 
 # cpplint
 if [ $xmlout -eq 1 ]; then
-  (echo $CPPLINT_FILES | xargs python tools/cpplint.py 2>&1) \
+  (echo $CPPLINT_FILES | xargs python tools/cpplint.p --extensions=cc,hhy 2>&1) \
     | python tools/cpplint_to_cppcheckxml.py 2> $xmldir/cpplint.xml
 elif [ $QUICK_CHECK -eq 0 ]; then
-  echo $CPPLINT_FILES | xargs python tools/cpplint.py 2>&1
+  echo $CPPLINT_FILES | xargs python tools/cpplint.py --extensions=cc,hh 2>&1
 fi
