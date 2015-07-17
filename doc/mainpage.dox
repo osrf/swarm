@@ -1,0 +1,18 @@
+/** \mainpage Swarm API Reference
+
+ This site provides useful information about the Swarm API (C++). Should you
+ find problems with this documentation - typos, unclear phrases, or insufficient detail - please create a <a
+   href="https://bitbucket.org/osrf/swarm/issues/new">new bitbucket issue</a>.
+ Include sufficient detail to quickly locate the problematic documentation,
+ and set the issue's fields accordingly: Assignee - blank; Kind - bug;
+ Priority - minor; Version - blank.
+
+ <h2>Get Started</h2>
+
+   <h4>C++-API</h4>
+     The C++-API contains a single header:
+
+     - SwarmPlugin.hh : The Swarm interface
+
+     Important functions:
+*/
