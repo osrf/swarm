@@ -15,17 +15,16 @@
  *
 */
 
-#include "swarm/swarm.hh"
+#include "swarm/SwarmPlugin.hh"
 
-using namespace gazebo;
 using namespace swarm;
 
 //////////////////////////////////////////////////
-Swarm::Swarm()
+SwarmPlugin::SwarmPlugin()
 {
 }
 
 //////////////////////////////////////////////////
-Swarm::~Swarm()
+SwarmPlugin::~SwarmPlugin()
 {
 }

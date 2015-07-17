@@ -16,11 +16,11 @@
 */
 
 #include "gtest/gtest.h"
-#include "swarm/swarm.hh"
+#include "swarm/SwarmPlugin.hh"
 
 //////////////////////////////////////////////////
 /// \brief
-TEST(Swarmest, aTest)
+TEST(SwarmPluginTest, aTest)
 {
   SUCCEED();
 }

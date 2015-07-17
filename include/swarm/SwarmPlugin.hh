@@ -15,26 +15,23 @@
  *
 */
 
-/// \file swarm.hh
-/// \brief Structures and functions for the SWARN API.
+/// \file SwarmPlugin.hh
+/// \brief Structures and functions for the Swarm API.
 
-#ifndef __SWARM_API_SWARM_HH__
-#define __SWARM_API_SWARM_HH__
+#ifndef _SWARM_API_SWARM_HH_
+#define _SWARM_API_SWARM_HH_
 
-namespace gazebo
+namespace swarm
 {
-  namespace swarm
+  /// \brief A plugin
+  class SwarmPlugin
   {
-    /// \brief
-    class Swarm
-    {
-      /// \brief
-      public: Swarm();
+    /// \brief Constructor
+    public: SwarmPlugin();
 
-      /// \brief
-      public: virtual ~Swarm();
-    };
-  }
+    /// \brief Destructor
+    public: virtual ~SwarmPlugin();
+  };
 }
 
 #endif
