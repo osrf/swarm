@@ -60,8 +60,20 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
   // Dispatch all incoming messages.
   while (!this->incomingMsgs.empty())
   {
-    auto msg = this->incomingMsgs.front();
+    auto incomingMsg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
+
+    // ToDo: Get the list of neighbors of the source node and include it in the
+    // outgoing message.
+
+    msgs::Datagram outgoingMsg;
+    outgoingMsg.mutable_socket()->set_address(incomingMsg.socket().address());
+    outgoingMsg.mutable_socket()->set_port(incomingMsg.socket().port());
+    outgoingMsg.set_data(incomingMsg.data());
+
+    transport::PublisherPtr pub =
+      this->node->Advertise<msgs::Datagram>(incomingMsg.socket().address());
+    pub->Publish(outgoingMsg);
   }
 }
 

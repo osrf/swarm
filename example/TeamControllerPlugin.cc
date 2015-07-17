@@ -52,18 +52,25 @@ void TeamControllerPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   this->Bind(this->socket, &TeamControllerPlugin::OnDataReceived, this);
 
   // Create a broadcast socket.
-  this->bcastSocket.set_address(swarm::kBroadcast);
+  this->bcastSocket.set_address("192.168.2.2");
   this->bcastSocket.set_port(4100);
 }
 
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const common::UpdateInfo &_info)
 {
-  // Send some data via the unicast socket.
-  auto res = this->SendTo(this->socket, "some data on the unicast socket" );
+  static int counter = 0;
 
-  // Send some data via the broadcast socket.
-  res = this->SendTo(this->bcastSocket, "more data on the broadcast socket");
+  if (counter == 0)
+  {
+    // Send some data via the unicast socket.
+    auto res = this->SendTo(this->socket, "some data on the unicast socket" );
+
+    // Send some data via the broadcast socket.
+    res = this->SendTo(this->bcastSocket, "more data on the broadcast socket");
+
+    counter++;
+  }
 }
 
 //////////////////////////////////////////////////
