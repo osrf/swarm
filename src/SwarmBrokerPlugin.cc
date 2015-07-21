@@ -15,6 +15,9 @@
  *
 */
 
+#include <string>
+#include <gazebo/common/Assert.hh>
+#include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
@@ -30,28 +33,24 @@ using namespace swarm;
 GZ_REGISTER_WORLD_PLUGIN(SwarmBrokerPlugin)
 
 //////////////////////////////////////////////////
-SwarmBrokerPlugin::SwarmBrokerPlugin()
+void SwarmBrokerPlugin::Load(physics::WorldPtr _world,
+    sdf::ElementPtr _sdf)
 {
-}
+  GZ_ASSERT(_world, "SwarmBrokerPlugin::Load() error: _world pointer is NULL");
+  GZ_ASSERT(_sdf, "SwarmBrokerPlugin::Load() error: _sdf pointer is NULL");
 
-//////////////////////////////////////////////////
-SwarmBrokerPlugin::~SwarmBrokerPlugin()
-{
-}
-
-//////////////////////////////////////////////////
-void SwarmBrokerPlugin::Load(physics::WorldPtr /*_world*/,
-    sdf::ElementPtr /*_sdf*/)
-{
+  // This is the subscription that will allow us to receive incoming messages.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
+  if (!this->node.Subscribe(kBrokerIncomingTopic,
+      &SwarmBrokerPlugin::OnMsgReceived, this))
+  {
+    gzerr << "SwarmBrokerPlugin::Load(): Error trying to subscribe"
+          << " on topic " << kBrokerIncomingTopic << std::endl;
+  }
 
-  this->node.Subscribe(kBrokerIncomingTopic,
-      &SwarmBrokerPlugin::OnMsgReceived, this);
-
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
+  // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-    boost::bind(&SwarmBrokerPlugin::Update, this, _1));
+      boost::bind(&SwarmBrokerPlugin::Update, this, _1));
 }
 
 //////////////////////////////////////////////////
@@ -62,26 +61,21 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
   // Dispatch all incoming messages.
   while (!this->incomingMsgs.empty())
   {
-    auto incomingMsg = this->incomingMsgs.front();
+    // Get the next message to dispatch.
+    auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
     // ToDo: Get the list of neighbors of the source node and include it in the
     // outgoing message.
 
-    msgs::Datagram outgoingMsg;
-    outgoingMsg.mutable_socket()->set_dst_address(
-      incomingMsg.socket().dst_address());
-    outgoingMsg.mutable_socket()->set_port(incomingMsg.socket().port());
-    outgoingMsg.set_src_address(incomingMsg.src_address());
-    outgoingMsg.set_data(incomingMsg.data());
-
+    // Create the topic name for the message destination.
     const std::string topic =
-        "/swarm/" + incomingMsg.socket().dst_address() + "/" +
-        std::to_string(incomingMsg.socket().port());
-    this->node.Advertise(topic);
-    this->node.Publish(topic, outgoingMsg);
+        "/swarm/" + msg.dst_address() + "/" +
+        std::to_string(msg.dst_port());
 
-    std::cout << "Broker: Sending new message to " << topic << std::endl;
+    // Forward the message to the destination.
+    this->node.Advertise(topic);
+    this->node.Publish(topic, msg);
   }
 }
 
@@ -90,9 +84,6 @@ void SwarmBrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
     const msgs::Datagram &_msg)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
-
-  std::cout << "Broker: New message received from " << _msg.src_address()
-            << std::endl;
 
   // Queue the new message.
   this->incomingMsgs.push(_msg);

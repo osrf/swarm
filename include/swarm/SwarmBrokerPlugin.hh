@@ -16,13 +16,14 @@
 */
 
 /// \file SwarmBrokerPlugin.hh
-/// \brief Structures and functions for the SWARM API.
+/// \brief Internal broker to dispatch messages inside the Swarm project.
 
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
 #include <mutex>
 #include <queue>
+#include <string>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
@@ -35,22 +36,32 @@ namespace gazebo
 {
   namespace swarm
   {
-    /// \brief
+    /// \brief This is a world plugin designed to centralize all the messages
+    /// sent by the members of the swarm. This plugin will be subscribed to a
+    /// topic "/swarm/broker/incoming" where all the agents will publish their
+    /// messages. This plugin will receive and queue the messages. The broker
+    /// will use its Update() function to dispatch the pending messages waiting
+    /// in the queue. Dispatch a message may consist on directly deliver it to
+    /// the destination/s node/s or it may require to forward the message to a
+    /// network simulator (ns-3).
     class IGNITION_VISIBLE SwarmBrokerPlugin : public WorldPlugin
     {
-      /// \brief
-      public: SwarmBrokerPlugin();
+      /// \brief Class constructor.
+      public: SwarmBrokerPlugin() = default;
 
-      /// \brief
-      public: virtual ~SwarmBrokerPlugin();
+      /// \brief Class destructor.
+      public: virtual ~SwarmBrokerPlugin() = default;
 
       // Documentation Inherited.
       public: virtual void Load(physics::WorldPtr _world, sdf::ElementPtr _sdf);
 
-      /// \brief Update the plugin.
+      /// \brief Update callback for the plugin.
       /// \param[in] _info Update information provided by the server.
       private: void Update(const common::UpdateInfo &_info);
 
+      /// \brief Callback executed when a new message is received.
+      /// \param[in] _topic Topic name associated to the new message received.
+      /// \param[in] _msg The new message received.
       private: void OnMsgReceived(const std::string &_topic,
                                   const msgs::Datagram &_msg);
 
@@ -66,10 +77,10 @@ namespace gazebo
       /// \brief Pointer to a node for communication.
       private: ignition::transport::Node node;
 
-      /// \brief
+      /// \brief Queue to store the incoming messages received from the agents.
       private: std::queue<msgs::Datagram> incomingMsgs;
 
-      /// \brief
+      /// \brief Mutex for protecting the queue.
       private: std::mutex mutex;
     };
   }

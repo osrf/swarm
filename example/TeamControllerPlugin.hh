@@ -15,47 +15,47 @@
  *
 */
 
-/// \file SwarmRobotPlugin.hh
+/// \file TeamPlugin.hh
 /// \brief An example of a Gazebo plugin for controlling a member of the swarm.
 
 #ifndef __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 #define __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 
-#include <memory>
-#include <gazebo/common/Events.hh>
+#include <string>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <swarm/SwarmRobotPlugin.hh>
-#include <swarm/msgs/socket.pb.h>
 
 namespace gazebo
 {
   namespace swarm
   {
-    /// \brief
+    /// \brief Class that shows a potential agent controller using the Swarm API
     class TeamControllerPlugin : public gazebo::swarm::SwarmRobotPlugin
     {
-      /// \brief
+      /// \brief Class constructor.
       public: TeamControllerPlugin();
 
-      /// \brief
-      public: virtual ~TeamControllerPlugin();
+      /// \brief Class destructor.
+      public: virtual ~TeamControllerPlugin() = default;
 
-      // Documentation Inherited.
-      public: virtual void Init();
+      // Documentation inherited.
+      public: virtual void Load(sdf::ElementPtr _sdf);
 
-      /// \brief Update the robot controller.
-      /// \param[in] _info Update information provided by the server.
-      private: void Update(const common::UpdateInfo &_info);
+      // Documentation inherited.
+      private: virtual void Update(const common::UpdateInfo &_info);
 
-      /// \brief
-      private: void OnDataReceived(const msgs::Socket &_socket,
+      /// \brief Callback executed when a new message is received.
+      /// \param[in] _srcAddress Source address of the message.
+      /// \param[in] _data Message payload.
+      private: void OnDataReceived(const std::string &_srcAddress,
                                    const std::string &_data);
 
-      /// \brief Pointer to the update event connection.
-      private: event::ConnectionPtr updateConnection;
+      /// \brief Total number of messages to be sent by this agent.
+      private: int numMessageToSend;
 
-      private: int counter = 0;
+      /// \brief Current number of messages sent.
+      private: int msgsSent;
     };
   }
 }

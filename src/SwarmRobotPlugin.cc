@@ -15,13 +15,12 @@
  *
 */
 
-#include <iostream>
 #include <string>
 #include <gazebo/common/Assert.hh>
+#include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include "msgs/datagram.pb.h"
-#include "msgs/socket.pb.h"
 #include "swarm/SwarmRobotPlugin.hh"
 
 using namespace gazebo;
@@ -30,45 +29,63 @@ using namespace swarm;
 GZ_REGISTER_MODEL_PLUGIN(SwarmRobotPlugin)
 
 //////////////////////////////////////////////////
+SwarmRobotPlugin::~SwarmRobotPlugin()
+{
+  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+}
+
+//////////////////////////////////////////////////
 void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_model, "SwarmRobotPlugin _model pointer is NULL");
   GZ_ASSERT(_sdf, "SwarmRobotPlugin _sdf pointer is NULL");
   this->model = _model;
 
-  std::cout << "SwarmRobotPlugin::Load()" << std::endl;
+  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
   {
-    std::cerr << "Unable to find the [address] parameter" << std::endl;
+    gzerr << "SwarmRobotPlugin::Load(): Unable to find the <address> parameter"
+          << std::endl;
     return;
   }
 
   this->address = _sdf->Get<std::string>("address");
 
-  this->node.Advertise("/swarm/broker/incoming");
+  if (!this->node.Advertise(kBrokerIncomingTopic))
+  {
+    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::Load(): Error "
+          << "trying to advertise topic [" << kBrokerIncomingTopic << "]"
+          << std::endl;
+  }
+
+  // Call the Load() method from the derived plugin.
+  this->Load(_sdf);
+
+  // Listen to the update event broadcasted every simulation iteration.
+  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+      boost::bind(&SwarmRobotPlugin::Update, this, _1));
+}
+
+//////////////////////////////////////////////////
+void SwarmRobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
+{
 }
 
 //////////////////////////////////////////////////
 bool SwarmRobotPlugin::SendTo(const std::string &_data,
-    const msgs::Socket &_socket)
+    const std::string &_dstAddress, const uint32_t _port)
 {
   msgs::Datagram msg;
-
-  // ToDo: Include here the source address.
-  msg.mutable_socket()->set_dst_address(_socket.dst_address());
-  msg.mutable_socket()->set_port(_socket.port());
+  msg.set_src_address(this->GetHost());
+  msg.set_dst_address(_dstAddress);
+  msg.set_dst_port(_port);
+  msg.set_data(_data);
 
   // ToDo: Include here the neighbors list.
 
-  msg.set_src_address(this->GetHost());
-
-  msg.set_data(_data);
-
-  std::cerr << "[" << this->GetHost() << "] Sending data to the broker"
-            << std::endl;
-
+  // Send the message from the agent to the broker.
   this->node.Publish("/swarm/broker/incoming", msg);
 
   return true;
@@ -84,27 +101,23 @@ std::string SwarmRobotPlugin::GetHost() const
 void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     const msgs::Datagram &_msg)
 {
-  const std::string topic =
-      "/swarm/" + _msg.socket().dst_address() + "/" +
-      std::to_string(_msg.socket().port());
+  const std::string topic = "/swarm/" + _msg.dst_address() + "/" +
+      std::to_string(_msg.dst_port());
 
-  if (this->cb.find(topic) == this->cb.end())
+  if (this->callbacks.find(topic) == this->callbacks.end())
   {
-    std::cerr << "Address not found" << std::endl;
+    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::OnMsgReceived(): "
+          << "Address [" << topic << "] not found" << std::endl;
     return;
   }
 
-  msgs::Socket socket;
-  socket.set_dst_address(_msg.src_address());
-  socket.set_port(_msg.socket().port());
-
-  // ToDo: Check if the destination node is in the neighbor list of the source
-  // node.
-
-  std::cerr << "[" << this->GetHost()
-            << "] SwarmRobotPlugin::New message received" << std::endl;
-
   // There's visibility between source and destination: run the user callback.
-  auto &userCallback = this->cb[topic];
-  userCallback(socket, _msg.data());
+  auto const &userCallback = this->callbacks[topic];
+  userCallback(_msg.src_address(), _msg.data());
+}
+
+//////////////////////////////////////////////////
+void SwarmRobotPlugin::Update(const common::UpdateInfo &_info)
+{
+  this->Update(_info);
 }

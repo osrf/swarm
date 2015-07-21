@@ -22,6 +22,7 @@
       <!-- Load the plugin to control this robot -->
       <plugin name="swarm_controller_1" filename="libTeamControllerPlugin.so">
         <address>192.168.2.1</address>
+        <num_messages>1</num_messages>
       </plugin>
     </model>
 
@@ -35,8 +36,10 @@
       <!-- Load the plugin to control this robot -->
       <plugin name="swarm_controller_2" filename="libTeamControllerPlugin.so">
         <address>192.168.2.2</address>
+        <num_messages>1</num_messages>
       </plugin>
     </model>
+
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>

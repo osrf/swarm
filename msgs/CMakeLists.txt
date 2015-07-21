@@ -1,6 +1,5 @@
 set(msgs
   datagram.proto
-  socket.proto
 )
 
 add_executable(ignmsgs_out generator/IgnGenerator.cc generator/ign_generator.cc)

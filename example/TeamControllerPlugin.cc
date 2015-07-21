@@ -15,15 +15,12 @@
  *
 */
 
-#include <iostream>
-#include <gazebo/common/Events.hh>
+#include <string>
+#include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
 #include <sdf/sdf.hh>
-#include <swarm/msgs/socket.pb.h>
 #include "TeamControllerPlugin.hh"
-
 
 using namespace gazebo;
 using namespace swarm;
@@ -32,67 +29,83 @@ GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
 
 //////////////////////////////////////////////////
 TeamControllerPlugin::TeamControllerPlugin()
-  : SwarmRobotPlugin()
+  : SwarmRobotPlugin(),
+    msgsSent(0)
 {
 }
 
 //////////////////////////////////////////////////
-TeamControllerPlugin::~TeamControllerPlugin()
+void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
-  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-}
+  // Read the <num_messages> SDF parameter.
+  if (!_sdf->HasElement("num_messages"))
+  {
+    gzerr << "TeamControllerPlugin::Load(): Unable to find the <num_messages> "
+          << "parameter" << std::endl;
+    return;
+  }
 
-//////////////////////////////////////////////////
-void TeamControllerPlugin::Init()
-{
-  // Bind on the default port.
-  this->Bind(&TeamControllerPlugin::OnDataReceived, this);
+  this->numMessageToSend = _sdf->Get<int>("num_messages");
 
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-    boost::bind(&TeamControllerPlugin::Update, this, _1));
+  // Bind on my local address and default port.
+  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->GetHost());
+
+  // Bind on the multicast group and default port.
+  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->kMulticast);
 }
 
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const common::UpdateInfo &_info)
 {
-  if (this->counter == 0)
+  // Check if we already reached the limit of messages to be sent.
+  if (this->msgsSent < this->numMessageToSend)
   {
-    // Create a unicast socket.
-    msgs::Socket socket;
+    this->msgsSent++;
+
+    std::string dstAddress;
+
     if (this->GetHost() == "192.168.2.1")
-      socket.set_dst_address("192.168.2.2");
+      dstAddress = "192.168.2.2";
     else if (this->GetHost() == "192.168.2.2")
-      socket.set_dst_address("192.168.2.1");
-    else
+      dstAddress = "192.168.2.1";
+
+    // Send a unicast message.
+    if (!this->SendTo("Unicast data", dstAddress))
     {
-      std::cout << this->GetHost() << ": Nothing to do" << std::endl;
+      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+            << std::endl;
       return;
     }
 
-    std::cout << "[" << this->GetHost() <<
-      "] TeamControllerPlugin::Update() Sending unicast data" << std::endl;
-    // Send some data via the unicast socket.
-    auto res = this->SendTo("some data on the unicast socket", socket);
+    // Send a broadcast message.
+    dstAddress = this->kBroadcast;
+    if (!this->SendTo("Broadcast data", dstAddress))
+    {
+      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+            << std::endl;
+      return;
+    }
 
-
-    // Create a broadcast socket.
-    std::cout << "[" << this->GetHost() <<
-      "] TeamControllerPlugin::Update() Sending broadcast data" << std::endl;
-    // Send some data via the broadcast socket.
-    res = this->SendTo("more data on the broadcast socket");
-
-    this->counter++;
+    // Send a multicast message.
+    dstAddress = this->kMulticast;
+    if (!this->SendTo("Multicast data", dstAddress))
+    {
+      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+            << std::endl;
+      return;
+    }
   }
 }
 
 //////////////////////////////////////////////////
-void TeamControllerPlugin::OnDataReceived(const msgs::Socket &_socket,
+void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  std::cout << "\n---\n" << std::endl;
-  std::cout << "\tNew Message [" << this->GetHost() << "]" << std::endl;
-  std::cout << "\tFrom: [" << _socket.dst_address() << "]" << std::endl;
+  std::cout << "---" << std::endl;
+  std::cout << "[" << this->GetHost() << "] New message received" << std::endl;
+  std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
   std::cout << "\tData: [" << _data << "]" << std::endl;
 }
