@@ -52,11 +52,6 @@ void TeamControllerPlugin::Init()
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
     boost::bind(&TeamControllerPlugin::Update, this, _1));
-
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-    boost::bind(&TeamControllerPlugin::Update, this, _1));
 }
 
 //////////////////////////////////////////////////

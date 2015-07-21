@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <string>
+#include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include "msgs/datagram.pb.h"
@@ -46,16 +47,12 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   this->address = _sdf->Get<std::string>("address");
 
-  // Initialize transport.
-  this->node = transport::NodePtr(new transport::Node());
-  this->node->Init();
-
-  this->pub = this->node->Advertise<msgs::Datagram>("~/swarm/broker/incoming");
+  this->node.Advertise("/swarm/broker/incoming");
 }
 
 //////////////////////////////////////////////////
 bool SwarmRobotPlugin::SendTo(const std::string &_data,
-    const msgs::Socket &_socket) const
+    const msgs::Socket &_socket)
 {
   msgs::Datagram msg;
 
@@ -72,7 +69,7 @@ bool SwarmRobotPlugin::SendTo(const std::string &_data,
   std::cerr << "[" << this->GetHost() << "] Sending data to the broker"
             << std::endl;
 
-  this->pub->Publish(msg);
+  this->node.Publish("/swarm/broker/incoming", msg);
 
   return true;
 }
@@ -84,11 +81,12 @@ std::string SwarmRobotPlugin::GetHost() const
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
+void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
+    const msgs::Datagram &_msg)
 {
   const std::string topic =
-      "~/swarm/" + _msg->socket().dst_address() + "/" +
-      std::to_string(_msg->socket().port());
+      "/swarm/" + _msg.socket().dst_address() + "/" +
+      std::to_string(_msg.socket().port());
 
   if (this->cb.find(topic) == this->cb.end())
   {
@@ -97,8 +95,8 @@ void SwarmRobotPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
   }
 
   msgs::Socket socket;
-  socket.set_dst_address(_msg->src_address());
-  socket.set_port(_msg->socket().port());
+  socket.set_dst_address(_msg.src_address());
+  socket.set_port(_msg.socket().port());
 
   // ToDo: Check if the destination node is in the neighbor list of the source
   // node.
@@ -107,6 +105,6 @@ void SwarmRobotPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
             << "] SwarmRobotPlugin::New message received" << std::endl;
 
   // There's visibility between source and destination: run the user callback.
-  auto &userCallback = this->cb[topic].cb;
-  userCallback(socket, _msg->data());
+  auto &userCallback = this->cb[topic];
+  userCallback(socket, _msg.data());
 }

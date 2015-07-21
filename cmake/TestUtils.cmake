@@ -30,6 +30,7 @@ macro (ign_build_tests)
       pthread
       ${PROTOBUF_LIBRARY}
       ${Boost_LIBRARIES}
+      ${IGNITION-TRANSPORT_LIBRARIES}
     )
 
     if (NOT DEFINED IGN_SKIP_IN_TESTSUITE)

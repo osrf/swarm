@@ -27,7 +27,7 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/transport.hh>
+#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/socket.pb.h"
@@ -38,22 +38,6 @@ namespace gazebo
   {
     using Callback_t =
       std::function<void(const msgs::Socket &, const std::string &_data)>;
-
-    /// \brief
-    class IGNITION_VISIBLE NodeHandler
-    {
-      /// \brief
-      public: NodeHandler() = default;
-
-      /// \brief
-      public: ~NodeHandler() = default;
-
-      /// \brief
-      public: Callback_t cb;
-
-      /// \brief
-      public: transport::SubscriberPtr socketSub;
-    };
 
     /// \brief
     class IGNITION_VISIBLE SwarmRobotPlugin : public gazebo::ModelPlugin
@@ -75,56 +59,47 @@ namespace gazebo
                 const int _port = 4100)
       {
         const std::string topic =
-          "~/swarm/" + this->GetHost() + "/" + std::to_string(_port);
+          "/swarm/" + this->GetHost() + "/" + std::to_string(_port);
 
         const std::string bcastTopic =
-          "~/swarm/broadcast/" + std::to_string(_port);
+          "/swarm/broadcast/" + std::to_string(_port);
 
         std::cout << "[" << this->GetHost() << "] Bind to ["
                   << topic << "]" << std::endl;
 
-       std::cout << "[" << this->GetHost() << "] Bind to ["
+        std::cout << "[" << this->GetHost() << "] Bind to ["
                   << bcastTopic << "]" << std::endl;
 
-        NodeHandler nodeHandler;
-        nodeHandler.cb = std::bind(_cb, _obj,
+        this->node.Subscribe(topic, &SwarmRobotPlugin::OnMsgReceived, this);
+        this->cb[topic] = std::bind(_cb, _obj,
             std::placeholders::_1, std::placeholders::_2);
-        nodeHandler.socketSub = this->node->Subscribe(topic,
+
+        this->node.Subscribe(bcastTopic,
             &SwarmRobotPlugin::OnMsgReceived, this);
-
-        this->cb[topic] = nodeHandler;
-
-        NodeHandler bcastNodeHandler;
-        bcastNodeHandler.cb = std::bind(_cb, _obj,
+        this->cb[bcastTopic] = std::bind(_cb, _obj,
             std::placeholders::_1, std::placeholders::_2);
-        bcastNodeHandler.socketSub = this->node->Subscribe(bcastTopic,
-            &SwarmRobotPlugin::OnMsgReceived, this);
-
-        this->cb[bcastTopic] = bcastNodeHandler;
 
         return true;
       }
 
       /// \brief
       public: bool SendTo(const std::string &_data,
-                          const msgs::Socket &_socket = msgs::Socket()) const;
+                          const msgs::Socket &_socket = msgs::Socket());
 
       /// \brief
       public: std::string GetHost() const;
 
       /// \brief
-      private: void OnMsgReceived(ConstDatagramPtr &_msg);
+      private: void OnMsgReceived(const std::string &_topic,
+                                  const msgs::Datagram &_msg);
 
       protected: const std::string kBroadcast = "broadcast";
 
-      /// \brief Node used for using Gazebo communications.
-      private: transport::NodePtr node;
+      /// \brief
+      public: ignition::transport::Node node;
 
       /// \brief
-      private: transport::PublisherPtr pub;
-
-      /// \brief
-      private: std::map<std::string, NodeHandler> cb;
+      private: std::map<std::string, Callback_t> cb;
 
       /// \brief Pointer to the model;
       private: physics::ModelPtr model;

@@ -27,7 +27,7 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/TransportTypes.hh>
+#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 
@@ -51,7 +51,8 @@ namespace gazebo
       /// \param[in] _info Update information provided by the server.
       private: void Update(const common::UpdateInfo &_info);
 
-      private: void OnMsgReceived(ConstDatagramPtr &_msg);
+      private: void OnMsgReceived(const std::string &_topic,
+                                  const msgs::Datagram &_msg);
 
       /// \brief World pointer.
       private: physics::WorldPtr world;
@@ -63,10 +64,7 @@ namespace gazebo
       private: event::ConnectionPtr updateConnection;
 
       /// \brief Pointer to a node for communication.
-      private: transport::NodePtr node;
-
-      /// \brief
-      private: transport::SubscriberPtr brokerSub;
+      private: ignition::transport::Node node;
 
       /// \brief
       private: std::queue<msgs::Datagram> incomingMsgs;

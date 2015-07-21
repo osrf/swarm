@@ -19,7 +19,7 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/transport.hh>
+#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "swarm/SwarmBrokerPlugin.hh"
@@ -43,13 +43,9 @@ SwarmBrokerPlugin::~SwarmBrokerPlugin()
 void SwarmBrokerPlugin::Load(physics::WorldPtr /*_world*/,
     sdf::ElementPtr /*_sdf*/)
 {
-  // Initialize transport.
-  this->node = transport::NodePtr(new transport::Node());
-  this->node->Init();
+  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
 
-  const std::string kBrokerIncomingTopic = "~/swarm/broker/incoming";
-
-  this->brokerSub = this->node->Subscribe(kBrokerIncomingTopic,
+  this->node.Subscribe(kBrokerIncomingTopic,
       &SwarmBrokerPlugin::OnMsgReceived, this);
 
   // Listen to the update event. This event is broadcast every
@@ -80,24 +76,24 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
     outgoingMsg.set_data(incomingMsg.data());
 
     const std::string topic =
-        "~/swarm/" + incomingMsg.socket().dst_address() + "/" +
+        "/swarm/" + incomingMsg.socket().dst_address() + "/" +
         std::to_string(incomingMsg.socket().port());
-    transport::PublisherPtr pub =
-      this->node->Advertise<msgs::Datagram>(topic);
-    pub->Publish(outgoingMsg);
+    this->node.Advertise(topic);
+    this->node.Publish(topic, outgoingMsg);
 
     std::cout << "Broker: Sending new message to " << topic << std::endl;
   }
 }
 
 //////////////////////////////////////////////////
-void SwarmBrokerPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
+void SwarmBrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
+    const msgs::Datagram &_msg)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  std::cout << "Broker: New message received from " << _msg->src_address()
+  std::cout << "Broker: New message received from " << _msg.src_address()
             << std::endl;
 
   // Queue the new message.
-  this->incomingMsgs.push(*_msg);
+  this->incomingMsgs.push(_msg);
 }
