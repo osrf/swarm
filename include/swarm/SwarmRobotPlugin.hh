@@ -143,7 +143,11 @@ namespace gazebo
       }
 
       /// \brief Send some data to other/s member/s of the swarm.
-      /// \param[in] _dstAddress Destination address.
+      /// \param[in] _dstAddress Destination address. Note that the destination
+      /// address might be a unicast address, "kBroadcast" or "kMulticast".
+      /// In the case of broadcast and multicast communications your node
+      /// will receive your own message if you're bind to your local or the
+      /// multicast address.
       /// \param[in] _port Destination port.
       /// \param[in] _data Payload.
       /// \return True when success or false otherwise.
