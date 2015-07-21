@@ -92,7 +92,7 @@ namespace gazebo
                               const std::string &_data),
                 C *_obj,
                 const std::string &_address,
-                const int _port = 4100)
+                const int _port = kDefaultPort)
       {
         // Sanity check: Make sure that you use your local address or multicast.
         if ((_address != this->kMulticast) && (_address != this->GetHost()))
@@ -149,7 +149,7 @@ namespace gazebo
       /// \return True when success or false otherwise.
       protected: bool SendTo(const std::string &_data,
                              const std::string &_dstAddress,
-                             const uint32_t _port = 4100);
+                             const uint32_t _port = kDefaultPort);
 
       /// \brief Get your local address. This address should be specified as a
       /// SDF model parameter.
@@ -189,6 +189,9 @@ namespace gazebo
       /// \brief Address used to bind to a multicast group. Note that we do not
       /// support multiple multicast groups, only one.
       protected: const std::string kMulticast = "multicast";
+
+      /// \brief Default port.
+      protected: static const uint32_t kDefaultPort = 4100;
 
       /// \brief The transport node.
       public: ignition::transport::Node node;
