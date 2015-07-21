@@ -16,7 +16,7 @@
 */
 
 /// \file SwarmRobotPlugin.hh
-/// \brief Structures and functions for the SWARM API.
+/// \brief Structures and functions for the Swarm API.
 
 #ifndef __SWARM_ROBOT_PLUGIN_HH__
 #define __SWARM_ROBOT_PLUGIN_HH__
@@ -36,8 +36,6 @@ namespace gazebo
 {
   namespace swarm
   {
-    static const std::string kBroadcast;
-
     using Callback_t =
       std::function<void(const msgs::Socket &, const std::string &_data)>;
 
@@ -71,21 +69,22 @@ namespace gazebo
 
       /// \brief
       public: template<typename C>
-      bool Bind(const msgs::Socket &_socket,
-                void(C::*_cb)(const msgs::Socket &_socket,
+      bool Bind(void(C::*_cb)(const msgs::Socket &_socket,
                               const std::string &_data),
-                C *_obj)
+                C *_obj,
+                const int _port = 4100)
       {
-        // Sanity check: Only allow to bind on your local address.
-        if (_socket.address() != this->address)
-        {
-          std::cerr << "Bind() error: Your local address is [" << this->address
-                    << "] but you're trying to bind using ["
-                    << _socket.address() << "]" << std::endl;
-        }
-
         const std::string topic =
-          "~/swarm/" + _socket.address() + "/" + std::to_string(_socket.port());
+          "~/swarm/" + this->GetHost() + "/" + std::to_string(_port);
+
+        const std::string bcastTopic =
+          "~/swarm/broadcast/" + std::to_string(_port);
+
+        std::cout << "[" << this->GetHost() << "] Bind to ["
+                  << topic << "]" << std::endl;
+
+       std::cout << "[" << this->GetHost() << "] Bind to ["
+                  << bcastTopic << "]" << std::endl;
 
         NodeHandler nodeHandler;
         nodeHandler.cb = std::bind(_cb, _obj,
@@ -95,12 +94,20 @@ namespace gazebo
 
         this->cb[topic] = nodeHandler;
 
+        NodeHandler bcastNodeHandler;
+        bcastNodeHandler.cb = std::bind(_cb, _obj,
+            std::placeholders::_1, std::placeholders::_2);
+        bcastNodeHandler.socketSub = this->node->Subscribe(bcastTopic,
+            &SwarmRobotPlugin::OnMsgReceived, this);
+
+        this->cb[bcastTopic] = bcastNodeHandler;
+
         return true;
       }
 
       /// \brief
-      public: bool SendTo(const msgs::Socket &_socket,
-                          const std::string &_data) const;
+      public: bool SendTo(const std::string &_data,
+                          const msgs::Socket &_socket = msgs::Socket()) const;
 
       /// \brief
       public: std::string GetHost() const;
@@ -108,8 +115,13 @@ namespace gazebo
       /// \brief
       private: void OnMsgReceived(ConstDatagramPtr &_msg);
 
+      protected: const std::string kBroadcast = "broadcast";
+
       /// \brief Node used for using Gazebo communications.
       private: transport::NodePtr node;
+
+      /// \brief
+      private: transport::PublisherPtr pub;
 
       /// \brief
       private: std::map<std::string, NodeHandler> cb;

@@ -15,6 +15,7 @@
  *
 */
 
+#include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
@@ -50,6 +51,11 @@ void SwarmBrokerPlugin::Load(physics::WorldPtr /*_world*/,
 
   this->brokerSub = this->node->Subscribe(kBrokerIncomingTopic,
       &SwarmBrokerPlugin::OnMsgReceived, this);
+
+  // Listen to the update event. This event is broadcast every
+  // simulation iteration.
+  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+    boost::bind(&SwarmBrokerPlugin::Update, this, _1));
 }
 
 //////////////////////////////////////////////////
@@ -67,13 +73,20 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
     // outgoing message.
 
     msgs::Datagram outgoingMsg;
-    outgoingMsg.mutable_socket()->set_address(incomingMsg.socket().address());
+    outgoingMsg.mutable_socket()->set_dst_address(
+      incomingMsg.socket().dst_address());
     outgoingMsg.mutable_socket()->set_port(incomingMsg.socket().port());
+    outgoingMsg.set_src_address(incomingMsg.src_address());
     outgoingMsg.set_data(incomingMsg.data());
 
+    const std::string topic =
+        "~/swarm/" + incomingMsg.socket().dst_address() + "/" +
+        std::to_string(incomingMsg.socket().port());
     transport::PublisherPtr pub =
-      this->node->Advertise<msgs::Datagram>(incomingMsg.socket().address());
+      this->node->Advertise<msgs::Datagram>(topic);
     pub->Publish(outgoingMsg);
+
+    std::cout << "Broker: Sending new message to " << topic << std::endl;
   }
 }
 
@@ -81,6 +94,9 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
 void SwarmBrokerPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
+
+  std::cout << "Broker: New message received from " << _msg->src_address()
+            << std::endl;
 
   // Queue the new message.
   this->incomingMsgs.push(*_msg);

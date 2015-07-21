@@ -28,14 +28,14 @@ using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(SwarmRobotPlugin)
 
-const std::string kBroadcast = "broadcast";
-
 //////////////////////////////////////////////////
 void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_model, "SwarmRobotPlugin _model pointer is NULL");
   GZ_ASSERT(_sdf, "SwarmRobotPlugin _sdf pointer is NULL");
   this->model = _model;
+
+  std::cout << "SwarmRobotPlugin::Load()" << std::endl;
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
@@ -49,13 +49,31 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // Initialize transport.
   this->node = transport::NodePtr(new transport::Node());
   this->node->Init();
+
+  this->pub = this->node->Advertise<msgs::Datagram>("~/swarm/broker/incoming");
 }
 
 //////////////////////////////////////////////////
-bool SwarmRobotPlugin::SendTo(const msgs::Socket &/*_socket*/,
-    const std::string &/*_data*/) const
+bool SwarmRobotPlugin::SendTo(const std::string &_data,
+    const msgs::Socket &_socket) const
 {
-  std::cout << "Sending data" << std::endl;
+  msgs::Datagram msg;
+
+  // ToDo: Include here the source address.
+  msg.mutable_socket()->set_dst_address(_socket.dst_address());
+  msg.mutable_socket()->set_port(_socket.port());
+
+  // ToDo: Include here the neighbors list.
+
+  msg.set_src_address(this->GetHost());
+
+  msg.set_data(_data);
+
+  std::cerr << "[" << this->GetHost() << "] Sending data to the broker"
+            << std::endl;
+
+  this->pub->Publish(msg);
+
   return true;
 }
 
@@ -68,16 +86,27 @@ std::string SwarmRobotPlugin::GetHost() const
 //////////////////////////////////////////////////
 void SwarmRobotPlugin::OnMsgReceived(ConstDatagramPtr &_msg)
 {
-  if (this->cb.find(_msg->socket().address()) == this->cb.end())
+  const std::string topic =
+      "~/swarm/" + _msg->socket().dst_address() + "/" +
+      std::to_string(_msg->socket().port());
+
+  if (this->cb.find(topic) == this->cb.end())
   {
     std::cerr << "Address not found" << std::endl;
     return;
   }
 
+  msgs::Socket socket;
+  socket.set_dst_address(_msg->src_address());
+  socket.set_port(_msg->socket().port());
+
   // ToDo: Check if the destination node is in the neighbor list of the source
   // node.
 
+  std::cerr << "[" << this->GetHost()
+            << "] SwarmRobotPlugin::New message received" << std::endl;
+
   // There's visibility between source and destination: run the user callback.
-  auto &userCallback = this->cb[_msg->socket().address()].cb;
-  userCallback(_msg->socket(), _msg->data());
+  auto &userCallback = this->cb[topic].cb;
+  userCallback(socket, _msg->data());
 }

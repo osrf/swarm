@@ -16,20 +16,20 @@ macro (ign_build_tests)
 
     add_dependencies(${BINARY_NAME}
       ${PROJECT_LIB_BROKER_NAME}
-        ${PROJECT_LIB_ROBOT_NAME}
-        ${PROJECT_LIB_MSGS_NAME}
+      ${PROJECT_LIB_ROBOT_NAME}
+      ${PROJECT_LIB_MSGS_NAME}
       gtest gtest_main
     )
 
     target_link_libraries(${BINARY_NAME}
-        ${PROJECT_LIB_BROKER_NAME}
-        ${PROJECT_LIB_ROBOT_NAME}
-        ${PROJECT_LIB_MSGS_NAME}
-        libgtest.a
-        libgtest_main.a
-        pthread
-        ${PROTOBUF_LIBRARY}
-        ${Boost_LIBRARIES}
+      ${PROJECT_LIB_BROKER_NAME}
+      ${PROJECT_LIB_ROBOT_NAME}
+      ${PROJECT_LIB_MSGS_NAME}
+      libgtest.a
+      libgtest_main.a
+      pthread
+      ${PROTOBUF_LIBRARY}
+      ${Boost_LIBRARIES}
     )
 
     if (NOT DEFINED IGN_SKIP_IN_TESTSUITE)

@@ -9,7 +9,8 @@ import "socket.proto";
 
 message Datagram
 {
-  required Socket socket    = 1;
-  repeated string neighbors = 2;
-  required string data      = 3;
+  required Socket socket      = 1;
+  repeated string neighbors   = 2;
+  required string src_address = 3;
+  required string data        = 4;
 }

@@ -5,6 +5,6 @@ package gazebo.swarm.msgs;
 /// \brief A message representing a UDP socket.
 message Socket
 {
-  required string address = 1;
-  required uint32 port    = 2;
+  required string dst_address = 1 [default = "broadcast"];
+  optional uint32 port        = 2 [default = 4100];
 }

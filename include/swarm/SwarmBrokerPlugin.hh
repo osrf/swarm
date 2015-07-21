@@ -23,6 +23,7 @@
 
 #include <mutex>
 #include <queue>
+#include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
@@ -57,6 +58,9 @@ namespace gazebo
 
       /// \brief SDF for this plugin.
       private: sdf::ElementPtr sdf;
+
+      /// \brief Pointer to the update event connection.
+      private: event::ConnectionPtr updateConnection;
 
       /// \brief Pointer to a node for communication.
       private: transport::NodePtr node;

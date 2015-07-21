@@ -22,6 +22,7 @@
 #define __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 
 #include <memory>
+#include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <swarm/SwarmRobotPlugin.hh>
@@ -41,7 +42,7 @@ namespace gazebo
       public: virtual ~TeamControllerPlugin();
 
       // Documentation Inherited.
-      public: virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+      public: virtual void Init();
 
       /// \brief Update the robot controller.
       /// \param[in] _info Update information provided by the server.
@@ -54,14 +55,7 @@ namespace gazebo
       /// \brief Pointer to the update event connection.
       private: event::ConnectionPtr updateConnection;
 
-      /// \brief Pointer to the model;
-      private: physics::ModelPtr model;
-
-      /// \brief
-      private: msgs::Socket socket;
-
-      /// \brief
-      private: msgs::Socket bcastSocket;
+      private: int counter = 0;
     };
   }
 }
