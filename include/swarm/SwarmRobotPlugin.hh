@@ -36,9 +36,6 @@ namespace gazebo
 {
   namespace swarm
   {
-    using Callback_t =
-      std::function<void(const msgs::Socket &, const std::string &_data)>;
-
     /// \brief
     class IGNITION_VISIBLE SwarmRobotPlugin : public gazebo::ModelPlugin
     {
@@ -92,6 +89,9 @@ namespace gazebo
       /// \brief
       private: void OnMsgReceived(const std::string &_topic,
                                   const msgs::Datagram &_msg);
+
+      using Callback_t =
+      std::function<void(const msgs::Socket &, const std::string &_data)>;
 
       protected: const std::string kBroadcast = "broadcast";
 
