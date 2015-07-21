@@ -104,8 +104,8 @@ void TeamControllerPlugin::Update(const common::UpdateInfo &_info)
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  std::cout << "---" << std::endl;
-  std::cout << "[" << this->GetHost() << "] New message received" << std::endl;
-  std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  std::cout << "\tData: [" << _data << "]" << std::endl;
+  gzmsg << "---" << std::endl;
+  gzmsg << "[" << this->GetHost() << "] New message received" << std::endl;
+  gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
+  gzmsg << "\tData: [" << _data << "]" << std::endl;
 }
