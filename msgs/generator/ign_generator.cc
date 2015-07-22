@@ -14,24 +14,16 @@
  * limitations under the License.
  *
 */
+#include <google/protobuf/compiler/plugin.h>
+#include "IgnGenerator.hh"
 
-/// \file SwarmPlugin.hh
-/// \brief Structures and functions for the Swarm API.
-
-#ifndef _SWARM_API_SWARM_HH_
-#define _SWARM_API_SWARM_HH_
-
-namespace swarm
+int main(int _argc, char *_argv[])
 {
-  /// \brief A plugin
-  class SwarmPlugin
-  {
-    /// \brief Constructor
-    public: SwarmPlugin();
+#ifdef _MSC_VER
+  // Don't print a silly message or stick a modal dialog box in my face, please.
+  _set_abort_behavior(0, ~0);
+#endif  // !_MSC_VER
 
-    /// \brief Destructor
-    public: virtual ~SwarmPlugin();
-  };
+  google::protobuf::compiler::cpp::IgnGenerator generator;
+  return google::protobuf::compiler::PluginMain(_argc, _argv, &generator);
 }
-
-#endif

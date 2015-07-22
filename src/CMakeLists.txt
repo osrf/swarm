@@ -1,32 +1,37 @@
 include (${project_cmake_dir}/Utils.cmake)
 
-set (sources
-  SwarmPlugin.cc
+set (broker_plugin_sources
+  BrokerPlugin.cc
+)
+
+set (robot_plugin_sources
+  RobotPlugin.cc
 )
 
 set (gtest_sources
-  SwarmPlugin_TEST.cc
+  BrokerPlugin_TEST.cc
+  RobotPlugin_TEST.cc
 )
 
-include_directories(${CMAKE_BINARY_DIR})
+set_source_files_properties(${PROTO_SRC} ${PROTO_HEADER} PROPERTIES
+                            GENERATED TRUE)
+include_directories(${CMAKE_BINARY_DIR}/)
+include_directories(${CMAKE_BINARY_DIR}/test/)
 
 ign_build_tests(${gtest_sources})
-if (UNIX)
-  ign_add_library(${PROJECT_NAME_LOWER} ${sources})
-elseif(WIN32)
-  # Probotuf compilation is recommended and configured for a STATIC .lib
-  # Not mixing static and shared and just build ignition transport as STATIC
-  # on Windows
-  add_library(${PROJECT_NAME_LOWER} STATIC ${sources})
-endif()
-target_link_libraries(${PROJECT_NAME_LOWER} ${IGNITION-TRANSPORT_LIBRARIES}
-                      ${PROJECT_MSGS_NAME})
 
-if(WIN32)
-  target_link_libraries(${PROJECT_NAME_LOWER} ws2_32 Iphlpapi)
-endif()
-ign_install_library(${PROJECT_NAME_LOWER})
+# Create the libSwarmBrokerPlugin.so library.
+ign_add_library(${PROJECT_LIB_BROKER_NAME} ${broker_plugin_sources})
+target_link_libraries(${PROJECT_LIB_BROKER_NAME}
+                      ${PROJECT_LIB_MSGS_NAME}
+                      ${PROTOBUF_LIBRARY}
+                      ${IGNITION-TRANSPORT_LIBRARIES})
+ign_install_library(${PROJECT_LIB_BROKER_NAME})
 
-add_dependencies(${PROJECT_NAME_LOWER}
-  gtest gtest_main
-)
+# Create the libSwarmRobotPlugin.so library.
+ign_add_library(${PROJECT_LIB_ROBOT_NAME} ${robot_plugin_sources})
+target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
+                      ${PROJECT_LIB_MSGS_NAME}
+                      ${PROTOBUF_LIBRARY}
+                      ${IGNITION-TRANSPORT_LIBRARIES})
+ign_install_library(${PROJECT_LIB_ROBOT_NAME})

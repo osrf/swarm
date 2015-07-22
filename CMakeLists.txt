@@ -6,9 +6,13 @@ project (${IGN_PROJECT_NAME})
 string (TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 string (TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 
+set (PROJECT_LIB_MSGS_NAME SwarmMsgs)
+set (PROJECT_LIB_BROKER_NAME SwarmBrokerPlugin)
+set (PROJECT_LIB_ROBOT_NAME SwarmRobotPlugin)
+
 set (PROJECT_MAJOR_VERSION 0)
-set (PROJECT_MINOR_VERSION 7)
-set (PROJECT_PATCH_VERSION 2)
+set (PROJECT_MINOR_VERSION 1)
+set (PROJECT_PATCH_VERSION 0)
 
 set (PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
 set (PROJECT_VERSION_FULL ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION})
@@ -239,7 +243,7 @@ else (build_errors)
   ########################################
   # Write the config.h file
   configure_file (${project_cmake_dir}/config.hh.in
-    ${PROJECT_BINARY_DIR}/include/swarm/${IGN_PROJECT_NAME}/config.hh)
+    ${PROJECT_BINARY_DIR}/include/${IGN_PROJECT_NAME}/config.hh)
   #ign_install_includes(${IGN_PROJECT_NAME}
   #  ${PROJECT_BINARY_DIR}/include/swarm/${IGN_PROJECT_NAME}/config.hh)
 
@@ -257,11 +261,12 @@ else (build_errors)
   message (STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
   message (STATUS "Install path: ${CMAKE_INSTALL_PREFIX}")
 
-
   if (BUILD_IGNITION)
     set(TEST_TYPE "UNIT")
+    add_subdirectory(msgs)
     add_subdirectory(src)
     add_subdirectory(include)
+    add_subdirectory(worlds)
     add_subdirectory(test)
   endif (BUILD_IGNITION)
 
@@ -276,7 +281,9 @@ else (build_errors)
   ########################################
   # Make the cmake config files
   set(PKG_NAME ${PROJECT_NAME_UPPER})
-  set(PKG_LIBRARIES ${PROJECT_NAME_LOWER} ${PROJECT_MSGS_NAME})
+  set(PKG_LIBRARIES ${PROJECT_LIB_MSGS_NAME}
+                    ${PROJECT_LIB_BROKER_NAME}
+                    ${PROJECT_LIB_ROBOT_NAME})
 
   set(PKG_DEPENDS)
 

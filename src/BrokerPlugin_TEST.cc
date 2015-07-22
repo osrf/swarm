@@ -15,16 +15,19 @@
  *
 */
 
-#include "swarm/SwarmPlugin.hh"
-
-using namespace swarm;
+#include "gtest/gtest.h"
+#include "swarm/BrokerPlugin.hh"
 
 //////////////////////////////////////////////////
-SwarmPlugin::SwarmPlugin()
+/// \brief
+TEST(BrokerPluginTest, aTest)
 {
+  SUCCEED();
 }
 
 //////////////////////////////////////////////////
-SwarmPlugin::~SwarmPlugin()
+int main(int argc, char **argv)
 {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
