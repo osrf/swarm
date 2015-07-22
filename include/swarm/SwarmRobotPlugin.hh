@@ -97,8 +97,8 @@ namespace gazebo
         // Sanity check: Make sure that you use your local address or multicast.
         if ((_address != this->kMulticast) && (_address != this->Host()))
         {
-          std::cerr << "[" << this->Host() << "] Bind() error: Address ["
-                    << _address << "] is not your local address" << std::endl;
+          gzerr << "[" << this->Host() << "] Bind() error: Address ["
+                << _address << "] is not your local address" << std::endl;
           return false;
         }
 
