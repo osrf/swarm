@@ -22,7 +22,6 @@
 #include <sdf/sdf.hh>
 #include "TeamControllerPlugin.hh"
 
-using namespace gazebo;
 using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
@@ -55,7 +54,7 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 }
 
 //////////////////////////////////////////////////
-void TeamControllerPlugin::Update(const common::UpdateInfo &_info)
+void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   // Check if we already reached the limit of messages to be sent.
   if (this->msgsSent < this->numMessageToSend)

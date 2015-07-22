@@ -26,38 +26,35 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <swarm/SwarmRobotPlugin.hh>
 
-namespace gazebo
+namespace swarm
 {
-  namespace swarm
+  /// \brief Class that shows a potential agent controller using the Swarm API
+  class TeamControllerPlugin : public gazebo::swarm::SwarmRobotPlugin
   {
-    /// \brief Class that shows a potential agent controller using the Swarm API
-    class TeamControllerPlugin : public gazebo::swarm::SwarmRobotPlugin
-    {
-      /// \brief Class constructor.
-      public: TeamControllerPlugin();
+    /// \brief Class constructor.
+    public: TeamControllerPlugin();
 
-      /// \brief Class destructor.
-      public: virtual ~TeamControllerPlugin() = default;
+    /// \brief Class destructor.
+    public: virtual ~TeamControllerPlugin() = default;
 
-      // Documentation inherited.
-      public: virtual void Load(sdf::ElementPtr _sdf);
+    // Documentation inherited.
+    public: virtual void Load(sdf::ElementPtr _sdf);
 
-      // Documentation inherited.
-      private: virtual void Update(const common::UpdateInfo &_info);
+    // Documentation inherited.
+    private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
-      /// \brief Callback executed when a new message is received.
-      /// \param[in] _srcAddress Source address of the message.
-      /// \param[in] _data Message payload.
-      private: void OnDataReceived(const std::string &_srcAddress,
-                                   const std::string &_data);
+    /// \brief Callback executed when a new message is received.
+    /// \param[in] _srcAddress Source address of the message.
+    /// \param[in] _data Message payload.
+    private: void OnDataReceived(const std::string &_srcAddress,
+                                 const std::string &_data);
 
-      /// \brief Total number of messages to be sent by this agent.
-      private: int numMessageToSend;
+    /// \brief Total number of messages to be sent by this agent.
+    private: int numMessageToSend;
 
-      /// \brief Current number of messages sent.
-      private: int msgsSent;
-    };
-  }
+    /// \brief Current number of messages sent.
+    private: int msgsSent;
+  };
 }
 
 #endif
