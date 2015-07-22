@@ -10,12 +10,6 @@ include (${project_cmake_dir}/Ronn2Man.cmake)
 add_manpage_target()
 
 #################################################
-# Boost
-find_package(Boost 1.54.0 COMPONENTS system filesystem thread REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
-#################################################
 # Gazebo
 find_package(gazebo REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS})
