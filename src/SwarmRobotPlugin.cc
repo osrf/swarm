@@ -41,8 +41,6 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   GZ_ASSERT(_sdf, "SwarmRobotPlugin _sdf pointer is NULL");
   this->model = _model;
 
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-
   // Read the robot address.
   if (!_sdf->HasElement("address"))
   {
@@ -53,6 +51,7 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   this->address = _sdf->Get<std::string>("address");
 
+  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Advertise(kBrokerIncomingTopic))
   {
     gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::Load(): Error "
@@ -65,7 +64,7 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-      boost::bind(&SwarmRobotPlugin::Update, this, _1));
+      std::bind(&SwarmRobotPlugin::Update, this, std::placeholders::_1));
 }
 
 //////////////////////////////////////////////////
@@ -86,7 +85,14 @@ bool SwarmRobotPlugin::SendTo(const std::string &_data,
   // ToDo: Include here the neighbors list.
 
   // Send the message from the agent to the broker.
-  this->node.Publish("/swarm/broker/incoming", msg);
+  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
+  if (!this->node.Publish(kBrokerIncomingTopic, msg))
+  {
+    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::SendTo(): Error "
+          << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
+          << std::endl;
+    return false;
+  }
 
   return true;
 }
