@@ -198,7 +198,7 @@ namespace gazebo
       protected: static const uint32_t kDefaultPort = 4100;
 
       /// \brief The transport node.
-      public: ignition::transport::Node node;
+      private: ignition::transport::Node node;
 
       /// \brief User callbacks. The key is the topic name
       /// (e.g.: "/swarm/192.168.2.1/4000") and the value is the user callback.
