@@ -37,12 +37,12 @@ namespace gazebo
   namespace swarm
   {
     /// \brief This is a world plugin designed to centralize all the messages
-    /// sent by the members of the swarm. This plugin will be subscribed to a
-    /// topic "/swarm/broker/incoming" where all the agents will publish their
-    /// messages. This plugin will receive and queue the messages. The broker
-    /// will use its Update() function to dispatch the pending messages waiting
-    /// in the queue. Dispatch a message may consist on directly deliver it to
-    /// the destination/s node/s or it may require to forward the message to a
+    /// sent by the members of the swarm. This plugin subscribes to the
+    /// "/swarm/broker/incoming" topic, on which all the agents publish their
+    /// messages. This plugin receives and queues the messages. The broker
+    /// uses its Update() function to dispatch the queued messages.
+    /// Dispatch of a message may directly deliver it to
+    /// the destination/s node/s or it may forward the message to a
     /// network simulator (ns-3).
     class IGNITION_VISIBLE SwarmBrokerPlugin : public WorldPlugin
     {
