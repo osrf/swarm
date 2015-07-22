@@ -87,6 +87,11 @@ namespace gazebo
       /// \param[in] _obj Instance containing the member function callback.
       /// \param[in] _port Port used to receive messages.
       /// \return True when success or false otherwise.
+      ///
+      /// * Example usage (bind on the local address and default port):
+      ///    this->Bind(&MyClass::OnDataReceived, this, this->Host());
+      /// * Example usage (Bind on the multicast group and custom port.):
+      ///    this->Bind(&MyClass::OnDataReceived, this, this->kMulticast, 5123);
       protected: template<typename C>
       bool Bind(void(C::*_cb)(const std::string &_srcAddress,
                               const std::string &_data),
