@@ -136,7 +136,7 @@ namespace gazebo
             gzerr << "SwarmRobotPlugin::Bind() error: Subscribe() returned an "
                   << "error while subscribing the broadcast address"
                   << std::endl;
-          return false;
+            return false;
           }
 
           // Register the user callback using the broadcast topic as the key.
