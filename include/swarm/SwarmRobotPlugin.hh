@@ -155,7 +155,9 @@ namespace gazebo
       /// multicast address.
       /// \param[in] _port Destination port.
       /// \param[in] _data Payload.
-      /// \return True when success or false otherwise.
+      /// \return True when success or false if the underlying library used for
+      /// sending messages notifies an error (meaning that the message was not
+      /// sent).
       protected: bool SendTo(const std::string &_data,
                              const std::string &_dstAddress,
                              const uint32_t _port = kDefaultPort);
