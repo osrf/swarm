@@ -21,26 +21,25 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include "msgs/datagram.pb.h"
-#include "swarm/SwarmRobotPlugin.hh"
+#include "swarm/RobotPlugin.hh"
 
-using namespace gazebo;
 using namespace swarm;
 
-GZ_REGISTER_MODEL_PLUGIN(SwarmRobotPlugin)
+GZ_REGISTER_MODEL_PLUGIN(RobotPlugin)
 
 //////////////////////////////////////////////////
-SwarmRobotPlugin::~SwarmRobotPlugin()
+RobotPlugin::~RobotPlugin()
 {
-  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
+void RobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
 {
 }
 
 //////////////////////////////////////////////////
-bool SwarmRobotPlugin::SendTo(const std::string &_data,
+bool RobotPlugin::SendTo(const std::string &_data,
     const std::string &_dstAddress, const uint32_t _port)
 {
   msgs::Datagram msg;
@@ -55,7 +54,7 @@ bool SwarmRobotPlugin::SendTo(const std::string &_data,
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Publish(kBrokerIncomingTopic, msg))
   {
-    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::SendTo(): Error "
+    gzerr << "[" << this->Host() << "] RobotPlugin::SendTo(): Error "
           << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
           << std::endl;
     return false;
@@ -65,28 +64,29 @@ bool SwarmRobotPlugin::SendTo(const std::string &_data,
 }
 
 //////////////////////////////////////////////////
-std::string SwarmRobotPlugin::Host() const
+std::string RobotPlugin::Host() const
 {
   return this->address;
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::Update(const common::UpdateInfo &_info)
+void RobotPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   this->Update(_info);
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
+                            sdf::ElementPtr _sdf)
 {
-  GZ_ASSERT(_model, "SwarmRobotPlugin _model pointer is NULL");
-  GZ_ASSERT(_sdf, "SwarmRobotPlugin _sdf pointer is NULL");
+  GZ_ASSERT(_model, "RobotPlugin _model pointer is NULL");
+  GZ_ASSERT(_sdf, "RobotPlugin _sdf pointer is NULL");
   this->model = _model;
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
   {
-    gzerr << "SwarmRobotPlugin::Load(): Unable to find the <address> parameter"
+    gzerr << "RobotPlugin::Load(): Unable to find the <address> parameter"
           << std::endl;
     return;
   }
@@ -96,7 +96,7 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Advertise(kBrokerIncomingTopic))
   {
-    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::Load(): Error "
+    gzerr << "[" << this->Host() << "] RobotPlugin::Load(): Error "
           << "trying to advertise topic [" << kBrokerIncomingTopic << "]"
           << std::endl;
   }
@@ -105,12 +105,12 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   this->Load(_sdf);
 
   // Listen to the update event broadcasted every simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&SwarmRobotPlugin::Update, this, std::placeholders::_1));
+  this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
+      std::bind(&RobotPlugin::Update, this, std::placeholders::_1));
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
+void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     const msgs::Datagram &_msg)
 {
   const std::string topic = "/swarm/" + _msg.dst_address() + "/" +
@@ -118,7 +118,7 @@ void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   if (this->callbacks.find(topic) == this->callbacks.end())
   {
-    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::OnMsgReceived(): "
+    gzerr << "[" << this->Host() << "] RobotPlugin::OnMsgReceived(): "
           << "Address [" << topic << "] not found" << std::endl;
     return;
   }

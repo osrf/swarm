@@ -25,36 +25,35 @@
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
-#include "swarm/SwarmBrokerPlugin.hh"
+#include "swarm/BrokerPlugin.hh"
 
-using namespace gazebo;
 using namespace swarm;
 
-GZ_REGISTER_WORLD_PLUGIN(SwarmBrokerPlugin)
+GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 
 //////////////////////////////////////////////////
-void SwarmBrokerPlugin::Load(physics::WorldPtr _world,
-    sdf::ElementPtr _sdf)
+void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
+                             sdf::ElementPtr _sdf)
 {
-  GZ_ASSERT(_world, "SwarmBrokerPlugin::Load() error: _world pointer is NULL");
-  GZ_ASSERT(_sdf, "SwarmBrokerPlugin::Load() error: _sdf pointer is NULL");
+  GZ_ASSERT(_world, "BrokerPlugin::Load() error: _world pointer is NULL");
+  GZ_ASSERT(_sdf, "BrokerPlugin::Load() error: _sdf pointer is NULL");
 
   // This is the subscription that will allow us to receive incoming messages.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Subscribe(kBrokerIncomingTopic,
-      &SwarmBrokerPlugin::OnMsgReceived, this))
+      &BrokerPlugin::OnMsgReceived, this))
   {
-    gzerr << "SwarmBrokerPlugin::Load(): Error trying to subscribe"
+    gzerr << "BrokerPlugin::Load(): Error trying to subscribe"
           << " on topic " << kBrokerIncomingTopic << std::endl;
   }
 
   // Listen to the update event broadcasted every simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-      boost::bind(&SwarmBrokerPlugin::Update, this, _1));
+  this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
+      std::bind(&BrokerPlugin::Update, this, std::placeholders::_1));
 }
 
 //////////////////////////////////////////////////
-void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
+void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -80,7 +79,7 @@ void SwarmBrokerPlugin::Update(const common::UpdateInfo &/*_info*/)
 }
 
 //////////////////////////////////////////////////
-void SwarmBrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
+void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
     const msgs::Datagram &_msg)
 {
   std::lock_guard<std::mutex> lock(this->mutex);

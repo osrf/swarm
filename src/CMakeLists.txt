@@ -1,15 +1,16 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (broker_plugin_sources
-  SwarmBrokerPlugin.cc
+  BrokerPlugin.cc
 )
 
 set (robot_plugin_sources
-  SwarmRobotPlugin.cc
+  RobotPlugin.cc
 )
 
 set (gtest_sources
-  SwarmBrokerPlugin_TEST.cc
+  BrokerPlugin_TEST.cc
+  RobotPlugin_TEST.cc
 )
 
 set_source_files_properties(${PROTO_SRC} ${PROTO_HEADER} PROPERTIES
