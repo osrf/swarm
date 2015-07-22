@@ -47,7 +47,7 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
   this->numMessageToSend = _sdf->Get<int>("num_messages");
 
   // Bind on my local address and default port.
-  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->GetHost());
+  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host());
 
   // Bind on the multicast group and default port.
   this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->kMulticast);
@@ -63,15 +63,15 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
     std::string dstAddress;
 
-    if (this->GetHost() == "192.168.2.1")
+    if (this->Host() == "192.168.2.1")
       dstAddress = "192.168.2.2";
-    else if (this->GetHost() == "192.168.2.2")
+    else if (this->Host() == "192.168.2.2")
       dstAddress = "192.168.2.1";
 
     // Send a unicast message.
     if (!this->SendTo("Unicast data", dstAddress))
     {
-      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
             << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
             << std::endl;
       return;
@@ -81,7 +81,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     dstAddress = this->kBroadcast;
     if (!this->SendTo("Broadcast data", dstAddress))
     {
-      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
             << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
             << std::endl;
       return;
@@ -91,7 +91,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     dstAddress = this->kMulticast;
     if (!this->SendTo("Multicast data", dstAddress))
     {
-      gzerr << "[" << this->GetHost() << "] TeamControllerPlugin::Update(): "
+      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
             << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
             << std::endl;
       return;
@@ -104,7 +104,7 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
   gzmsg << "---" << std::endl;
-  gzmsg << "[" << this->GetHost() << "] New message received" << std::endl;
+  gzmsg << "[" << this->Host() << "] New message received" << std::endl;
   gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
   gzmsg << "\tData: [" << _data << "]" << std::endl;
 }

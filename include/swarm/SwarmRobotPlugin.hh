@@ -51,7 +51,7 @@ namespace gazebo
     ///     - SendTo()  This method allows an agent to send data to other
     ///                 individual agent (unicast), all the agents (broadcast),
     ///                 or a group of agents (multicast).
-    ///     - GetHost() This method will return the agent's address.
+    ///     - Host() This method will return the agent's address.
     ///
     ///  * Motion.
     ///
@@ -95,9 +95,9 @@ namespace gazebo
                 const int _port = kDefaultPort)
       {
         // Sanity check: Make sure that you use your local address or multicast.
-        if ((_address != this->kMulticast) && (_address != this->GetHost()))
+        if ((_address != this->kMulticast) && (_address != this->Host()))
         {
-          std::cerr << "[" << this->GetHost() << "] Bind() error: Address ["
+          std::cerr << "[" << this->Host() << "] Bind() error: Address ["
                     << _address << "] is not your local address" << std::endl;
           return false;
         }
@@ -158,7 +158,7 @@ namespace gazebo
       /// \brief Get your local address. This address should be specified as a
       /// SDF model parameter.
       /// \return The local address.
-      protected: std::string GetHost() const;
+      protected: std::string Host() const;
 
       /// \brief Update the plugin.
       /// \param[in] _info Update information provided by the server.

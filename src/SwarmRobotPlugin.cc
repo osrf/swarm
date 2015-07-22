@@ -35,6 +35,48 @@ SwarmRobotPlugin::~SwarmRobotPlugin()
 }
 
 //////////////////////////////////////////////////
+void SwarmRobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
+{
+}
+
+//////////////////////////////////////////////////
+bool SwarmRobotPlugin::SendTo(const std::string &_data,
+    const std::string &_dstAddress, const uint32_t _port)
+{
+  msgs::Datagram msg;
+  msg.set_src_address(this->Host());
+  msg.set_dst_address(_dstAddress);
+  msg.set_dst_port(_port);
+  msg.set_data(_data);
+
+  // ToDo: Include here the neighbors list.
+
+  // Send the message from the agent to the broker.
+  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
+  if (!this->node.Publish(kBrokerIncomingTopic, msg))
+  {
+    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::SendTo(): Error "
+          << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
+          << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+std::string SwarmRobotPlugin::Host() const
+{
+  return this->address;
+}
+
+//////////////////////////////////////////////////
+void SwarmRobotPlugin::Update(const common::UpdateInfo &_info)
+{
+  this->Update(_info);
+}
+
+//////////////////////////////////////////////////
 void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_model, "SwarmRobotPlugin _model pointer is NULL");
@@ -54,7 +96,7 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Advertise(kBrokerIncomingTopic))
   {
-    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::Load(): Error "
+    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::Load(): Error "
           << "trying to advertise topic [" << kBrokerIncomingTopic << "]"
           << std::endl;
   }
@@ -68,42 +110,6 @@ void SwarmRobotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 }
 
 //////////////////////////////////////////////////
-void SwarmRobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
-{
-}
-
-//////////////////////////////////////////////////
-bool SwarmRobotPlugin::SendTo(const std::string &_data,
-    const std::string &_dstAddress, const uint32_t _port)
-{
-  msgs::Datagram msg;
-  msg.set_src_address(this->GetHost());
-  msg.set_dst_address(_dstAddress);
-  msg.set_dst_port(_port);
-  msg.set_data(_data);
-
-  // ToDo: Include here the neighbors list.
-
-  // Send the message from the agent to the broker.
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Publish(kBrokerIncomingTopic, msg))
-  {
-    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::SendTo(): Error "
-          << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
-          << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-//////////////////////////////////////////////////
-std::string SwarmRobotPlugin::GetHost() const
-{
-  return this->address;
-}
-
-//////////////////////////////////////////////////
 void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     const msgs::Datagram &_msg)
 {
@@ -112,7 +118,7 @@ void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   if (this->callbacks.find(topic) == this->callbacks.end())
   {
-    gzerr << "[" << this->GetHost() << "] SwarmRobotPlugin::OnMsgReceived(): "
+    gzerr << "[" << this->Host() << "] SwarmRobotPlugin::OnMsgReceived(): "
           << "Address [" << topic << "] not found" << std::endl;
     return;
   }
@@ -120,10 +126,4 @@ void SwarmRobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   // There's visibility between source and destination: run the user callback.
   auto const &userCallback = this->callbacks[topic];
   userCallback(_msg.src_address(), _msg.data());
-}
-
-//////////////////////////////////////////////////
-void SwarmRobotPlugin::Update(const common::UpdateInfo &_info)
-{
-  this->Update(_info);
 }
