@@ -24,12 +24,12 @@
 #include <string>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <swarm/SwarmRobotPlugin.hh>
+#include <swarm/RobotPlugin.hh>
 
 namespace swarm
 {
   /// \brief Class that shows a potential agent controller using the Swarm API
-  class TeamControllerPlugin : public gazebo::swarm::SwarmRobotPlugin
+  class TeamControllerPlugin : public swarm::RobotPlugin
   {
     /// \brief Class constructor.
     public: TeamControllerPlugin();
