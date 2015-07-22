@@ -37,8 +37,8 @@ namespace gazebo
 {
   namespace swarm
   {
-    /// \brief Model plugin that has been designed to be the base class from
-    /// which to derive when creating a plugin to control an agent.
+    /// \brief A Model plugin that is the base class for all agent plugins
+    /// in a swarm.
     /// This plugin exposes the following functionality to the derived plugins:
     ///
     /// * Configuration.
@@ -46,12 +46,12 @@ namespace gazebo
     ///                 from the model.
     ///
     /// * Communication.
-    ///     - Bind()    This method will bind an address to a "virtual socket"
-    ///                 to be able to receive messages from other agents.
-    ///     - SendTo()  This method will allow an agent to send data to other
+    ///     - Bind()    This method binds an address to a virtual socket, and
+    ///                 sends incoming messages to the specified callback.
+    ///     - SendTo()  This method allows an agent to send data to other
     ///                 individual agent (unicast), all the agents (broadcast),
     ///                 or a group of agents (multicast).
-    ///     - GetHost() This method will return the current agent's address.
+    ///     - GetHost() This method will return the agent's address.
     ///
     ///  * Motion.
     ///
@@ -65,13 +65,13 @@ namespace gazebo
       /// \brief Class destructor.
       public: virtual ~SwarmRobotPlugin();
 
-      /// \brief This method is called after the world has been loaded and give
-      /// you access to the SDF model file.
+      /// \brief This method is called after the world has been loaded and gives
+      /// child plugins access to the SDF model file.
       /// \param[in] _sdf Pointer to the SDF element of the model.
       protected: virtual void Load(sdf::ElementPtr _sdf);
 
       /// \brief This method can bind a local address and a port to a
-      /// "virtual socket". This is a required step if your agent needs to
+      /// virtual socket. This is a required step if your agent needs to
       /// receive messages.
       /// \param[in] _address Local address or "kMulticast". If you specify your
       /// local address, you will receive all the messages sent where the
