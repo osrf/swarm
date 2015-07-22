@@ -28,7 +28,7 @@ GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
 
 //////////////////////////////////////////////////
 TeamControllerPlugin::TeamControllerPlugin()
-  : SwarmRobotPlugin(),
+  : RobotPlugin(),
     msgsSent(0)
 {
 }

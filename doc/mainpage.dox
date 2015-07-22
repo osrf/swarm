@@ -12,7 +12,5 @@
    <h4>C++-API</h4>
      The C++-API contains a single header:
 
-     - SwarmPlugin.hh : The Swarm interface
-
-     Important functions:
+     - swarm::RobotPlugin : The Swarm interface
 */

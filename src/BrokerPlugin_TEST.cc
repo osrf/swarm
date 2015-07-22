@@ -16,11 +16,11 @@
 */
 
 #include "gtest/gtest.h"
-#include "swarm/SwarmBrokerPlugin.hh"
+#include "swarm/BrokerPlugin.hh"
 
 //////////////////////////////////////////////////
 /// \brief
-TEST(SwarmBrokerPluginTest, aTest)
+TEST(BrokerPluginTest, aTest)
 {
   SUCCEED();
 }

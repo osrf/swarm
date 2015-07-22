@@ -1,4 +1,4 @@
-package gazebo.swarm.msgs;
+package swarm.msgs;
 
 /// \ingroup swarm_msgs
 /// \interface Datagram
