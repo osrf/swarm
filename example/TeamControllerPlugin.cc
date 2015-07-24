@@ -98,21 +98,32 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     }
   }
 
-  if (this->Type() == GROUND)
+  // Simple example for moving each type of robot.
+  switch (this->Type())
   {
-    this->SetLinearVelocity(ignition::math::Vector3d(1, 0, 0));
-    this->SetAngularVelocity(ignition::math::Vector3d(0, 0, 0.1));
-  }
-  else if (this->Type() == ROTOR)
-  {
-    this->SetLinearVelocity(ignition::math::Vector3d(0, 0, 1));
-    this->SetAngularVelocity(ignition::math::Vector3d(0, 0, -0.1));
-  }
-  else if (this->Type() == FIXED_WING)
-  {
-    this->SetLinearVelocity(ignition::math::Vector3d(1, 0, 0));
-    this->SetAngularVelocity(ignition::math::Vector3d(0, -0.4, 0));
-  }
+    case GROUND:
+      {
+        this->SetLinearVelocity(ignition::math::Vector3d(1, 0, 0));
+        this->SetAngularVelocity(ignition::math::Vector3d(0, 0, 0.1));
+        break;
+      }
+    case ROTOR:
+      {
+        this->SetLinearVelocity(ignition::math::Vector3d(0, 0, 1));
+        this->SetAngularVelocity(ignition::math::Vector3d(0, 0, -0.1));
+      }
+    case FIXED_WING:
+      {
+        this->SetLinearVelocity(ignition::math::Vector3d(1, 0, 0));
+        this->SetAngularVelocity(ignition::math::Vector3d(0, -0.4, 0));
+      }
+    default:
+      {
+        gzerr << "Unknown vehicle type[" << this->Type() << "]\n";
+        break;
+      }
+  };
+
 }
 
 //////////////////////////////////////////////////
