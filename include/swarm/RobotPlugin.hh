@@ -230,8 +230,8 @@ namespace swarm
     ///
     /// This velocity will be constrained by the type of robot. For example,
     /// a ground vehicle will ignore the x and y components of the _velocity
-    ///
     /// vector, but a quadcopter will use all three.
+    ///
     /// \param[in] _velocity Velocity about the robot's local XYZ axes
     /// (radian/s).
     protected: void SetAngularVelocity(
