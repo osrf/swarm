@@ -19,6 +19,8 @@
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/physics/Model.hh>
+#include <gazebo/physics/Link.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include "msgs/datagram.pb.h"
 #include "swarm/RobotPlugin.hh"
@@ -26,6 +28,12 @@
 using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(RobotPlugin)
+
+//////////////////////////////////////////////////
+RobotPlugin::RobotPlugin()
+  : type(GROUND)
+{
+}
 
 //////////////////////////////////////////////////
 RobotPlugin::~RobotPlugin()
@@ -64,6 +72,81 @@ bool RobotPlugin::SendTo(const std::string &_data,
 }
 
 //////////////////////////////////////////////////
+void RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
+{
+  ignition::math::Pose3d myPose = this->model->GetWorldPose().Ign();
+
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            _velocity * ignition::math::Vector3d::UnitX);
+        this->model->SetLinearVel(linearVel);
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            _velocity);
+        this->model->SetLinearVel(linearVel);
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            _velocity * ignition::math::Vector3d::UnitX);
+        this->model->SetLinearVel(linearVel);
+        break;
+      }
+  };
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::SetLinearVelocity(const double _x, const double _y,
+    const double _z)
+{
+  this->SetLinearVelocity(ignition::math::Vector3d(_x, _y, _z));
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
+{
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        this->model->SetAngularVel(
+            _velocity * ignition::math::Vector3d::UnitZ);;
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        this->model->SetAngularVel(_velocity);
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
+        this->model->SetAngularVel(_velocity *
+            ignition::math::Vector3d(1, 1, 0));
+        break;
+      }
+  };
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
+    const double _z)
+{
+  this->SetAngularVelocity(ignition::math::Vector3d(_x, _y, _z));
+}
+
+//////////////////////////////////////////////////
 std::string RobotPlugin::Host() const
 {
   return this->address;
@@ -77,11 +160,26 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
 //////////////////////////////////////////////////
 void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
-                            sdf::ElementPtr _sdf)
+                       sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_model, "RobotPlugin _model pointer is NULL");
   GZ_ASSERT(_sdf, "RobotPlugin _sdf pointer is NULL");
   this->model = _model;
+
+  // Load the vehicle type
+  std::string vehicleType = _sdf->Get<std::string>("type");
+  if (vehicleType == "ground")
+    this->type = GROUND;
+  else if (vehicleType == "rotor")
+    this->type = ROTOR;
+  else if (vehicleType == "fixed_wing")
+    this->type = FIXED_WING;
+  else
+    gzerr << "Unknown vehicle type[" << vehicleType <<"] Using ground.\n";
+
+  // Collide with nothing
+  for (auto &link : this->model->GetLinks())
+    link->SetCollideMode("none");
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
@@ -126,4 +224,10 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   // There's visibility between source and destination: run the user callback.
   auto const &userCallback = this->callbacks[topic];
   userCallback(_msg.src_address(), _msg.data());
+}
+
+//////////////////////////////////////////////////
+RobotPlugin::VehicleType RobotPlugin::Type() const
+{
+  return this->type;
 }

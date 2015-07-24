@@ -1,0 +1,229 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <scene>
+      <shadows>false</shadows>
+      <ambient>1 1 1 1</ambient>
+    </scene>
+
+    <physics type="ode">
+      <ode>
+        <solver>
+          <type>world</type>
+        </solver>
+      </ode>
+      <max_step_size>0.01</max_step_size>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+
+    <!-- The lost person -->
+    <model name="lost_person">
+      <pose>100 100 0.5 0 0 0</pose>
+      <link name="link">
+        <kinematic>true</kinematic>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.0</mu>
+                <mu2>0.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <visual name="visual_ul">
+          <pose>0.5 0.5 0.5 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.04</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Red</name>
+            </script>
+          </material>
+        </visual>
+        <visual name="visual_ur">
+          <pose>0.5 -0.5 0.5 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.04</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+        <visual name="visual_lr">
+          <pose>-0.5 -0.5 0.5 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.04</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Blue</name>
+            </script>
+          </material>
+        </visual>
+        <visual name="visual_ll">
+          <pose>-0.5 0.5 0.5 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.04</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+
+      <plugin name="random" filename="libRandomVelocityPlugin.so">
+        <link>link</link>
+        <initial_velocity>0 0.2 0</initial_velocity>
+        <velocity_factor>0.5</velocity_factor>
+        <update_period>10</update_period>
+        <min_z>0</min_z>
+        <max_z>0</max_z>
+      </plugin>
+   </model>
+
+    <!-- Create the rotor vehicles -->
+    <% for y in 0..5 %>
+      <% for x in 0..5 %>
+        <% index = y * 6 + x %>
+        <model name="rotor_<%=index%>">
+          <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
+          <link name="link">
+            <kinematic>true</kinematic>
+            <gravity>false</gravity>
+            <collision name="collision">
+              <geometry>
+                <box>
+                  <size>0.2 .1 .1</size>
+                </box>
+              </geometry>
+            </collision>
+            <visual name="visual">
+              <geometry>
+                <box>
+                  <size>0.2 .1 .1</size>
+                </box>
+              </geometry>
+            </visual>
+            <visual name="visual_front">
+              <pose>0.07 0 0.04 0 0 0</pose>
+              <geometry>
+                <sphere>
+                  <radius>.04</radius>
+                </sphere>
+              </geometry>
+              <material>
+                <script>
+                  <name>Gazebo/Red</name>
+                </script>
+              </material>
+            </visual>
+
+            <visual name="visual_blade1">
+              <pose>0 0 0.055 0 0 0.78539</pose>
+              <geometry>
+                <box>
+                  <size>.4 0.02 0.01</size>
+                </box>
+              </geometry>
+              <material>
+                <script>
+                  <name>Gazebo/Green</name>
+                </script>
+              </material>
+            </visual>
+            <visual name="visual_blade2">
+              <pose>0 0 0.055 0 0 2.3562</pose>
+              <geometry>
+                <box>
+                  <size>.4 0.02 0.01</size>
+                </box>
+              </geometry>
+              <material>
+                <script>
+                  <name>Gazebo/Green</name>
+                </script>
+              </material>
+            </visual>
+          </link>
+
+          <!-- Load the plugin to control this robot -->
+          <plugin name="swarm_controller_<%=index%>"
+                  filename="libTeamControllerPlugin.so">
+            <type>rotor</type>
+            <address>192.168.2.<%=index+1%></address>
+            <num_messages>1</num_messages>
+          </plugin>
+        </model>
+      <% end %>
+    <% end %>
+
+    <!-- Load the plugin to deliver all the messages inside the swarm -->
+    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10000 10000</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10000 10000</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
+
