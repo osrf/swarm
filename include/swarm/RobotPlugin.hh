@@ -220,7 +220,7 @@ namespace swarm
     protected: void SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
-    /// \brief Set the robot's anular velocity, using Euler angles.
+    /// \brief Set the robot's angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -237,7 +237,7 @@ namespace swarm
     protected: void SetAngularVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's anular velocity, using Euler angles.
+    /// \brief Set the robot's angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///

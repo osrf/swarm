@@ -111,9 +111,9 @@
    </model>
 
     <!-- Create the fixed wing vehicles -->
-    
-      
-        
+
+
+
         <model name="fixed_wing_0">
           <pose>0.0 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -185,8 +185,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_1">
           <pose>0.4 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -258,8 +258,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_2">
           <pose>0.8 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -331,8 +331,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_3">
           <pose>1.2000000000000002 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -404,8 +404,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_4">
           <pose>1.6 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -477,8 +477,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_5">
           <pose>2.0 0.0 0.05 0 0 0</pose>
           <link name="link">
@@ -550,10 +550,10 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
-      
-        
+
+
+
+
         <model name="fixed_wing_6">
           <pose>0.0 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -625,8 +625,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_7">
           <pose>0.4 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -698,8 +698,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_8">
           <pose>0.8 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -771,8 +771,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_9">
           <pose>1.2000000000000002 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -844,8 +844,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_10">
           <pose>1.6 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -917,8 +917,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_11">
           <pose>2.0 0.4 0.05 0 0 0</pose>
           <link name="link">
@@ -990,10 +990,10 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
-      
-        
+
+
+
+
         <model name="fixed_wing_12">
           <pose>0.0 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1065,8 +1065,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_13">
           <pose>0.4 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1138,8 +1138,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_14">
           <pose>0.8 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1211,8 +1211,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_15">
           <pose>1.2000000000000002 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1284,8 +1284,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_16">
           <pose>1.6 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1357,8 +1357,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_17">
           <pose>2.0 0.8 0.05 0 0 0</pose>
           <link name="link">
@@ -1430,10 +1430,10 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
-      
-        
+
+
+
+
         <model name="fixed_wing_18">
           <pose>0.0 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1505,8 +1505,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_19">
           <pose>0.4 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1578,8 +1578,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_20">
           <pose>0.8 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1651,8 +1651,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_21">
           <pose>1.2000000000000002 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1724,8 +1724,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_22">
           <pose>1.6 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1797,8 +1797,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_23">
           <pose>2.0 1.2000000000000002 0.05 0 0 0</pose>
           <link name="link">
@@ -1870,10 +1870,10 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
-      
-        
+
+
+
+
         <model name="fixed_wing_24">
           <pose>0.0 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -1945,8 +1945,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_25">
           <pose>0.4 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -2018,8 +2018,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_26">
           <pose>0.8 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -2091,8 +2091,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_27">
           <pose>1.2000000000000002 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -2164,8 +2164,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_28">
           <pose>1.6 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -2237,8 +2237,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_29">
           <pose>2.0 1.6 0.05 0 0 0</pose>
           <link name="link">
@@ -2310,10 +2310,10 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
-      
-        
+
+
+
+
         <model name="fixed_wing_30">
           <pose>0.0 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2385,8 +2385,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_31">
           <pose>0.4 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2458,8 +2458,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_32">
           <pose>0.8 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2531,8 +2531,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_33">
           <pose>1.2000000000000002 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2604,8 +2604,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_34">
           <pose>1.6 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2677,8 +2677,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-        
+
+
         <model name="fixed_wing_35">
           <pose>2.0 2.0 0.05 0 0 0</pose>
           <link name="link">
@@ -2750,8 +2750,8 @@
             <num_messages>1</num_messages>
           </plugin>
         </model>
-      
-    
+
+
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
