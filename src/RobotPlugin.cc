@@ -167,15 +167,22 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   this->model = _model;
 
   // Load the vehicle type
-  std::string vehicleType = _sdf->Get<std::string>("type");
-  if (vehicleType == "ground")
-    this->type = GROUND;
-  else if (vehicleType == "rotor")
-    this->type = ROTOR;
-  else if (vehicleType == "fixed_wing")
-    this->type = FIXED_WING;
+  if (_sdf->HasElement("type"))
+  {
+    std::string vehicleType = _sdf->Get<std::string>("type");
+    if (vehicleType == "ground")
+      this->type = GROUND;
+    else if (vehicleType == "rotor")
+      this->type = ROTOR;
+    else if (vehicleType == "fixed_wing")
+      this->type = FIXED_WING;
+    else
+      gzerr << "Unknown vehicle type[" << vehicleType <<"], using ground.\n";
+  }
   else
-    gzerr << "Unknown vehicle type[" << vehicleType <<"] Using ground.\n";
+  {
+    gzerr << "No vehicle type specified, using ground.\n";
+  }
 
   // Collide with nothing
   for (auto &link : this->model->GetLinks())
