@@ -17,3 +17,4 @@ link_directories(${SWARM_LIBRARY_DIRS})
 # Generate the team's plugin for controlling a robot.
 add_library(TeamControllerPlugin SHARED TeamControllerPlugin.cc)
 target_link_libraries(TeamControllerPlugin ${SWARM_LIBRARIES})
+install (TARGETS TeamControllerPlugin DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT shlib)
