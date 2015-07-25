@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <string>
+#include <vector>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
