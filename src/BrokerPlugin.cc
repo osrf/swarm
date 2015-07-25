@@ -64,7 +64,10 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 {
   sdf::ElementPtr worldSDF = _sdf->GetParent();
   if (!worldSDF)
+  {
+    gzerr << "BrokerPlugin::ReadSwarmFromSDF() Unable to read world SDF\n";
     return;
+  }
 
   // Iterate over all the models looking for <address> inside <plugin>.
   auto modelElem = worldSDF->GetElement("model");
@@ -103,10 +106,10 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
   }
 
   if (this->swarm.empty())
-    gzerr << "BrokerPlugin::ReadSwarmFromSDF: Unable to find any addresses\n";
+    gzerr << "BrokerPlugin::ReadSwarmFromSDF: No members found" << std::endl;
   else
     gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm.size()
-          << " members of the team found" << std::endl;
+          << " swarm members found" << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -125,7 +128,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
-    // Sanity check: Make sure that the sender is member of the swarm.
+    // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm.find(msg.src_address()) == this->swarm.end())
     {
       gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
@@ -151,14 +154,17 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 //////////////////////////////////////////////////
 void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 {
+  GZ_ASSERT(this->swarm.find(_address) != this->swarm.end(),
+            "_address not found in the swarm.");
+
   auto swarmMember = this->swarm[_address];
 
   // Update the neighbor list for this robot.
   // ToDo: For now we include all the robots as neighbors.
   //       In the future we should do something smarter.
   swarmMember->neighbors.clear();
-  for (auto const &robot : this->swarm)
-    swarmMember->neighbors.push_back(robot.first);
+  for (auto const &member : this->swarm)
+    swarmMember->neighbors.push_back(member.first);
 
   // Fill the message with the new neighbor list.
   swarm::msgs::Neighbor_V msg;

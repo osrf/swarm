@@ -57,7 +57,7 @@ bool RobotPlugin::SendTo(const std::string &_data,
   msg.set_dst_port(_port);
   msg.set_data(_data);
 
-  // ToDo: Include here the neighbors list.
+  // The neighbors list will be included in the broker.
 
   // Send the message from the agent to the broker.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
@@ -199,8 +199,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Read the robot address.
   if (!_sdf->HasElement("address"))
   {
-    gzerr << "RobotPlugin::Load(): Unable to find the <address> parameter"
-          << std::endl;
+    gzerr << "RobotPlugin::Load(): Unable to find the <address> parameter\n";
     return;
   }
 
@@ -210,8 +209,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   if (!this->node.Advertise(kBrokerIncomingTopic))
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::Load(): Error "
-          << "trying to advertise topic [" << kBrokerIncomingTopic << "]"
-          << std::endl;
+          << "trying to advertise topic [" << kBrokerIncomingTopic << "]\n";
   }
 
   // Subscribe to the topic for receiving neighbor updates.
