@@ -25,6 +25,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <vector>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
@@ -54,7 +55,7 @@ namespace swarm
   ///                   or a group of agents (multicast).
   ///     - Host()      This method will return the agent's address.
   ///     - Neighbors() This method returns the addresses of other vehicles that
-  ///                   are under the communication range of this robot.
+  ///                   are inside the communication range of this robot.
   ///
   ///  * Motion.
   ///
@@ -83,6 +84,7 @@ namespace swarm
 
     /// \brief This method is called after the world has been loaded and gives
     /// child plugins access to the SDF model file.
+    ///
     /// \param[in] _sdf Pointer to the SDF element of the model.
     protected: virtual void Load(sdf::ElementPtr _sdf);
 
@@ -96,6 +98,7 @@ namespace swarm
     /// you will be subscribed to the multicast group <"kMulticast, port>".
     /// You will receive all the messages sent from any node to this multicast
     /// group.
+    ///
     /// \param[in] _cb Callback function to be executed when a new message is
     /// received associated to the specified <_address, port>.
     /// In the callback, "_srcAddress" contains the address of the sender of
@@ -169,6 +172,7 @@ namespace swarm
     /// In the case of broadcast and multicast communications your node
     /// will receive your own message if you're bind to your local or the
     /// multicast address.
+    ///
     /// \param[in] _port Destination port.
     /// \param[in] _data Payload.
     /// \return True when success or false if the underlying library used for
@@ -180,10 +184,12 @@ namespace swarm
 
     /// \brief Get your local address. This address should be specified as a
     /// SDF model parameter.
+    ///
     /// \return The local address.
     protected: std::string Host() const;
 
     /// \brief Get the list of local neighbors.
+    ///
     /// \return A vector of addresses from your local neighbors.
     protected: std::vector<std::string> Neighbors() const;
 
@@ -264,6 +270,7 @@ namespace swarm
                    const double _z);
 
     /// \brief Update the plugin.
+    ///
     /// \param[in] _info Update information provided by the server.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
@@ -276,11 +283,19 @@ namespace swarm
     /// broker. The broker will process and forward the message, that will be
     /// received here. Inside this method we will execute the appropritate
     /// user's callback.
+    ///
     /// \param[in] _topic Topic name associated to the new message received.
     /// \param[in] _msg New message received.
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
+    /// \brief Callback executed each time that new neighbor update is received.
+    /// The messages are coming from the broker. The broker decides which are
+    /// the robots inside the communication range of each other vehicle and
+    /// notifies these updates.
+    ///
+    /// \param[in] _topic Topic name associated to the new message received.
+    /// \param[in] _msg New message received containing the list of neighbors.
     private: void OnNeighborsReceived(const std::string &_topic,
                                       const msgs::Neighbor_V &_msg);
 

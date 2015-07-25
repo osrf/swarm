@@ -70,26 +70,32 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
   auto modelElem = worldSDF->GetElement("model");
   while (modelElem)
   {
-    if (modelElem->HasElement("plugin"))
+    if (modelElem->HasElement("plugin") && modelElem->HasAttribute("name"))
     {
-      auto pluginElem = modelElem->GetElement("plugin");
+      auto const &pluginElem = modelElem->GetElement("plugin");
       if (pluginElem->HasElement("address"))
       {
         std::string address = pluginElem->Get<std::string>("address");
         std::string name = modelElem->GetAttribute("name")->GetAsString();
-        auto model = this->world->GetModel(name);
-        if (!model)
-          gzerr << "Error getting a model pointer" << std::endl;
+        auto const &model = this->world->GetModel(name);
+        if (model)
+        {
+          // Create a new SwarmMember for storing the vehicle's information.
+          auto newMember = std::make_shared<SwarmMember>();
+          newMember->address = address;
+          newMember->name = name;
+          newMember->model = model;
+          this->swarm[address] = newMember;
 
-        // Create a new SwarmMember for storing the member's information.
-        auto newMember = std::make_shared<SwarmMember>();
-        newMember->address = address;
-        newMember->name = name;
-        newMember->model = model;
-        this->swarm[address] = newMember;
-
-        std::string topic = "/swarm/" + address + "/neighbors";
-        this->node.Advertise(topic);
+          // Advertise the topic for future neighbor updates for this vehicle.
+          std::string topic = "/swarm/" + address + "/neighbors";
+          this->node.Advertise(topic);
+        }
+        else
+        {
+          gzerr << "BrokerPlugin::ReadSwarmFromSDF(): Error getting a model"
+                << "pointer for robot [" << name << "]" << std::endl;
+        }
       }
     }
 
@@ -149,6 +155,7 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   // Update the neighbor list for this robot.
   // ToDo: For now we include all the robots as neighbors.
+  //       In the future we should do something smarter.
   swarmMember->neighbors.clear();
   for (auto const &robot : this->swarm)
     swarmMember->neighbors.push_back(robot.first);
