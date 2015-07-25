@@ -33,6 +33,5 @@ ign_add_library(${PROJECT_LIB_ROBOT_NAME} ${robot_plugin_sources})
 target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
                       ${PROJECT_LIB_MSGS_NAME}
                       ${PROTOBUF_LIBRARY}
-
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_ROBOT_NAME})
