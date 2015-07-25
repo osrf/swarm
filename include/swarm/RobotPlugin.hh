@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
@@ -30,8 +31,10 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
+#include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
+#include "msgs/neighbor_v.pb.h"
 
 namespace swarm
 {
@@ -44,12 +47,14 @@ namespace swarm
   ///                 from the model.
   ///
   /// * Communication.
-  ///     - Bind()    This method binds an address to a virtual socket, and
-  ///                 sends incoming messages to the specified callback.
-  ///     - SendTo()  This method allows an agent to send data to other
-  ///                 individual agent (unicast), all the agents (broadcast),
-  ///                 or a group of agents (multicast).
-  ///     - Host() This method will return the agent's address.
+  ///     - Bind()      This method binds an address to a virtual socket, and
+  ///                   sends incoming messages to the specified callback.
+  ///     - SendTo()    This method allows an agent to send data to other
+  ///                   individual agent (unicast), all the agents (broadcast),
+  ///                   or a group of agents (multicast).
+  ///     - Host()      This method will return the agent's address.
+  ///     - Neighbors() This method returns the addresses of other vehicles that
+  ///                   are under the communication range of this robot.
   ///
   ///  * Motion.
   ///
@@ -57,8 +62,21 @@ namespace swarm
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
+    /// \brief The type of vehicle.
+    public: enum VehicleType
+            {
+              /// \brief A ground vehicle.
+              GROUND = 0,
+
+              /// \brief A rotorcraft aerial vehicle.
+              ROTOR = 1,
+
+              /// \brief A fixed wing aerial vehicle.
+              FIXED_WING = 2
+            };
+
     /// \brief Class constructor.
-    public: RobotPlugin() = default;
+    public: RobotPlugin();
 
     /// \brief Class destructor.
     public: virtual ~RobotPlugin();
@@ -165,6 +183,86 @@ namespace swarm
     /// \return The local address.
     protected: std::string Host() const;
 
+    /// \brief Get the list of local neighbors.
+    /// \return A vector of addresses from your local neighbors.
+    protected: std::vector<std::string> Neighbors() const;
+
+    /// \brief Get the type of vehicle. The type of vehicle is set in the
+    /// SDF world file using the <type> XML element.
+    /// \return The enum value that specifies what type of vehicles this
+    /// plugin controls.
+    protected: VehicleType Type() const;
+
+    /// \brief Set the robot's linear velocity.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back,
+    /// * y = left/right,
+    /// * z = up/down.
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the y & z components of the _velocity
+    /// vector, but a rotorcraft will use all three.
+    ///
+    /// \param[in] _velocity The velocity vector in the robot's local
+    /// coordinate frame (m/s).
+    protected: void SetLinearVelocity(
+                   const ignition::math::Vector3d &_velocity);
+
+    /// \brief Set the robot's linear velocity.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back,
+    /// * y = left/right,
+    /// * z = up/down.
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the y & z components of the _velocity
+    /// vector, but a rotorcraft will use all three.
+    ///
+    /// \param[in] _x X velocity in the robot's local coordinate frame (m/s).
+    /// \param[in] _y Y velocity in the robot's local coordinate frame (m/s).
+    /// \param[in] _z Z velocity in the robot's local coordinate frame (m/s).
+    protected: void SetLinearVelocity(const double _x,
+                   const double _y, const double _z);
+
+    /// \brief Set the robot's angular velocity, using Euler angles.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = rotate about x-axis (roll),
+    /// * y = rotate about y-axis (pitch),
+    /// * z = rotate about z-axis (yaw).
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the x and y components of the _velocity
+    /// vector, but a quadcopter will use all three.
+    ///
+    /// \param[in] _velocity Velocity about the robot's local XYZ axes
+    /// (radian/s).
+    protected: void SetAngularVelocity(
+                   const ignition::math::Vector3d &_velocity);
+
+    /// \brief Set the robot's angular velocity, using Euler angles.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = rotate about x-axis (roll),
+    /// * y = rotate about y-axis (pitch),
+    /// * z = rotate about z-axis (yaw).
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the x and y components of the _velocity
+    /// vector, but a quadcopter will use all three.
+    ///
+    /// \param[in] _x Velocity about the robot's local X axis (radian/s).
+    /// \param[in] _y Velocity about the robot's local Y axis (radian/s).
+    /// \param[in] _z Velocity about the robot's local Z axis (radian/s).
+    protected: void SetAngularVelocity(const double _x, const double _y,
+                   const double _z);
+
     /// \brief Update the plugin.
     /// \param[in] _info Update information provided by the server.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
@@ -182,6 +280,9 @@ namespace swarm
     /// \param[in] _msg New message received.
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
+
+    private: void OnNeighborsReceived(const std::string &_topic,
+                                      const msgs::Neighbor_V &_msg);
 
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
@@ -202,6 +303,9 @@ namespace swarm
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
 
+    /// \brief Addresses of all the local neighbors.
+    protected: std::vector<std::string> neighbors;
+
     /// \brief The transport node.
     private: ignition::transport::Node node;
 
@@ -217,6 +321,12 @@ namespace swarm
 
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;
+
+    /// \brief Type of vehicle.
+    private: VehicleType type;
+
+    /// \brief Mutex to protect shared member variables.
+    private: mutable std::mutex mutex;
   };
 }
 #endif

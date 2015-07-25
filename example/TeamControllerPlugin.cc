@@ -96,6 +96,11 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
             << std::endl;
       return;
     }
+
+    // Show the list of neighbors.
+    gzmsg << "[" << this->Host() << "] Neighbors:" << std::endl;
+    for (auto const &neighbor : this->Neighbors())
+      gzmsg << "\t" << neighbor << std::endl;
   }
 }
 

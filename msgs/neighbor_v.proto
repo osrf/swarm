@@ -1,0 +1,11 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Neighbor_V
+/// \brief A message containing a list of neighbor addresses.
+
+message Neighbor_V
+{
+  /// \brief List of neighbors.
+  repeated string neighbors = 1;
+}
