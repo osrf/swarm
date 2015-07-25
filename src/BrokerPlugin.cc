@@ -119,13 +119,22 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
-    // ToDo: Get the list of neighbors of the source node and include it in the
-    // outgoing message.
+    // Sanity check: Make sure that the sender is member of the swarm.
+    if (this->swarm.find(msg.src_address()) == this->swarm.end())
+    {
+      gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
+            << msg.src_address() << "] is not registered as a member of the "
+            << "swarm" << std::endl;
+      continue;
+    }
+
+    // Add the list of neighbors of the sender to the outgoing message.
+    for (auto const &neighbor : this->swarm[msg.src_address()]->neighbors)
+      msg.add_neighbors(neighbor);
 
     // Create the topic name for the message destination.
     const std::string topic =
-        "/swarm/" + msg.dst_address() + "/" +
-        std::to_string(msg.dst_port());
+        "/swarm/" + msg.dst_address() + "/" + std::to_string(msg.dst_port());
 
     // Forward the message to the destination.
     this->node.Advertise(topic);
@@ -149,6 +158,7 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
   for (auto const &neighbor : swarmMember->neighbors)
     msg.add_neighbors(neighbor);
 
+  // Notify the node with its updated list of neighbors.
   std::string topic = "/swarm/" + swarmMember->address + "/neighbors";
   this->node.Publish(topic, msg);
 }

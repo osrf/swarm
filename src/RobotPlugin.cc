@@ -241,9 +241,23 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     return;
   }
 
-  // There's visibility between source and destination: run the user callback.
-  auto const &userCallback = this->callbacks[topic];
-  userCallback(_msg.src_address(), _msg.data());
+  // Ignore if the address of this robot was not a neighbor of the sender.
+  bool visible = false;
+  for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  {
+    if (_msg.neighbors(i) == this->Host())
+    {
+      visible = true;
+      break;
+    }
+  }
+
+  if (visible)
+  {
+    // There's visibility between source and destination: run the user callback.
+    auto const &userCallback = this->callbacks[topic];
+    userCallback(_msg.src_address(), _msg.data());
+  }
 }
 
 //////////////////////////////////////////////////
