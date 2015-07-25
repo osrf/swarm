@@ -289,7 +289,7 @@ namespace swarm
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
-    /// \brief Callback executed each time that new neighbor update is received.
+    /// \brief Callback executed each time that a neighbor update is received.
     /// The messages are coming from the broker. The broker decides which are
     /// the robots inside the communication range of each other vehicle and
     /// notifies these updates.
