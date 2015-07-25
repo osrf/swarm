@@ -15,14 +15,14 @@
  *
 */
 
+#include <mutex>
 #include <string>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/physics/physics.hh>
 #include "msgs/datagram.pb.h"
+#include "msgs/neighbor_v.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -153,6 +153,13 @@ std::string RobotPlugin::Host() const
 }
 
 //////////////////////////////////////////////////
+std::vector<std::string> RobotPlugin::Neighbors() const
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+  return this->neighbors;
+}
+
+//////////////////////////////////////////////////
 void RobotPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   this->Update(_info);
@@ -206,6 +213,12 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
           << std::endl;
   }
 
+  // Subscribe to the topic for receiving neighbor updates.
+  const std::string kNeighborUpdatesTopic =
+      "/swarm/" + this->Host() + "/neighbors";
+  this->node.Subscribe(
+      kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
+
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
 
@@ -231,6 +244,19 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   // There's visibility between source and destination: run the user callback.
   auto const &userCallback = this->callbacks[topic];
   userCallback(_msg.src_address(), _msg.data());
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
+    const msgs::Neighbor_V &_msg)
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+  this->neighbors.clear();
+  for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  {
+    if (_msg.neighbors(i) != this->Host())
+      this->neighbors.push_back(_msg.neighbors(i));
+  }
 }
 
 //////////////////////////////////////////////////

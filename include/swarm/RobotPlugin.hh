@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
@@ -33,6 +34,7 @@
 #include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
+#include "msgs/neighbor_v.pb.h"
 
 namespace swarm
 {
@@ -45,12 +47,14 @@ namespace swarm
   ///                 from the model.
   ///
   /// * Communication.
-  ///     - Bind()    This method binds an address to a virtual socket, and
-  ///                 sends incoming messages to the specified callback.
-  ///     - SendTo()  This method allows an agent to send data to other
-  ///                 individual agent (unicast), all the agents (broadcast),
-  ///                 or a group of agents (multicast).
-  ///     - Host() This method will return the agent's address.
+  ///     - Bind()      This method binds an address to a virtual socket, and
+  ///                   sends incoming messages to the specified callback.
+  ///     - SendTo()    This method allows an agent to send data to other
+  ///                   individual agent (unicast), all the agents (broadcast),
+  ///                   or a group of agents (multicast).
+  ///     - Host()      This method will return the agent's address.
+  ///     - Neighbors() This method returns the addresses of other vehicles that
+  ///                   are under the communication range of this robot.
   ///
   ///  * Motion.
   ///
@@ -179,6 +183,10 @@ namespace swarm
     /// \return The local address.
     protected: std::string Host() const;
 
+    /// \brief Get the list of local neighbors.
+    /// \return A vector of addresses from your local neighbors.
+    protected: std::vector<std::string> Neighbors() const;
+
     /// \brief Get the type of vehicle. The type of vehicle is set in the
     /// SDF world file using the <type> XML element.
     /// \return The enum value that specifies what type of vehicles this
@@ -273,6 +281,9 @@ namespace swarm
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
+    private: void OnNeighborsReceived(const std::string &_topic,
+                                      const msgs::Neighbor_V &_msg);
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -292,6 +303,9 @@ namespace swarm
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
 
+    /// \brief Addresses of all the local neighbors.
+    protected: std::vector<std::string> neighbors;
+
     /// \brief The transport node.
     private: ignition::transport::Node node;
 
@@ -310,6 +324,9 @@ namespace swarm
 
     /// \brief Type of vehicle.
     private: VehicleType type;
+
+    /// \brief Mutex to protect shared member variables.
+    private: mutable std::mutex mutex;
   };
 }
 #endif

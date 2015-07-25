@@ -24,6 +24,7 @@
 #include <mutex>
 #include <queue>
 #include <string>
+#include <vector>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
@@ -34,6 +35,21 @@
 
 namespace swarm
 {
+  class IGNITION_VISIBLE SwarmMember
+  {
+    /// \brief Gazebo name used for this model.
+    public: std::string name;
+
+    /// \brief Address of the robot. E.g.: 192.168.1.2
+    public: std::string address;
+
+    /// \brief Model pointer.
+    public: gazebo::physics::ModelPtr model;
+
+    /// \brief List of neighbors for this robot.
+    public: std::vector<std::string> neighbors;
+  };
+
   /// \brief This is a world plugin designed to centralize all the messages
   /// sent by the members of the swarm. This plugin subscribes to the
   /// "/swarm/broker/incoming" topic, on which all the agents publish their
@@ -54,9 +70,15 @@ namespace swarm
     public: virtual void Load(gazebo::physics::WorldPtr _world,
                               sdf::ElementPtr _sdf);
 
+    /// \brief
+    private: void ReadSwarmFromSDF(sdf::ElementPtr _sdf);
+
     /// \brief Update callback for the plugin.
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
+
+    /// \brief
+    private: void UpdateNeighborList(const std::string &_address);
 
     /// \brief Callback executed when a new message is received.
     /// \param[in] _topic Topic name associated to the new message received.
@@ -78,6 +100,9 @@ namespace swarm
 
     /// \brief Queue to store the incoming messages received from the agents.
     private: std::queue<msgs::Datagram> incomingMsgs;
+
+    /// \brief Vector containing all the addresses of the swarm.
+    private: std::map<std::string, std::shared_ptr<SwarmMember>> swarm;
 
     /// \brief Mutex for protecting the queue.
     private: std::mutex mutex;
