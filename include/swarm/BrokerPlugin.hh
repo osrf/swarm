@@ -21,6 +21,7 @@
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
+#include <map>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -35,6 +36,7 @@
 
 namespace swarm
 {
+  /// \brief Class used to store information about a member of the Swarm.
   class IGNITION_VISIBLE SwarmMember
   {
     /// \brief Gazebo name used for this model.
