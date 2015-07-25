@@ -76,18 +76,23 @@ namespace swarm
     /// all the members of the swarm. For each member of the swarm we store its
     /// gazebo model name, its address, a pointer to the gazebo model and its
     /// list of neighbors. The key of the map is the address of the robot.
+    ///
     /// \param[in] _sdf SDF for this plugin.
     private: void ReadSwarmFromSDF(sdf::ElementPtr _sdf);
 
     /// \brief Update callback for the plugin.
+    ///
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
 
-    /// \brief Update the neighbor list for a single robot.
+    /// \brief Update the neighbor list for a single robot and notifies the
+    /// robot with the updated list.
+    ///
     /// \param[in] _address Address of the robot to be updated.
     private: void UpdateNeighborList(const std::string &_address);
 
     /// \brief Callback executed when a new message is received.
+    ///
     /// \param[in] _topic Topic name associated to the new message received.
     /// \param[in] _msg The new message received.
     private: void OnMsgReceived(const std::string &_topic,
