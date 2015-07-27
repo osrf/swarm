@@ -36,3 +36,7 @@ macro (check_gcc_visibility)
   check_cxx_compiler_flag(-fvisibility=hidden GCC_SUPPORTS_VISIBILITY)
 endmacro()
 
+# gtest apparently needs boost::system. Boost_LIBRARIES is added to the link
+# line for tests in TestUtils.cmake.
+include(FindBoost)
+find_package(Boost REQUIRED system)
