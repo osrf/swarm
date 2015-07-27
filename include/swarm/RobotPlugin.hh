@@ -30,6 +30,7 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
+#include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 
@@ -57,8 +58,21 @@ namespace swarm
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
+    /// \brief The type of vehicle.
+    public: enum VehicleType
+            {
+              /// \brief A ground vehicle.
+              GROUND = 0,
+
+              /// \brief A rotorcraft aerial vehicle.
+              ROTOR = 1,
+
+              /// \brief A fixed wing aerial vehicle.
+              FIXED_WING = 2
+            };
+
     /// \brief Class constructor.
-    public: RobotPlugin() = default;
+    public: RobotPlugin();
 
     /// \brief Class destructor.
     public: virtual ~RobotPlugin();
@@ -165,6 +179,82 @@ namespace swarm
     /// \return The local address.
     protected: std::string Host() const;
 
+    /// \brief Get the type of vehicle. The type of vehicle is set in the
+    /// SDF world file using the <type> XML element.
+    /// \return The enum value that specifies what type of vehicles this
+    /// plugin controls.
+    protected: VehicleType Type() const;
+
+    /// \brief Set the robot's linear velocity.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back,
+    /// * y = left/right,
+    /// * z = up/down.
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the y & z components of the _velocity
+    /// vector, but a rotorcraft will use all three.
+    ///
+    /// \param[in] _velocity The velocity vector in the robot's local
+    /// coordinate frame (m/s).
+    protected: void SetLinearVelocity(
+                   const ignition::math::Vector3d &_velocity);
+
+    /// \brief Set the robot's linear velocity.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back,
+    /// * y = left/right,
+    /// * z = up/down.
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the y & z components of the _velocity
+    /// vector, but a rotorcraft will use all three.
+    ///
+    /// \param[in] _x X velocity in the robot's local coordinate frame (m/s).
+    /// \param[in] _y Y velocity in the robot's local coordinate frame (m/s).
+    /// \param[in] _z Z velocity in the robot's local coordinate frame (m/s).
+    protected: void SetLinearVelocity(const double _x,
+                   const double _y, const double _z);
+
+    /// \brief Set the robot's angular velocity, using Euler angles.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = rotate about x-axis (roll),
+    /// * y = rotate about y-axis (pitch),
+    /// * z = rotate about z-axis (yaw).
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the x and y components of the _velocity
+    /// vector, but a quadcopter will use all three.
+    ///
+    /// \param[in] _velocity Velocity about the robot's local XYZ axes
+    /// (radian/s).
+    protected: void SetAngularVelocity(
+                   const ignition::math::Vector3d &_velocity);
+
+    /// \brief Set the robot's angular velocity, using Euler angles.
+    ///
+    /// The velocity is applied in the robot's local coordinate frame, where
+    ///
+    /// * x = rotate about x-axis (roll),
+    /// * y = rotate about y-axis (pitch),
+    /// * z = rotate about z-axis (yaw).
+    ///
+    /// This velocity will be constrained by the type of robot. For example,
+    /// a ground vehicle will ignore the x and y components of the _velocity
+    /// vector, but a quadcopter will use all three.
+    ///
+    /// \param[in] _x Velocity about the robot's local X axis (radian/s).
+    /// \param[in] _y Velocity about the robot's local Y axis (radian/s).
+    /// \param[in] _z Velocity about the robot's local Z axis (radian/s).
+    protected: void SetAngularVelocity(const double _x, const double _y,
+                   const double _z);
+
     /// \brief Update the plugin.
     /// \param[in] _info Update information provided by the server.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
@@ -217,6 +307,9 @@ namespace swarm
 
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;
+
+    /// \brief Type of vehicle.
+    private: VehicleType type;
   };
 }
 #endif
