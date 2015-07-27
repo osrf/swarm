@@ -23,6 +23,7 @@
       <plugin name="swarm_controller_1" filename="libTeamControllerPlugin.so">
         <address>192.168.2.1</address>
         <num_messages>1</num_messages>
+        <type>ground</type>
       </plugin>
     </model>
 
@@ -37,6 +38,7 @@
       <plugin name="swarm_controller_2" filename="libTeamControllerPlugin.so">
         <address>192.168.2.2</address>
         <num_messages>1</num_messages>
+        <type>ground</type>
       </plugin>
     </model>
 
