@@ -96,6 +96,16 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
             << std::endl;
       return;
     }
+
+    // Show the list of neighbors.
+    if (this->Neighbors().empty())
+      gzmsg << "[" << this->Host() << "] Neighbors: EMPTY" << std::endl;
+    else
+    {
+      gzmsg << "[" << this->Host() << "] Neighbors:" << std::endl;
+      for (auto const &neighbor : this->Neighbors())
+        gzmsg << "\t" << neighbor << std::endl;
+    }
   }
 
   // Simple example for moving each type of robot.

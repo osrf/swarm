@@ -15,14 +15,15 @@
  *
 */
 
+#include <mutex>
 #include <string>
+#include <vector>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/physics/physics.hh>
 #include "msgs/datagram.pb.h"
+#include "msgs/neighbor_v.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -56,7 +57,7 @@ bool RobotPlugin::SendTo(const std::string &_data,
   msg.set_dst_port(_port);
   msg.set_data(_data);
 
-  // ToDo: Include here the neighbors list.
+  // The neighbors list will be included in the broker.
 
   // Send the message from the agent to the broker.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
@@ -153,6 +154,13 @@ std::string RobotPlugin::Host() const
 }
 
 //////////////////////////////////////////////////
+std::vector<std::string> RobotPlugin::Neighbors() const
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+  return this->neighbors;
+}
+
+//////////////////////////////////////////////////
 void RobotPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   this->Update(_info);
@@ -191,8 +199,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Read the robot address.
   if (!_sdf->HasElement("address"))
   {
-    gzerr << "RobotPlugin::Load(): Unable to find the <address> parameter"
-          << std::endl;
+    gzerr << "RobotPlugin::Load(): Unable to find the <address> parameter\n";
     return;
   }
 
@@ -202,9 +209,14 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   if (!this->node.Advertise(kBrokerIncomingTopic))
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::Load(): Error "
-          << "trying to advertise topic [" << kBrokerIncomingTopic << "]"
-          << std::endl;
+          << "trying to advertise topic [" << kBrokerIncomingTopic << "]\n";
   }
+
+  // Subscribe to the topic for receiving neighbor updates.
+  const std::string kNeighborUpdatesTopic =
+      "/swarm/" + this->Host() + "/neighbors";
+  this->node.Subscribe(
+      kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
 
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
@@ -228,9 +240,36 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     return;
   }
 
-  // There's visibility between source and destination: run the user callback.
-  auto const &userCallback = this->callbacks[topic];
-  userCallback(_msg.src_address(), _msg.data());
+  // Ignore if the address of this robot was not a neighbor of the sender.
+  bool visible = false;
+  for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  {
+    if (_msg.neighbors(i) == this->Host())
+    {
+      visible = true;
+      break;
+    }
+  }
+
+  if (visible)
+  {
+    // There's visibility between source and destination: run the user callback.
+    auto const &userCallback = this->callbacks[topic];
+    userCallback(_msg.src_address(), _msg.data());
+  }
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
+    const msgs::Neighbor_V &_msg)
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+  this->neighbors.clear();
+  for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  {
+    if (_msg.neighbors(i) != this->Host())
+      this->neighbors.push_back(_msg.neighbors(i));
+  }
 }
 
 //////////////////////////////////////////////////
