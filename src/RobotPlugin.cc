@@ -148,6 +148,20 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
+bool RobotPlugin::GetPose(ignition::math::Angle& _latitude,
+                          ignition::math::Angle& _longitude,
+                          double& _altitude)
+{
+  if (!this->gps)
+    return false;
+  // TODO: Consider adding noise (or just let Gazebo do it?).
+  _latitude = this->gps->Latitude();
+  _longitude = this->gps->Longitude();
+  _altitude = this->gps->GetAltitude();
+  return true;
+}
+
+//////////////////////////////////////////////////
 std::string RobotPlugin::Host() const
 {
   return this->address;
@@ -204,6 +218,35 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   this->address = _sdf->Get<std::string>("address");
+
+  // Get the GPS sensor.  This lookup is brittle, in that it makes assumptions
+  // about the names of the link and sensor.  It would be more robust to give
+  // the sensor name explicitly as a parameter to the plugin.
+  gazebo::sensors::SensorManager *mgr = gazebo::sensors::SensorManager::Instance();
+  sdf::ElementPtr modelSDF = _sdf->GetParent();
+  sdf::ElementPtr linkSDF = modelSDF->GetElement("link");
+  while (linkSDF && !this->gps)
+  {
+    sdf::ElementPtr sensorSDF = linkSDF->GetElement("sensor");
+    while (sensorSDF && !this->gps)
+    {
+      if (sensorSDF->HasAttribute("type") &&
+          (sensorSDF->Get<std::string>("type") == "gps") &&
+          sensorSDF->HasAttribute("name"))
+      {
+        std::string name = sensorSDF->Get<std::string>("name");
+        gazebo::sensors::SensorPtr sensor = mgr->GetSensor(name);
+        this->gps = boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(sensor);
+      }
+      sensorSDF = sensorSDF->GetNextElement("sensor");
+    }
+    linkSDF = linkSDF->GetNextElement("link");
+  }
+  if (!this->gps)
+  {
+    gzwarn << "No GPS sensor found on robot with address " << this->address <<
+      std::endl;
+  }
 
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Advertise(kBrokerIncomingTopic))

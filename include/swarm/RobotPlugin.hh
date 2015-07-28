@@ -29,6 +29,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/sensors/sensors.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
@@ -269,6 +270,17 @@ namespace swarm
     protected: void SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
+    /// \brief Get the robot's current pose from its GPS sensor.
+    ///
+    /// \param[out] _latitude Robot latitude will be written here.
+    /// \param[out] _longitude Robot longitude will be written here.
+    /// \param[out] _altitude Robot altitude will be written here.
+    /// \return True if the call succeeded, false otherwise (the output
+    /// parameters will not be filled out in the failure case).
+    protected: bool GetPose(ignition::math::Angle& _latitude,
+                            ignition::math::Angle& _longitude,
+                            double& _altitude);
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -339,6 +351,9 @@ namespace swarm
 
     /// \brief Type of vehicle.
     private: VehicleType type;
+
+    /// \brief Point to GPS sensor
+    private: gazebo::sensors::GpsSensorPtr gps;
 
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;
