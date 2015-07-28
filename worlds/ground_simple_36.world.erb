@@ -1,6 +1,15 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="default">
+    <!-- Anchor our GPS sensors to a real place: Camp Roberts
+         http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
+    <spherical_coordinates>
+      <latitude_deg>35.7753257</latitude_deg>
+      <longitude_deg>-120.774063</longitude_deg>
+      <elevation>208</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
     <scene>
       <shadows>false</shadows>
       <ambient>1 1 1 1</ambient>
@@ -117,6 +126,10 @@
         <model name="ground_<%=index%>">
           <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
           <link name="link">
+            <sensor name="gps" type="gps">
+              <gps/>
+              <always_on>1</always_on>
+            </sensor>            
             <kinematic>true</kinematic>
             <gravity>false</gravity>
             <collision name="collision">

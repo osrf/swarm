@@ -1,6 +1,15 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="default">
+    <!-- Anchor our GPS sensors to a real place: Camp Roberts
+         http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
+    <spherical_coordinates>
+      <latitude_deg>35.7753257</latitude_deg>
+      <longitude_deg>-120.774063</longitude_deg>
+      <elevation>208</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
     <scene>
       <shadows>false</shadows>
       <ambient>1 1 1 1</ambient>
@@ -110,13 +119,17 @@
       -->
    </model>
 
-    <!-- Create the rotor vehicles -->
+    <!-- Create the fixed wing vehicles -->
     <% for y in 0..5 %>
       <% for x in 0..5 %>
         <% index = y * 6 + x %>
-        <model name="rotor_<%=index%>">
+        <model name="fixed_wing_<%=index%>">
           <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
           <link name="link">
+            <sensor name="gps" type="gps">
+              <gps/>
+              <always_on>1</always_on>
+            </sensor>            
             <kinematic>true</kinematic>
             <gravity>false</gravity>
             <collision name="collision">
@@ -147,38 +160,40 @@
               </material>
             </visual>
 
-            <visual name="visual_blade1">
-              <pose>0 0 0.055 0 0 0.78539</pose>
+            <visual name="visual_wing1">
+              <pose>0.03 0 0.02 0 0 0</pose>
               <geometry>
                 <box>
-                  <size>.4 0.02 0.01</size>
+                  <size>.06 0.35 0.01</size>
                 </box>
               </geometry>
               <material>
                 <script>
-                  <name>Gazebo/Green</name>
+                  <name>Gazebo/Blue</name>
                 </script>
               </material>
             </visual>
-            <visual name="visual_blade2">
-              <pose>0 0 0.055 0 0 2.3562</pose>
+
+            <visual name="visual_wing2">
+              <pose>-0.07 0 0.055 0 0 0</pose>
               <geometry>
                 <box>
-                  <size>.4 0.02 0.01</size>
+                  <size>.03 0.15 0.01</size>
                 </box>
               </geometry>
               <material>
                 <script>
-                  <name>Gazebo/Green</name>
+                  <name>Gazebo/Blue</name>
                 </script>
               </material>
             </visual>
+
           </link>
 
           <!-- Load the plugin to control this robot -->
           <plugin name="swarm_controller_<%=index%>"
                   filename="libTeamControllerPlugin.so">
-            <type>rotor</type>
+            <type>fixed_wing</type>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
           </plugin>
