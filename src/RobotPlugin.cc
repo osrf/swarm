@@ -237,7 +237,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Get the GPS sensor.  This lookup is brittle, in that it makes assumptions
   // about the names of the link and sensor.  It would be more robust to give
   // the sensor name explicitly as a parameter to the plugin.
-  gazebo::sensors::SensorManager *mgr = gazebo::sensors::SensorManager::Instance();
+  gazebo::sensors::SensorManager *mgr =
+    gazebo::sensors::SensorManager::Instance();
   sdf::ElementPtr modelSDF = _sdf->GetParent();
   sdf::ElementPtr linkSDF = modelSDF->GetElement("link");
   while (linkSDF && !this->gps)
@@ -251,7 +252,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       {
         std::string name = sensorSDF->Get<std::string>("name");
         gazebo::sensors::SensorPtr sensor = mgr->GetSensor(name);
-        this->gps = boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(sensor);
+        this->gps =
+          boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(sensor);
       }
       sensorSDF = sensorSDF->GetNextElement("sensor");
     }
@@ -295,7 +297,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // We have the search area size.  Now get the origin, which is in
   // spherical_coordinates.
   sdf::ElementPtr worldSDF = modelSDF->GetParent();
-  sdf::ElementPtr sphericalCoordsSDF = worldSDF->GetElement("spherical_coordinates");
+  sdf::ElementPtr sphericalCoordsSDF =
+    worldSDF->GetElement("spherical_coordinates");
   bool foundSphericalCoords = false;
   while (sphericalCoordsSDF)
   {
