@@ -59,8 +59,14 @@ namespace swarm
   ///                   are inside the communication range of this robot.
   ///
   ///  * Motion.
+  ///     - Type()               This method returns the type of vehicle where
+  ///                            this controller is running.
+  ///     - SetLinearVelocity()  New linear velocity applied to the robot.
+  ///     - SetAngularVelocity() New angular velocity applied to the robot.
   ///
   ///  * Sensors.
+  ///     - GetPose() Get the robot's current pose from its GPS sensor.
+  ///     - GetSearchArea() Get the search area, in GPS coordinates.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
