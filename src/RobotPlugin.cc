@@ -265,8 +265,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       std::endl;
   }
 
-  // Get the search area size, which is a child of the world
-  // (sibling of the model).
+  // Get the search area size, which is a child of the plugin
   this->search_min_latitude = 0.0;
   this->search_max_latitude = 0.0;
   this->search_min_longitude = 0.0;
@@ -295,7 +294,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   // We have the search area size.  Now get the origin, which is in
-  // spherical_coordinates.
+  // spherical_coordinates, a child of the world.
   sdf::ElementPtr worldSDF = modelSDF->GetParent();
   sdf::ElementPtr sphericalCoordsSDF =
     worldSDF->GetElement("spherical_coordinates");
