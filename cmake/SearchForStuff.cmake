@@ -40,3 +40,9 @@ endmacro()
 # line for tests in TestUtils.cmake.
 include(FindBoost)
 find_package(Boost REQUIRED system)
+
+# We need erb to process the .world.erb files.
+find_program(ERB_EXE_PATH erb)
+if(NOT ERB_EXE_PATH)
+  message(FATAL_ERROR "Could not find the `erb` tool.  Try `sudo apt-get install ruby`")
+endif()
