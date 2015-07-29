@@ -119,6 +119,14 @@
       -->
    </model>
 
+   <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
+        So +/- 0.01 deg defines a ~2km X ~2km region. -->
+   <% search_area = '''<swarm_search_area>
+              <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
+              <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
+              <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
+              <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
+            </swarm_search_area>''' %>
     <!-- Create the rotor vehicles -->
     <% for y in 0..5 %>
       <% for x in 0..5 %>
@@ -194,6 +202,7 @@
             <type>rotor</type>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
+            <%=search_area%>
           </plugin>
         </model>
       <% end %>

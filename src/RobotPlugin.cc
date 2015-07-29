@@ -148,17 +148,32 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-bool RobotPlugin::GetPose(ignition::math::Angle& _latitude,
-                          ignition::math::Angle& _longitude,
+void RobotPlugin::GetPose(double& _latitude,
+                          double& _longitude,
                           double& _altitude)
 {
   if (!this->gps)
-    return false;
+  {
+    gzerr << "GetPose(): no GPS sensor available" << std::endl;
+    _latitude = _longitude = _altitude = 0.0;
+    return;
+  }
   // TODO: Consider adding noise (or just let Gazebo do it?).
-  _latitude = this->gps->Latitude();
-  _longitude = this->gps->Longitude();
+  _latitude = this->gps->Latitude().Degree();
+  _longitude = this->gps->Longitude().Degree();
   _altitude = this->gps->GetAltitude();
-  return true;
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::GetSearchArea(double& _minLatitude,
+                                double& _maxLatitude,
+                                double& _minLongitude,
+                                double& _maxLongitude)
+{
+  _minLatitude = this->search_min_latitude;
+  _maxLatitude = this->search_max_latitude;
+  _minLongitude = this->search_min_longitude;
+  _maxLongitude = this->search_max_longitude;
 }
 
 //////////////////////////////////////////////////
@@ -246,6 +261,67 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     gzwarn << "No GPS sensor found on robot with address " << this->address <<
       std::endl;
+  }
+
+  // Get the search area size, which is a child of the world
+  // (sibling of the model).
+  this->search_min_latitude = 0.0;
+  this->search_max_latitude = 0.0;
+  this->search_min_longitude = 0.0;
+  this->search_max_longitude = 0.0;
+  bool foundSwarmSearchArea = false;
+  sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
+  while (searchAreaSDF)
+  {
+    if (searchAreaSDF->HasElement("min_relative_latitude_deg") &&
+        searchAreaSDF->HasElement("max_relative_latitude_deg") &&
+        searchAreaSDF->HasElement("min_relative_longitude_deg") &&
+        searchAreaSDF->HasElement("max_relative_longitude_deg"))
+    {
+      this->search_min_latitude =
+        searchAreaSDF->GetElement("min_relative_latitude_deg")->Get<double>();
+      this->search_max_latitude =
+        searchAreaSDF->GetElement("max_relative_latitude_deg")->Get<double>();
+      this->search_min_longitude =
+        searchAreaSDF->GetElement("min_relative_longitude_deg")->Get<double>();
+      this->search_max_longitude =
+        searchAreaSDF->GetElement("max_relative_longitude_deg")->Get<double>();
+      foundSwarmSearchArea = true;
+      break;
+    }
+    searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
+  }
+
+  // We have the search area size.  Now get the origin, which is in
+  // spherical_coordinates.
+  sdf::ElementPtr worldSDF = modelSDF->GetParent();
+  sdf::ElementPtr sphericalCoordsSDF = worldSDF->GetElement("spherical_coordinates");
+  bool foundSphericalCoords = false;
+  while (sphericalCoordsSDF)
+  {
+    if (sphericalCoordsSDF->HasElement("latitude_deg") &&
+        sphericalCoordsSDF->HasElement("longitude_deg"))
+    {
+      // Offset the search borders by the origin.
+      this->search_min_latitude +=
+        sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
+      this->search_max_latitude +=
+        sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
+      this->search_min_longitude +=
+        sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
+      this->search_max_longitude +=
+        sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
+      foundSphericalCoords = true;
+      break;
+    }
+    sphericalCoordsSDF =
+      sphericalCoordsSDF->GetNextElement("spherical_coordinates");
+  }
+
+  if (!foundSwarmSearchArea || !foundSphericalCoords)
+  {
+    gzwarn << "No spherical_coordinates and/or swarm_search_area tags found. "
+              "Search area will be undefined." << std::endl;
   }
 
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";

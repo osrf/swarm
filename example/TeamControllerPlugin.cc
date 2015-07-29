@@ -137,22 +137,18 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   };
 
   // Get pose and velocity
-  ignition::math::Angle latitude, longitude;
-  double altitude;
-  if (this->GetPose(latitude, longitude, altitude))
+  double latitude, longitude, altitude;
+  this->GetPose(latitude, longitude, altitude);
+  double minLatitude, maxLatitude, minLongitude, maxLongitude;
+  this->GetSearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+  // Only print for one robot, to minimize console output
+  if (this->Host() == "192.168.2.1")
   {
-    // Only print for one robot, to minimize console output
-    if (this->Host() == "192.168.2.1")
-    {
-      gzmsg << "[" << this->Host() << "] lat long alt: " <<
-        latitude.Degree() << " " << longitude.Degree() << " " <<
-        altitude << std::endl;
-    }
-  }
-  else
-  {
-    gzmsg << "[" << this->Host() << "] Failed to get pose/vel data" <<
-      std::endl;
+    gzmsg << "[" << this->Host() << "] search area: " <<
+      minLatitude << " " << maxLatitude << " " <<
+      minLongitude << " " << maxLongitude << std::endl;
+    gzmsg << "[" << this->Host() << "] lat long alt: " <<
+      latitude << " " << longitude << " " << altitude << std::endl;
   }
 }
 
