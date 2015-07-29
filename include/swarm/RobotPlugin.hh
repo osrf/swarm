@@ -65,8 +65,8 @@ namespace swarm
   ///     - SetAngularVelocity() New angular velocity applied to the robot.
   ///
   ///  * Sensors.
-  ///     - GetPose() Get the robot's current pose from its GPS sensor.
-  ///     - GetSearchArea() Get the search area, in GPS coordinates.
+  ///     - Pose() Get the robot's current pose from its GPS sensor.
+  ///     - SearchArea() Get the search area, in GPS coordinates.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
@@ -281,9 +281,9 @@ namespace swarm
     /// \param[out] _latitude Robot latitude will be written here.
     /// \param[out] _longitude Robot longitude will be written here.
     /// \param[out] _altitude Robot altitude will be written here.
-    protected: void GetPose(double& _latitude,
-                            double& _longitude,
-                            double& _altitude);
+    protected: void Pose(double& _latitude,
+                         double& _longitude,
+                         double& _altitude);
 
     /// \brief Get the search area, in GPS coordinates.
     ///
@@ -291,10 +291,10 @@ namespace swarm
     /// \param[out] _maxLatitude Maximum latitude will be written here.
     /// \param[out] _minLongitude Minimum longitude will be written here.
     /// \param[out] _maxLongitude Maximum longitude will be written here.
-    protected: void GetSearchArea(double& _minLatitude,
-                                  double& _maxLatitude,
-                                  double& _minLongitude,
-                                  double& _maxLongitude);
+    protected: void SearchArea(double& _minLatitude,
+                               double& _maxLatitude,
+                               double& _minLongitude,
+                               double& _maxLongitude);
 
     /// \brief Update the plugin.
     ///

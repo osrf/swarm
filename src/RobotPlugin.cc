@@ -148,13 +148,13 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::GetPose(double& _latitude,
-                          double& _longitude,
-                          double& _altitude)
+void RobotPlugin::Pose(double& _latitude,
+                       double& _longitude,
+                       double& _altitude)
 {
   if (!this->gps)
   {
-    gzerr << "GetPose(): no GPS sensor available" << std::endl;
+    gzerr << "Pose(): no GPS sensor available" << std::endl;
     _latitude = _longitude = _altitude = 0.0;
     return;
   }
@@ -165,10 +165,10 @@ void RobotPlugin::GetPose(double& _latitude,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::GetSearchArea(double& _minLatitude,
-                                double& _maxLatitude,
-                                double& _minLongitude,
-                                double& _maxLongitude)
+void RobotPlugin::SearchArea(double& _minLatitude,
+                             double& _maxLatitude,
+                             double& _minLongitude,
+                             double& _maxLongitude)
 {
   _minLatitude = this->search_min_latitude;
   _maxLatitude = this->search_max_latitude;
