@@ -285,10 +285,10 @@ namespace swarm
     /// \param[out] _maxLatitude Maximum latitude will be written here.
     /// \param[out] _minLongitude Minimum longitude will be written here.
     /// \param[out] _maxLongitude Maximum longitude will be written here.
-    protected: void GetSearchArea(double& _minLatitude,
-                                  double& _maxLatitude,
-                                  double& _minLongitude,
-                                  double& _maxLongitude);
+    protected: void GetSearchArea(double &_minLatitude,
+                                  double &_maxLatitude,
+                                  double &_minLongitude,
+                                  double &_maxLongitude);
 
     /// \brief Update the plugin.
     ///
