@@ -281,9 +281,9 @@ namespace swarm
     /// \param[out] _latitude Robot latitude will be written here.
     /// \param[out] _longitude Robot longitude will be written here.
     /// \param[out] _altitude Robot altitude will be written here.
-    protected: void Pose(double& _latitude,
-                         double& _longitude,
-                         double& _altitude);
+    protected: void Pose(double &_latitude,
+                         double &_longitude,
+                         double &_altitude);
 
     /// \brief Get the search area, in GPS coordinates.
     ///
@@ -291,10 +291,10 @@ namespace swarm
     /// \param[out] _maxLatitude Maximum latitude will be written here.
     /// \param[out] _minLongitude Minimum longitude will be written here.
     /// \param[out] _maxLongitude Maximum longitude will be written here.
-    protected: void SearchArea(double& _minLatitude,
-                               double& _maxLatitude,
-                               double& _minLongitude,
-                               double& _maxLongitude);
+    protected: void SearchArea(double &_minLatitude,
+                               double &_maxLatitude,
+                               double &_minLongitude,
+                               double &_maxLongitude);
 
     /// \brief Update the plugin.
     ///
@@ -371,8 +371,8 @@ namespace swarm
     private: gazebo::sensors::GpsSensorPtr gps;
 
     /// \brief Min/max lat/long of search area.
-    private: double search_min_latitude, search_max_latitude,
-                    search_min_longitude, search_max_longitude;
+    private: double searchMinLatitude, searchMaxLatitude,
+                    searchMinLongitude, searchMaxLongitude;
 
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;

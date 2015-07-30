@@ -148,9 +148,9 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::Pose(double& _latitude,
-                       double& _longitude,
-                       double& _altitude)
+void RobotPlugin::Pose(double &_latitude,
+                       double &_longitude,
+                       double &_altitude)
 {
   if (!this->gps)
   {
@@ -158,6 +158,7 @@ void RobotPlugin::Pose(double& _latitude,
     _latitude = _longitude = _altitude = 0.0;
     return;
   }
+
   // TODO: Consider adding noise (or just let Gazebo do it?).
   _latitude = this->gps->Latitude().Degree();
   _longitude = this->gps->Longitude().Degree();
@@ -165,15 +166,15 @@ void RobotPlugin::Pose(double& _latitude,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::SearchArea(double& _minLatitude,
-                             double& _maxLatitude,
-                             double& _minLongitude,
-                             double& _maxLongitude)
+void RobotPlugin::SearchArea(double &_minLatitude,
+                             double &_maxLatitude,
+                             double &_minLongitude,
+                             double &_maxLongitude)
 {
-  _minLatitude = this->search_min_latitude;
-  _maxLatitude = this->search_max_latitude;
-  _minLongitude = this->search_min_longitude;
-  _maxLongitude = this->search_max_longitude;
+  _minLatitude = this->searchMinLatitude;
+  _maxLatitude = this->searchMaxLatitude;
+  _minLongitude = this->searchMinLongitude;
+  _maxLongitude = this->searchMaxLongitude;
 }
 
 //////////////////////////////////////////////////
@@ -266,10 +267,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   // Get the search area size, which is a child of the plugin
-  this->search_min_latitude = 0.0;
-  this->search_max_latitude = 0.0;
-  this->search_min_longitude = 0.0;
-  this->search_max_longitude = 0.0;
+  this->searchMinLatitude = 0.0;
+  this->searchMaxLatitude = 0.0;
+  this->searchMinLongitude = 0.0;
+  this->searchMaxLongitude = 0.0;
   bool foundSwarmSearchArea = false;
   sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
   while (searchAreaSDF)
@@ -279,13 +280,13 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
         searchAreaSDF->HasElement("min_relative_longitude_deg") &&
         searchAreaSDF->HasElement("max_relative_longitude_deg"))
     {
-      this->search_min_latitude =
+      this->searchMinLatitude =
         searchAreaSDF->GetElement("min_relative_latitude_deg")->Get<double>();
-      this->search_max_latitude =
+      this->searchMaxLatitude =
         searchAreaSDF->GetElement("max_relative_latitude_deg")->Get<double>();
-      this->search_min_longitude =
+      this->searchMinLongitude =
         searchAreaSDF->GetElement("min_relative_longitude_deg")->Get<double>();
-      this->search_max_longitude =
+      this->searchMaxLongitude =
         searchAreaSDF->GetElement("max_relative_longitude_deg")->Get<double>();
       foundSwarmSearchArea = true;
       break;
@@ -305,13 +306,13 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
         sphericalCoordsSDF->HasElement("longitude_deg"))
     {
       // Offset the search borders by the origin.
-      this->search_min_latitude +=
+      this->searchMinLatitude +=
         sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
-      this->search_max_latitude +=
+      this->searchMaxLatitude +=
         sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
-      this->search_min_longitude +=
+      this->searchMinLongitude +=
         sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
-      this->search_max_longitude +=
+      this->searchMaxLongitude +=
         sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
       foundSphericalCoords = true;
       break;
