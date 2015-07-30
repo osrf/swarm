@@ -1,6 +1,15 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="default">
+    <!-- Anchor our GPS sensors to a real place: Camp Roberts
+         http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
+    <spherical_coordinates>
+      <latitude_deg>35.7753257</latitude_deg>
+      <longitude_deg>-120.774063</longitude_deg>
+      <elevation>208</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
     <scene>
       <shadows>false</shadows>
       <ambient>1 1 1 1</ambient>
@@ -110,6 +119,14 @@
       -->
    </model>
 
+   <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
+        So +/- 0.01 deg defines a ~2km X ~2km region. -->
+   <% search_area = '''<swarm_search_area>
+              <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
+              <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
+              <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
+              <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
+            </swarm_search_area>''' %>
     <!-- Create the ground vehicles -->
     <% for y in 0..5 %>
       <% for x in 0..5 %>
@@ -117,6 +134,10 @@
         <model name="ground_<%=index%>">
           <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
           <link name="link">
+            <sensor name="gps" type="gps">
+              <gps/>
+              <always_on>1</always_on>
+            </sensor>            
             <kinematic>true</kinematic>
             <gravity>false</gravity>
             <collision name="collision">
@@ -154,6 +175,7 @@
             <type>ground</type>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
+            <%=search_area%>
           </plugin>
         </model>
       <% end %>

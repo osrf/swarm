@@ -136,6 +136,20 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       }
   };
 
+  // Get pose and velocity
+  double latitude, longitude, altitude;
+  this->Pose(latitude, longitude, altitude);
+  double minLatitude, maxLatitude, minLongitude, maxLongitude;
+  this->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+  // Only print for one robot, to minimize console output
+  if (this->Host() == "192.168.2.1")
+  {
+    gzmsg << "[" << this->Host() << "] search area: " <<
+      minLatitude << " " << maxLatitude << " " <<
+      minLongitude << " " << maxLongitude << std::endl;
+    gzmsg << "[" << this->Host() << "] lat long alt: " <<
+      latitude << " " << longitude << " " << altitude << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////

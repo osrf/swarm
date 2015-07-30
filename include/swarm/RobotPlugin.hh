@@ -29,6 +29,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/sensors/sensors.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
@@ -58,8 +59,14 @@ namespace swarm
   ///                   are inside the communication range of this robot.
   ///
   ///  * Motion.
+  ///     - Type()               This method returns the type of vehicle where
+  ///                            this controller is running.
+  ///     - SetLinearVelocity()  New linear velocity applied to the robot.
+  ///     - SetAngularVelocity() New angular velocity applied to the robot.
   ///
   ///  * Sensors.
+  ///     - Pose() Get the robot's current pose from its GPS sensor.
+  ///     - SearchArea() Get the search area, in GPS coordinates.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
@@ -269,6 +276,26 @@ namespace swarm
     protected: void SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
+    /// \brief Get the robot's current pose from its GPS sensor.
+    ///
+    /// \param[out] _latitude Robot latitude will be written here.
+    /// \param[out] _longitude Robot longitude will be written here.
+    /// \param[out] _altitude Robot altitude will be written here.
+    protected: void Pose(double& _latitude,
+                         double& _longitude,
+                         double& _altitude);
+
+    /// \brief Get the search area, in GPS coordinates.
+    ///
+    /// \param[out] _minLatitude Minimum latitude will be written here.
+    /// \param[out] _maxLatitude Maximum latitude will be written here.
+    /// \param[out] _minLongitude Minimum longitude will be written here.
+    /// \param[out] _maxLongitude Maximum longitude will be written here.
+    protected: void SearchArea(double& _minLatitude,
+                               double& _maxLatitude,
+                               double& _minLongitude,
+                               double& _maxLongitude);
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -339,6 +366,13 @@ namespace swarm
 
     /// \brief Type of vehicle.
     private: VehicleType type;
+
+    /// \brief Point to GPS sensor
+    private: gazebo::sensors::GpsSensorPtr gps;
+
+    /// \brief Min/max lat/long of search area.
+    private: double search_min_latitude, search_max_latitude,
+                    search_min_longitude, search_max_longitude;
 
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;
