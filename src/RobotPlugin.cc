@@ -148,21 +148,43 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::Pose(double &_latitude,
+bool RobotPlugin::Pose(double &_latitude,
                        double &_longitude,
                        double &_altitude)
 {
   if (!this->gps)
   {
-    gzerr << "Pose(): no GPS sensor available" << std::endl;
+    gzerr << "No GPS sensor available" << std::endl;
     _latitude = _longitude = _altitude = 0.0;
-    return;
+    return false;
   }
 
   // TODO: Consider adding noise (or just let Gazebo do it?).
   _latitude = this->gps->Latitude().Degree();
   _longitude = this->gps->Longitude().Degree();
   _altitude = this->gps->GetAltitude();
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool RobotPlugin::Image(ImageData &_img)
+{
+  if (!this->camera)
+  {
+    gzerr << "No logical_camera snesor available" << std::endl;
+    return false;
+  }
+
+  _img.objects.clear();
+
+  gazebo::msgs::LogicalCameraImage img = this->camera->Image();
+  for (auto const imgModel : img.model())
+  {
+    _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
+  }
+
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -234,6 +256,27 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   this->address = _sdf->Get<std::string>("address");
+
+  // Get the camera sensor;
+  if (_sdf->HasElement("camera"))
+  {
+    this->camera =
+      boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
+        gazebo::sensors::get_sensor(_sdf->Get<std::string>("camera")));
+
+    if (!this->camera)
+    {
+      gzerr << "Trying to get a logical_camera for robot with address["
+        << this->address << "], but the specified camera[" <<
+        _sdf->Get<std::string>("camera") << "] has an incorrect type.\n";
+    }
+  }
+
+  if (!this->camera)
+  {
+    gzwarn << "No camera sensor found on robot with address "
+      << this->address << std::endl;
+  }
 
   // Get the GPS sensor.  This lookup is brittle, in that it makes assumptions
   // about the names of the link and sensor.  It would be more robust to give

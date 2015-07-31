@@ -1,4 +1,8 @@
 <?xml version="1.0" ?>
+<%camera_range = 20%>
+<%camera_fov = 1.04719755%>
+<%camera_aspect_ratio = 1.778%>
+
 <sdf version="1.5">
   <world name="default">
     <!-- Anchor our GPS sensors to a real place: Camp Roberts
@@ -127,6 +131,7 @@
               <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
               <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
             </swarm_search_area>''' %>
+
     <!-- Create the rotor vehicles -->
     <% for y in 0..5 %>
       <% for x in 0..5 %>
@@ -142,9 +147,9 @@
             <sensor name="camera" type="logical_camera">
               <logical_camera>
                 <near>0</near>
-                <far><%camera_range%></far>
-                <fov><%camera_fov%></fov>
-                <aspect_ratio><%camera_aspect_ratio%></aspect_ratio>
+                <far><%=camera_range%></far>
+                <fov><%=camera_fov%></fov>
+                <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
               </logical_camera>
               <visualize>false</visualize>
               <always_on>true</always_on>
@@ -212,6 +217,7 @@
           <plugin name="swarm_controller_<%=index%>"
                   filename="libTeamControllerPlugin.so">
             <type>rotor</type>
+            <camera>camera</camera>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
             <%=search_area%>
