@@ -138,6 +138,18 @@
               <gps/>
               <always_on>1</always_on>
             </sensor>            
+
+            <sensor name="camera" type="logical_camera">
+              <logical_camera>
+                <near>0</near>
+                <far><%camera_range%></far>
+                <fov><%camera_fov%></fov>
+                <aspect_ratio><%camera_aspect_ratio%></aspect_ratio>
+              </logical_camera>
+              <visualize>false</visualize>
+              <always_on>true</always_on>
+            </sensor>
+
             <kinematic>true</kinematic>
             <gravity>false</gravity>
             <collision name="collision">
