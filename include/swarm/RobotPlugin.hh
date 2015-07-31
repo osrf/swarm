@@ -26,7 +26,6 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include <map>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
