@@ -150,7 +150,7 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 bool RobotPlugin::Pose(double &_latitude,
                        double &_longitude,
-                       double &_altitude)
+                       double &_altitude) const
 {
   if (!this->gps)
   {
@@ -168,7 +168,7 @@ bool RobotPlugin::Pose(double &_latitude,
 }
 
 //////////////////////////////////////////////////
-bool RobotPlugin::Image(ImageData &_img)
+bool RobotPlugin::Image(ImageData &_img) const
 {
   if (!this->camera)
   {

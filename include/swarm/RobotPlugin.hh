@@ -41,7 +41,8 @@
 
 namespace swarm
 {
-  // Typedef for the camera data.
+  /// Typedef for object pose data.
+  /// \sa ImageData
   typedef std::map<std::string, ignition::math::Pose3d> ObjPose_M;
 
   /// \brief A class that encapsulates image data.
@@ -79,7 +80,8 @@ namespace swarm
   ///  * Sensors.
   ///     - Pose() Get the robot's current pose from its GPS sensor.
   ///     - SearchArea() Get the search area, in GPS coordinates.
-  ///     - Image() Get the list of detected objects from the camera sensor.
+  ///     - Image() Get the list of detected objects, and other related
+  ///       information, from the camera sensor.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
@@ -297,14 +299,14 @@ namespace swarm
     /// \return True if the call was successful.
     protected: bool Pose(double &_latitude,
                          double &_longitude,
-                         double &_altitude);
+                         double &_altitude) const;
 
     /// \brief Get the set of objects detected by the camera.
     ///
     /// \param[out] _img Image object that will hold the output from the
     /// camera.
     /// \return True if the call was successful.
-    protected: bool Image(ImageData &_img);
+    protected: bool Image(ImageData &_img) const;
 
     /// \brief Get the search area, in GPS coordinates.
     ///
