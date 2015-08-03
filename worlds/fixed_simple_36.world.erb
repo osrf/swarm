@@ -217,8 +217,8 @@
           <plugin name="swarm_controller_<%=index%>"
                   filename="libTeamControllerPlugin.so">
             <type>fixed_wing</type>
-            <camera>camera</camera>
-            <gps>gps</gps>
+            <camera>link::camera</camera>
+            <gps>link::gps</gps>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
             <%=search_area%>
