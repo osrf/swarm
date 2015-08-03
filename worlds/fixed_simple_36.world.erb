@@ -111,7 +111,6 @@
         </visual>
       </link>
 
-      <!--
       <plugin name="random" filename="libRandomVelocityPlugin.so">
         <link>link</link>
         <initial_velocity>0 0.2 0</initial_velocity>
@@ -120,7 +119,6 @@
         <min_z>0</min_z>
         <max_z>0</max_z>
       </plugin>
-      -->
    </model>
 
    <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
@@ -219,6 +217,7 @@
                   filename="libTeamControllerPlugin.so">
             <type>fixed_wing</type>
             <camera>camera</camera>
+            <gps>gps</gps>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
             <%=search_area%>
