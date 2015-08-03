@@ -172,7 +172,7 @@ bool RobotPlugin::Image(ImageData &_img) const
 {
   if (!this->camera)
   {
-    gzerr << "No logical_camera snesor available" << std::endl;
+    gzerr << "No logical_camera sensor available" << std::endl;
     return false;
   }
 
@@ -181,7 +181,9 @@ bool RobotPlugin::Image(ImageData &_img) const
   gazebo::msgs::LogicalCameraImage img = this->camera->Image();
   for (auto const imgModel : img.model())
   {
-    _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
+    // Skip ground plane model
+    if (imgModel.name() != "ground_plane")
+      _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
   }
 
   return true;
@@ -262,7 +264,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     this->camera =
       boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
-        gazebo::sensors::get_sensor(_sdf->Get<std::string>("camera")));
+        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+          _sdf->Get<std::string>("camera")));
 
     if (!this->camera)
     {
@@ -283,7 +286,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     this->gps =
       boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
-        gazebo::sensors::get_sensor(_sdf->Get<std::string>("gps")));
+        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+          _sdf->Get<std::string>("gps")));
 
     if (!this->camera)
     {
@@ -433,4 +437,10 @@ void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
 RobotPlugin::VehicleType RobotPlugin::Type() const
 {
   return this->type;
+}
+
+//////////////////////////////////////////////////
+std::string RobotPlugin::Name() const
+{
+  return this->model->GetName();
 }

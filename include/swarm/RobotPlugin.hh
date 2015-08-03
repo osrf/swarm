@@ -221,6 +221,11 @@ namespace swarm
     /// plugin controls.
     protected: VehicleType Type() const;
 
+    /// \brief Get the name of this robot.
+    ///
+    /// \return The name given to this robot in the SDF file.
+    protected: std::string Name() const;
+
     /// \brief Set the robot's linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where

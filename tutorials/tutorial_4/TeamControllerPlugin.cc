@@ -46,10 +46,11 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     for (auto const obj : img.objects)
     {
-      std::cout << "Obj[" << obj.first << "] Pose[" << obj.second << "]\n";
+      std::cout <<  this->Name () << " sees " << obj.first << " at "
+        << obj.second << ".\n";
     }
   }
-/*
+
   // Simple example for moving each type of robot.
   switch (this->Type())
   {
@@ -77,5 +78,4 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
         break;
       }
   };
-  */
 }

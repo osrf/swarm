@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<%camera_near = 0.1%>
+<%camera_near = 0.12%>
 <%camera_far = 20%>
 <%camera_fov = 1.04719755%>
 <%camera_aspect_ratio = 1.778%>
@@ -132,7 +132,7 @@
              </swarm_search_area>''' %>
 
     <!-- Create the ground vehicles -->
-    <% for index in 0..0 %>
+    <% for index in 0..1 %>
       <model name="ground_<%=index%>">
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
@@ -187,8 +187,8 @@
         <plugin name="swarm_controller_<%=index%>"
                 filename="libTeamControllerPlugin.so">
           <type>ground</type>
-          <camera>camera</camera>
-          <gps>gps</gps>
+          <camera>link::camera</camera>
+          <gps>link::gps</gps>
           <address>192.168.2.<%=index+1%></address>
           <num_messages>1</num_messages>
           <%=search_area%>
