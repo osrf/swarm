@@ -34,12 +34,25 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/math/Pose3.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
 
 namespace swarm
 {
+  /// Typedef for object pose data.
+  /// \sa ImageData
+  typedef std::map<std::string, ignition::math::Pose3d> ObjPose_M;
+
+  /// \brief A class that encapsulates image data.
+  class ImageData
+  {
+    /// \brief Map of detected objects.
+    public: ObjPose_M objects;
+  };
+
+
   /// \brief A Model plugin that is the base class for all agent plugins
   /// in a swarm.
   /// This plugin exposes the following functionality to the derived plugins:
@@ -67,6 +80,8 @@ namespace swarm
   ///  * Sensors.
   ///     - Pose() Get the robot's current pose from its GPS sensor.
   ///     - SearchArea() Get the search area, in GPS coordinates.
+  ///     - Image() Get the list of detected objects, and other related
+  ///       information, from the camera sensor.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
@@ -281,9 +296,17 @@ namespace swarm
     /// \param[out] _latitude Robot latitude will be written here.
     /// \param[out] _longitude Robot longitude will be written here.
     /// \param[out] _altitude Robot altitude will be written here.
-    protected: void Pose(double &_latitude,
+    /// \return True if the call was successful.
+    protected: bool Pose(double &_latitude,
                          double &_longitude,
-                         double &_altitude);
+                         double &_altitude) const;
+
+    /// \brief Get the set of objects detected by the camera.
+    ///
+    /// \param[out] _img Image object that will hold the output from the
+    /// camera.
+    /// \return True if the call was successful.
+    protected: bool Image(ImageData &_img) const;
 
     /// \brief Get the search area, in GPS coordinates.
     ///
@@ -367,8 +390,11 @@ namespace swarm
     /// \brief Type of vehicle.
     private: VehicleType type;
 
-    /// \brief Point to GPS sensor
+    /// \brief Pointer to GPS sensor
     private: gazebo::sensors::GpsSensorPtr gps;
+
+    /// \brief Pointer to LogicalCamera sensor
+    private: gazebo::sensors::LogicalCameraSensorPtr camera;
 
     /// \brief Min/max lat/long of search area.
     private: double searchMinLatitude, searchMaxLatitude,

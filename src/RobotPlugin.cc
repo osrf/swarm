@@ -148,21 +148,43 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::Pose(double &_latitude,
+bool RobotPlugin::Pose(double &_latitude,
                        double &_longitude,
-                       double &_altitude)
+                       double &_altitude) const
 {
   if (!this->gps)
   {
-    gzerr << "Pose(): no GPS sensor available" << std::endl;
+    gzerr << "No GPS sensor available" << std::endl;
     _latitude = _longitude = _altitude = 0.0;
-    return;
+    return false;
   }
 
   // TODO: Consider adding noise (or just let Gazebo do it?).
   _latitude = this->gps->Latitude().Degree();
   _longitude = this->gps->Longitude().Degree();
   _altitude = this->gps->GetAltitude();
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool RobotPlugin::Image(ImageData &_img) const
+{
+  if (!this->camera)
+  {
+    gzerr << "No logical_camera snesor available" << std::endl;
+    return false;
+  }
+
+  _img.objects.clear();
+
+  gazebo::msgs::LogicalCameraImage img = this->camera->Image();
+  for (auto const imgModel : img.model())
+  {
+    _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
+  }
+
+  return true;
 }
 
 //////////////////////////////////////////////////
@@ -235,35 +257,46 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   this->address = _sdf->Get<std::string>("address");
 
-  // Get the GPS sensor.  This lookup is brittle, in that it makes assumptions
-  // about the names of the link and sensor.  It would be more robust to give
-  // the sensor name explicitly as a parameter to the plugin.
-  gazebo::sensors::SensorManager *mgr =
-    gazebo::sensors::SensorManager::Instance();
-  sdf::ElementPtr modelSDF = _sdf->GetParent();
-  sdf::ElementPtr linkSDF = modelSDF->GetElement("link");
-  while (linkSDF && !this->gps)
+  // Get the camera sensor
+  if (_sdf->HasElement("camera"))
   {
-    sdf::ElementPtr sensorSDF = linkSDF->GetElement("sensor");
-    while (sensorSDF && !this->gps)
+    this->camera =
+      boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
+        gazebo::sensors::get_sensor(_sdf->Get<std::string>("camera")));
+
+    if (!this->camera)
     {
-      if (sensorSDF->HasAttribute("type") &&
-          (sensorSDF->Get<std::string>("type") == "gps") &&
-          sensorSDF->HasAttribute("name"))
-      {
-        std::string name = sensorSDF->Get<std::string>("name");
-        gazebo::sensors::SensorPtr sensor = mgr->GetSensor(name);
-        this->gps =
-          boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(sensor);
-      }
-      sensorSDF = sensorSDF->GetNextElement("sensor");
+      gzerr << "Trying to get a logical_camera for robot with address["
+        << this->address << "], but the specified camera[" <<
+        _sdf->Get<std::string>("camera") << "] has an incorrect type.\n";
     }
-    linkSDF = linkSDF->GetNextElement("link");
   }
+
+  if (!this->camera)
+  {
+    gzwarn << "No camera sensor found on robot with address "
+      << this->address << std::endl;
+  }
+
+  // Get the gps sensor
+  if (_sdf->HasElement("gps"))
+  {
+    this->gps =
+      boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+        gazebo::sensors::get_sensor(_sdf->Get<std::string>("gps")));
+
+    if (!this->camera)
+    {
+      gzerr << "Trying to get a gps sensor for robot with address["
+        << this->address << "], but the specified gps[" <<
+        _sdf->Get<std::string>("gps") << "] has an incorrect type.\n";
+    }
+  }
+
   if (!this->gps)
   {
-    gzwarn << "No GPS sensor found on robot with address " << this->address <<
-      std::endl;
+    gzwarn << "No gps sensor found on robot with address "
+      << this->address << std::endl;
   }
 
   // Get the search area size, which is a child of the plugin
@@ -293,6 +326,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     }
     searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
   }
+
+  sdf::ElementPtr modelSDF = _sdf->GetParent();
 
   // We have the search area size.  Now get the origin, which is in
   // spherical_coordinates, a child of the world.

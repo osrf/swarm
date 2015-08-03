@@ -1,4 +1,8 @@
 <?xml version="1.0" ?>
+<%camera_range = 20%>
+<%camera_fov = 1.04719755%>
+<%camera_aspect_ratio = 1.778%>
+
 <sdf version="1.5">
   <world name="default">
     <!-- Anchor our GPS sensors to a real place: Camp Roberts
@@ -107,7 +111,6 @@
         </visual>
       </link>
 
-      <!--
       <plugin name="random" filename="libRandomVelocityPlugin.so">
         <link>link</link>
         <initial_velocity>0 0.2 0</initial_velocity>
@@ -116,7 +119,6 @@
         <min_z>0</min_z>
         <max_z>0</max_z>
       </plugin>
-      -->
    </model>
 
    <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
@@ -138,6 +140,18 @@
               <gps/>
               <always_on>1</always_on>
             </sensor>            
+
+            <sensor name="camera" type="logical_camera">
+              <logical_camera>
+                <near>0</near>
+                <far><%=camera_range%></far>
+                <fov><%=camera_fov%></fov>
+                <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
+              </logical_camera>
+              <visualize>false</visualize>
+              <always_on>true</always_on>
+            </sensor>
+
             <kinematic>true</kinematic>
             <gravity>false</gravity>
             <collision name="collision">
@@ -202,6 +216,8 @@
           <plugin name="swarm_controller_<%=index%>"
                   filename="libTeamControllerPlugin.so">
             <type>fixed_wing</type>
+            <camera>camera</camera>
+            <gps>gps</gps>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
             <%=search_area%>

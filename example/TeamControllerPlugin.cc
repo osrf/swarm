@@ -141,6 +141,16 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   this->Pose(latitude, longitude, altitude);
   double minLatitude, maxLatitude, minLongitude, maxLongitude;
   this->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+
+  // Get the camera information
+  ImageData img;
+  if (this->Image(img))
+  {
+    // check if we can see the lost person
+    if (img.objects.find("lost_person") != img.objects.end())
+      gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
+  }
+
   // Only print for one robot, to minimize console output
   if (this->Host() == "192.168.2.1")
   {
