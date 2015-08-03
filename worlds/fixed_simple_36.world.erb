@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
-<%camera_range = 20%>
+<%camera_near = 0.1%>
+<%camera_far = 20%>
 <%camera_fov = 1.04719755%>
 <%camera_aspect_ratio = 1.778%>
 
@@ -143,9 +144,9 @@
 
             <sensor name="camera" type="logical_camera">
               <logical_camera>
-                <near>0</near>
-                <far><%=camera_range%></far>
-                <fov><%=camera_fov%></fov>
+                <near><%=camera_near%></near>
+                <far><%=camera_far%></far>
+                <horizontal_fov><%=camera_fov%></horizontal_fov>
                 <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
               </logical_camera>
               <visualize>false</visualize>

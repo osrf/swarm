@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
-<%camera_range = 20%>
+<%camera_near = 0.1%>
+<%camera_far = 20%>
 <%camera_fov = 1.04719755%>
 <%camera_aspect_ratio = 1.778%>
 
@@ -131,7 +132,7 @@
              </swarm_search_area>''' %>
 
     <!-- Create the ground vehicles -->
-    <% for index in 0..1 %>
+    <% for index in 0..0 %>
       <model name="ground_<%=index%>">
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
@@ -142,12 +143,12 @@
 
           <sensor name="camera" type="logical_camera">
             <logical_camera>
-              <near>0</near>
-              <far><%=camera_range%></far>
-              <fov><%=camera_fov%></fov>
+              <near><%=camera_near%></near>
+              <far><%=camera_far%></far>
+              <horizontal_fov><%=camera_fov%></horizontal_fov>
               <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
             </logical_camera>
-            <visualize>false</visualize>
+            <visualize>true</visualize>
             <always_on>true</always_on>
           </sensor>
 
