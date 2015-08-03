@@ -1,41 +1,21 @@
-# Swarm API
+# Install
 
-** SWARM classes and functions.**
+See the [install](https://bitbucket.org/osrf/swarm/wiki/Install.md) instructions.
 
-  [https://bitbucket.org/osrf/swarm(https://bitbucket.org/osrf/swarm)
+# API
 
-## Dependencies
+  [Doxygen](https://s3.amazonaws.com/osrf-distributions/swarm/api/0.1.0/index.html)
 
-The following dependencies are required to compile Swarm from source:
+# Test worlds
 
- - cmake
- - mercurial
- - C++ compiler (with C++11 support).
+1. `gazebo worlds/fixed_simple_36.world`
 
-Installation of dependencies:
+    This will run a sample world with 36 fixed wing aircraft.
 
- - sudo apt-get install build-essential cmake mercurial
+1. `gazebo worlds/rotor_simple_36.world`
 
-## Installation
+    This will run a sample world with 36 rotocraft.
 
-Standard installation can be performed in UNIX systems using the following
-steps:
+1. `gazebo worlds/ground_simple_36.world`
 
- - mkdir build/
- - cd build/
- - cmake ..
- - sudo make install
-
-## Uninstallation
-
-To uninstall the software installed with the previous steps:
-
- - cd build/
- - sudo make uninstall
-
-## Documentation
-
-### Update Matlab documentation
-
- - Run `make doc`
- - Upload content of `build/doxygen/html/*` to s3.
+    This will run a sample world with 36 ground vehicles.
