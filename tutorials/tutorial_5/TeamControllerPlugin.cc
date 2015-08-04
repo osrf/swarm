@@ -40,17 +40,16 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
-  // Get pose and altitude.
-  double latitude, longitude, altitude;
-  this->Pose(latitude, longitude, altitude);
-  double minLatitude, maxLatitude, minLongitude, maxLongitude;
-  this->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-
-  std::cout << "Lat/Long/Alt[" << latitude << " " << longitude
-            << " " << altitude << "]\n";
-
-  std::cout << "Search Area[" << minLatitude << " " << minLongitude << " : "
-            << maxLatitude << " " << maxLongitude << "]\n";
+  // Get the camera information
+  ImageData img;
+  if (this->Image(img))
+  {
+    for (auto const obj : img.objects)
+    {
+      std::cout <<  this->Name () << " sees " << obj.first << " at "
+        << obj.second << ".\n";
+    }
+  }
 
   // Simple example for moving each type of robot.
   switch (this->Type())
