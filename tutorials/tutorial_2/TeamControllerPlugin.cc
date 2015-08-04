@@ -67,5 +67,4 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
         break;
       }
   };
-
 }
