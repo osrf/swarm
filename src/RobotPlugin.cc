@@ -292,25 +292,36 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   GZ_ASSERT(_model, "RobotPlugin _model pointer is NULL");
   GZ_ASSERT(_sdf, "RobotPlugin _sdf pointer is NULL");
   this->model = _model;
+  if (!this->model)
+  {
+    gzerr << "Invalid model pointer. Plugin will not load.\n";
+    return;
+  }
   this->modelHeight2 = this->model->GetBoundingBox().GetZLength()*0.5;
 
+  // Get the terrain, if it's present
   gazebo::physics::ModelPtr terrainModel =
     this->model->GetWorld()->GetModel("terrain");
-  this->terrain =
-    boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
-        terrainModel->GetLink()->GetCollision("collision")->GetShape());
 
-  if (!terrain)
-    gzerr << "Unable to find terrain\n";
+  // Load some info about the terrain.
+  if (terrainModel)
+  {
+    this->terrain =
+      boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
+          terrainModel->GetLink()->GetCollision("collision")->GetShape());
 
-  // Get the size of the terrain
-  this->terrainSize = this->terrain->GetSize().Ign();
+    if (!terrain)
+      gzerr << "Unable to find terrain\n";
 
-  // Set the terrain scaling.
-  this->terrainScaling.Set(this->terrain->GetSize().x /
-                           (this->terrain->GetVertexCount().x-1),
-                           this->terrain->GetSize().y /
-                           (this->terrain->GetVertexCount().y-1));
+    // Get the size of the terrain
+    this->terrainSize = this->terrain->GetSize().Ign();
+
+    // Set the terrain scaling.
+    this->terrainScaling.Set(this->terrain->GetSize().x /
+        (this->terrain->GetVertexCount().x-1),
+        this->terrain->GetSize().y /
+        (this->terrain->GetVertexCount().y-1));
+  }
 
 
   // Load the vehicle type
@@ -333,7 +344,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // Collide with nothing
   for (auto &link : this->model->GetLinks())
-    link->SetCollideMode("fixed");
+    link->SetCollideMode("none");
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
