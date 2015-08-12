@@ -18,9 +18,11 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <gazebo/math/Vector2i.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
@@ -215,9 +217,72 @@ std::vector<std::string> RobotPlugin::Neighbors() const
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::Update(const gazebo::common::UpdateInfo &_info)
+void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
+{
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
   this->Update(_info);
+  this->AdjustPose();
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::AdjustPose()
+{
+  if (!this->terrain || !this->model)
+    return;
+
+  // Get the pose of the vehicle
+  ignition::math::Pose3d pose = this->model->GetWorldPose().Ign();
+
+  // Constrain X position to the terrain boundaries
+  pose.Pos().X(ignition::math::clamp(pose.Pos().X(),
+        -this->terrainSize.X() * 0.5, this->terrainSize.X() * 0.5));
+
+  // Constrain Y position to the terrain boundaries
+  pose.Pos().Y(ignition::math::clamp(pose.Pos().Y(),
+        -this->terrainSize.Y() * 0.5, this->terrainSize.Y() * 0.5));
+
+  double height = this->TerrainHeight(pose.Pos());
+
+  // Constrain each type of robot
+  switch (this->Type())
+  {
+    default:
+    case GROUND:
+      {
+        // Add half the height of the vehicle
+        pose.Pos().Z(height + this->modelHeight2);
+
+        // Set the pose.
+        this->model->SetWorldPose(pose);
+        break;
+      }
+    case ROTOR:
+      {
+        if (pose.Pos().Z() < height + this->modelHeight2)
+        {
+          pose.Pos().Z(height + this->modelHeight2);
+
+          // Set the pose.
+          this->model->SetWorldPose(pose);
+        }
+        break;
+      }
+    case FIXED_WING:
+      {
+        if (pose.Pos().Z() < height + this->modelHeight2)
+        {
+          pose.Pos().Z(height + this->modelHeight2);
+
+          // Set the pose.
+          this->model->SetWorldPose(pose);
+        }
+        break;
+      }
+  };
 }
 
 //////////////////////////////////////////////////
@@ -227,6 +292,26 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   GZ_ASSERT(_model, "RobotPlugin _model pointer is NULL");
   GZ_ASSERT(_sdf, "RobotPlugin _sdf pointer is NULL");
   this->model = _model;
+  this->modelHeight2 = this->model->GetBoundingBox().GetZLength()*0.5;
+
+  gazebo::physics::ModelPtr terrainModel =
+    this->model->GetWorld()->GetModel("terrain");
+  this->terrain =
+    boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
+        terrainModel->GetLink()->GetCollision("collision")->GetShape());
+
+  if (!terrain)
+    gzerr << "Unable to find terrain\n";
+
+  // Get the size of the terrain
+  this->terrainSize = this->terrain->GetSize().Ign();
+
+  // Set the terrain scaling.
+  this->terrainScaling.Set(this->terrain->GetSize().x /
+                           (this->terrain->GetVertexCount().x-1),
+                           this->terrain->GetSize().y /
+                           (this->terrain->GetVertexCount().y-1));
+
 
   // Load the vehicle type
   if (_sdf->HasElement("type"))
@@ -248,7 +333,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // Collide with nothing
   for (auto &link : this->model->GetLinks())
-    link->SetCollideMode("none");
+    link->SetCollideMode("fixed");
 
   // Read the robot address.
   if (!_sdf->HasElement("address"))
@@ -379,12 +464,22 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   this->node.Subscribe(
       kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
 
+  this->AdjustPose();
+
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
 
+  // This is debug code that can be used to render markers in Gazebo. It
+  // requires a version of gazebo with visual markers.
+  // this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
+  // this->gzNode->Init();
+  // this->markerPub =
+  // this->gzNode->Advertise<gazebo::msgs::Marker>("~/marker");
+  // END DEBUG CODE
+
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
-      std::bind(&RobotPlugin::Update, this, std::placeholders::_1));
+      std::bind(&RobotPlugin::Loop, this, std::placeholders::_1));
 }
 
 //////////////////////////////////////////////////
@@ -443,4 +538,161 @@ RobotPlugin::VehicleType RobotPlugin::Type() const
 std::string RobotPlugin::Name() const
 {
   return this->model->GetName();
+}
+
+//////////////////////////////////////////////////
+double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
+{
+  // The robot position in the coordinate frame of the terrain
+  ignition::math::Vector3d robotPos(
+      (this->terrainSize.X() * 0.5 + _pos.X()) / this->terrainScaling.X(),
+      (this->terrainSize.Y() * 0.5 - _pos.Y()) / this->terrainScaling.Y(), 0);
+
+  // Three vertices that define the triangle on which the vehicle rests
+  // The first vertex is closest point on the terrain
+  ignition::math::Vector3d v1(std::round(robotPos.X()),
+      std::round(robotPos.Y()), 0);
+  ignition::math::Vector3d v2 = v1;
+  ignition::math::Vector3d v3 = v1;
+
+  // The second and third vertices are chosen based on how OGRE layouts
+  // the triangle strip.
+  if (static_cast<int>(v1.X()) == static_cast<int>(std::ceil(robotPos.X())) &&
+      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
+  {
+    if (static_cast<int>(v1.Y()) % 2 == 0)
+    {
+      v2.X(v1.X()-1);
+      v3.Y(v1.Y()-1);
+    }
+    else
+    {
+      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
+      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
+      if (robotPos.Distance(b) < robotPos.Distance(c))
+        v2 = b;
+      else
+        v2 = c;
+
+      v3.X(v1.X()-1);
+      v3.Y(v1.Y()-1);
+    }
+  }
+  else if (static_cast<int>(v1.X()) ==
+      static_cast<int>(std::floor(robotPos.X())) &&
+      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
+  {
+    if (static_cast<int>(v1.Y()) % 2 == 0)
+    {
+      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
+      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
+      if (robotPos.Distance(b) < robotPos.Distance(c))
+        v2 = b;
+      else
+        v2 = c;
+
+      v3.X(v1.X()+1);
+      v3.Y(v1.Y()-1);
+    }
+    else
+    {
+      v2.Y(v1.Y()-1);
+      v3.X(v1.X()+1);
+    }
+  }
+  else if (static_cast<int>(v1.X()) ==
+      static_cast<int>(std::floor(robotPos.X())) &&
+      static_cast<int>(v1.Y()) == static_cast<int>(std::floor(robotPos.Y())))
+  {
+    if (static_cast<int>(v1.Y()) % 2 == 0)
+    {
+      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
+      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
+      if (robotPos.Distance(b) < robotPos.Distance(c))
+        v2 = b;
+      else
+        v2 = c;
+
+      v3.X(v1.X()+1);
+      v3.Y(v1.Y()+1);
+    }
+    else
+    {
+      v2.X(v1.X()+1);
+      v3.Y(v1.Y()+1);
+    }
+  }
+  else
+  {
+    if (static_cast<int>(v1.Y()) % 2 == 0)
+    {
+      v2.Y() += 1;
+      v3.X() -= 1;
+    }
+    else
+    {
+      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
+      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
+      if (robotPos.Distance(b) < robotPos.Distance(c))
+        v2 = b;
+      else
+        v2 = c;
+
+      v3.X(v1.X()-1);
+      v3.Y(v1.Y()+1);
+    }
+  }
+
+  // Get the height at each vertex
+  v1.Z(this->terrain->GetHeight(v1.X(), v1.Y()));
+  v2.Z(this->terrain->GetHeight(v2.X(), v2.Y()));
+  v3.Z(this->terrain->GetHeight(v3.X(), v3.Y()));
+
+  // Display a marker that highlights the vertices currently used to
+  // compute the vehicles height. This is debug code that is very useful
+  // but it requires a version of gazebo with visual markers.
+  //
+  // gazebo::msgs::Marker markerMsg;
+  // markerMsg.set_layer("default");
+  // markerMsg.set_id(0);
+  // markerMsg.set_action(gazebo::msgs::Marker::MODIFY);
+  // markerMsg.set_type(gazebo::msgs::Marker::LINE_STRIP);
+
+  // ignition::math::Vector3d v1a = v1;
+  // ignition::math::Vector3d v2a = v2;
+  // ignition::math::Vector3d v3a = v3;
+  // v1a.X(v1a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  // v1a.Y(this->terrainSize.Y()*0.5 - v1a.Y()*this->terrainScaling.Y());
+  // v1a.Z() += 0.1;
+
+  // v2a.X(v2a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  // v2a.Y(this->terrainSize.Y()*0.5 - v2a.Y()*this->terrainScaling.Y());
+  // v2a.Z() += 0.1;
+
+  // v3a.X(v3a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  // v3a.Y(this->terrainSize.Y()*0.5 - v3a.Y()*this->terrainScaling.Y());
+  // v3a.Z() += 0.1;
+
+  // gazebo::msgs::Set(markerMsg.add_point(), v1a);
+  // gazebo::msgs::Set(markerMsg.add_point(), v2a);
+  // gazebo::msgs::Set(markerMsg.add_point(), v3a);
+  // if (this->markerPub)
+  //   this->markerPub->Publish(markerMsg);
+  // END DEBUG CODE
+
+  // Triangle normal
+  ignition::math::Vector3d norm =
+    ignition::math::Vector3d::Normal(v1, v2, v3);
+
+  // Ray direction to intersect with triangle
+  ignition::math::Vector3d rayDir(0, 0, -1);
+
+  // Ray start point
+  ignition::math::Vector3d rayPt(robotPos.X(), robotPos.Y(), 1000);
+
+  // Distance from ray start to triangle intersection
+  double intersection = -norm.Dot(rayPt - v1) / norm.Dot(rayDir);
+
+  // Height of the terrain
+  return (rayPt + intersection * rayDir).Z();
 }

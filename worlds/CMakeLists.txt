@@ -1,3 +1,5 @@
+add_subdirectory(terrains)
+
 # Non-erb world files
 set (world_files
 
