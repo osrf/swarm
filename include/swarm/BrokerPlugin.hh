@@ -29,6 +29,7 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/math/Pose.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
@@ -50,6 +51,68 @@ namespace swarm
 
     /// \brief List of neighbors for this robot.
     public: std::vector<std::string> neighbors;
+  };
+
+  /// \brief Class used to store information about the communication model.
+  class IGNITION_VISIBLE CommsModel
+  {
+    /// \brief Class constructor
+    public: CommsModel();
+
+    /// \brief Minimum free-space distance (m) between two nodes to be
+    /// neighbors.  Set to <0 for no limit.
+    public: double neighborDistanceMin;
+
+    /// \brief Maximum free-space distance (m) between two nodes to be
+    /// neighbors.  Set to <0 for no limit.
+    public: double neighborDistanceMax;
+
+    /// \brief Equivalent free space distance (m) that is "consumed" by an
+    /// intervening solid obstacle (wall, terrain, etc.).
+    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
+    public: double neighborDistancePenaltyWall;
+
+    /// \brief Equivalent free space distance (m) that is "consumed" by an
+    /// intervening non-solid obstacle (forest, etc.).
+    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
+    public: double neighborDistancePenaltyTree;
+
+    /// \brief Minimum free-space distance (m) between two nodes to communicate
+    /// (must also be neighbors).  Set to <0 for no limit.
+    public: double commsDistanceMin;
+
+    /// \brief Maximum free-space distance (m) between two nodes to communicate
+    /// (must also be neighbors).  Set to <0 for no limit.
+    public: double commsDistanceMax;
+
+    /// \brief Equivalent free space distance (m) that is "consumed" by an
+    /// intervening solid obstacle (wall, terrain, etc.).
+    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
+    public: double commsDistancePenaltyWall;
+
+    /// \brief Equivalent free space distance (m) that is "consumed" by an
+    /// intervening non-solid obstacle (forest, etc.).
+    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
+    public: double commsDistancePenaltyTree;
+
+    /// \brief Minimum probability of dropping a given packet.
+    /// Used with uniform drop probability model.
+    public: double commsDropProbabilityMin;
+
+    /// \brief Maximum probability of dropping a given packet.
+    /// Used with uniform drop probability model.
+    public: double commsDropProbabilityMax;
+
+    /// \brief Probability of going into a comms outage at each time step.
+    public: double commsOutageProbability;
+
+    /// \brief Minimum length of comms outage.  Set to <0 for no limit.
+    /// Used with uniform outage duration probability model.
+    public: double commsOutageDurationMin;
+
+    /// \brief Maximum length of comms outage. Set to <0 for no limit.
+    /// Used with uniform outage duration probability model.
+    public: double commsOutageDurationMax;
   };
 
   /// \brief This is a world plugin designed to centralize all the messages
@@ -98,6 +161,12 @@ namespace swarm
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
+    private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& p1,
+                                               const gazebo::math::Pose& p2);
+
+    private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& p1,
+                                               const gazebo::math::Pose& p2);
+
     /// \brief World pointer.
     private: gazebo::physics::WorldPtr world;
 
@@ -120,6 +189,9 @@ namespace swarm
 
     /// \brief Mutex for protecting the queue.
     private: std::mutex mutex;
+
+    /// \brief Comms model that we're using.
+    private: CommsModel commsModel;
   };
 }
 #endif

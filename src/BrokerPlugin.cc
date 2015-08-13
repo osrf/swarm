@@ -23,6 +23,7 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
+#include <gazebo/physics/Model.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
@@ -159,12 +160,80 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   auto swarmMember = this->swarm[_address];
 
+  auto myPose = swarmMember->model->GetWorldPose();
+
+  gzmsg << "UpdateNeighborList: " << swarmMember->name << std::endl;
+
   // Update the neighbor list for this robot.
-  // ToDo: For now we include all the robots as neighbors.
-  //       In the future we should do something smarter.
   swarmMember->neighbors.clear();
   for (auto const &member : this->swarm)
-    swarmMember->neighbors.push_back(member.first);
+  {
+    // Decide whether this node goes into our neighbor list
+
+    // Where is the other node?
+    auto other = member.second;
+    auto otherPose = other->model->GetWorldPose();
+
+    // How far away is it from me?
+    auto dist = (myPose.pos - otherPose.pos).GetLength();
+
+    // Apply the neighbor part of the comms model
+    auto neighbor = true;
+    if (neighbor &&
+        (this->commsModel.neighborDistanceMin >= 0.0) && 
+        (this->commsModel.neighborDistanceMin > dist))
+      neighbor = false;
+    if (neighbor &&
+        (this->commsModel.neighborDistanceMax >= 0.0) && 
+        (this->commsModel.neighborDistanceMax < dist))
+      neighbor = false;
+    if (neighbor && this->commsModel.neighborDistancePenaltyWall > 0.0)
+    {
+      // We're within range.  Check for obstacles (don't want to waste time on
+      // that if we're not within range).
+      auto numWalls = this->NumWallsBetweenPoses(myPose, otherPose);
+      if ((numWalls > 0) &&
+          (this->commsModel.neighborDistancePenaltyWall < 0.0))
+        neighbor = false;
+      else
+        dist -= numWalls * this->commsModel.neighborDistancePenaltyWall; 
+      if (neighbor &&
+          (this->commsModel.neighborDistanceMin >= 0.0) && 
+          (this->commsModel.neighborDistanceMin > dist))
+        neighbor = false;
+      if (neighbor &&
+          (this->commsModel.neighborDistanceMax >= 0.0) && 
+          (this->commsModel.neighborDistanceMax < dist))
+        neighbor = false;
+    }
+    if (neighbor && this->commsModel.neighborDistancePenaltyTree > 0.0)
+    {
+      // We're within range.  Check for obstacles (don't want to waste time on
+      // that if we're not within range).
+      auto numTrees = this->NumTreesBetweenPoses(myPose, otherPose);
+      if ((numTrees > 0) &&
+          (this->commsModel.neighborDistancePenaltyTree < 0.0))
+        neighbor = false;
+      else
+        dist -= numTrees * this->commsModel.neighborDistancePenaltyTree; 
+      if (neighbor &&
+          (this->commsModel.neighborDistanceMin >= 0.0) && 
+          (this->commsModel.neighborDistanceMin > dist))
+        neighbor = false;
+      if (neighbor &&
+          (this->commsModel.neighborDistanceMax >= 0.0) && 
+          (this->commsModel.neighborDistanceMax < dist))
+        neighbor = false;
+    }
+
+    if (neighbor)
+    {
+      swarmMember->neighbors.push_back(member.first);
+      gzmsg << other->name << ": Yes" << std::endl;
+    }
+    else
+      gzmsg << other->name << ": No" << std::endl;
+  }
 
   // Fill the message with the new neighbor list.
   swarm::msgs::Neighbor_V msg;
@@ -184,4 +253,37 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   // Queue the new message.
   this->incomingMsgs.push(_msg);
+}
+
+unsigned int BrokerPlugin::NumWallsBetweenPoses(const gazebo::math::Pose& p1,
+                                                const gazebo::math::Pose& p2)
+{
+  // TODO: raytrace to answer this question
+  return 0;
+}
+
+unsigned int BrokerPlugin::NumTreesBetweenPoses(const gazebo::math::Pose& p1,
+                                                const gazebo::math::Pose& p2)
+{
+  // TODO: raytrace to answer this question
+  return 0;
+}
+
+//////////////////////////////////////////////////
+CommsModel::CommsModel()
+{
+  // Default to perfect comms.
+  this->neighborDistanceMin = -1.0;
+  this->neighborDistanceMax = -1.0;
+  this->neighborDistancePenaltyWall = 0.0;
+  this->neighborDistancePenaltyTree = 0.0;
+  this->commsDistanceMin = -1.0;
+  this->commsDistanceMax = -1.0;
+  this->commsDistancePenaltyWall = 0.0;
+  this->commsDistancePenaltyTree = 0.0;
+  this->commsDropProbabilityMin = 0.0;
+  this->commsDropProbabilityMax = 0.0;
+  this->commsOutageProbability = 0.0;
+  this->commsOutageDurationMin = -1.0;
+  this->commsOutageDurationMax = -1.0;
 }
