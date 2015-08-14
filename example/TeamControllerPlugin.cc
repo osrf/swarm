@@ -136,7 +136,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       }
   };
 
-  // Get pose and velocity
+  // Get pose
   double latitude, longitude, altitude;
   this->Pose(latitude, longitude, altitude);
   double minLatitude, maxLatitude, minLongitude, maxLongitude;
@@ -149,6 +149,21 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     // check if we can see the lost person
     if (img.objects.find("lost_person") != img.objects.end())
       gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
+  }
+
+  // Get velocity and orientation
+  ignition::math::Vector3d linVel, angVel;
+  ignition::math::Quaterniond orient;
+  if (this->Velocity(linVel, angVel))
+  {
+    gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
+    gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
+  }
+
+  if (this->Orientation(orient))
+  {
+    gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
+    gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
   }
 
   // Only print for one robot, to minimize console output

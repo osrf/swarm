@@ -296,6 +296,13 @@ namespace swarm
     protected: void SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
+    /// \brief
+    protected: bool Velocity(ignition::math::Vector3d &_linVel,
+                             ignition::math::Vector3d &_angVel) const;
+
+    /// \brief
+    protected: bool Orientation(ignition::math::Quaterniond &_orient) const;
+
     /// \brief Get the robot's current pose from its GPS sensor.
     ///
     /// \param[out] _latitude Robot latitude will be written here.
@@ -397,6 +404,9 @@ namespace swarm
 
     /// \brief Pointer to GPS sensor
     private: gazebo::sensors::GpsSensorPtr gps;
+
+    /// \brief Pointer to IMU sensor
+    private: gazebo::sensors::ImuSensorPtr imu;
 
     /// \brief Pointer to LogicalCamera sensor
     private: gazebo::sensors::LogicalCameraSensorPtr camera;

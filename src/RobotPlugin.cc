@@ -148,6 +148,38 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
+bool RobotPlugin::Velocity(ignition::math::Vector3d &_linVel,
+    ignition::math::Vector3d &_angVel) const
+{
+  if (!this->model || !this->imu)
+  {
+    gzerr << "No model or IMU available" << std::endl;
+    _linVel = _angVel = ignition::math::Vector3d::Zero;
+    return false;
+  }
+
+  // TODO: Consider adding noise (or just let Gazebo do it?).
+  _linVel = this->model->GetRelativeLinearVel().Ign();
+  _angVel = this->imu->AngularVelocity();
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool RobotPlugin::Orientation(ignition::math::Quaterniond &_orient) const
+{
+  if (!this->imu)
+  {
+    gzerr << "No IMU sensor available" << std::endl;
+    _orient = ignition::math::Quaterniond::Identity;
+    return false;
+  }
+
+  // TODO: Consider adding noise (or just let Gazebo do it?).
+  _orient = this->imu->Orientation();
+  return true;
+}
+
+//////////////////////////////////////////////////
 bool RobotPlugin::Pose(double &_latitude,
                        double &_longitude,
                        double &_altitude) const
@@ -288,18 +320,26 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
         gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
           _sdf->Get<std::string>("gps")));
-
-    if (!this->camera)
-    {
-      gzerr << "Trying to get a gps sensor for robot with address["
-        << this->address << "], but the specified gps[" <<
-        _sdf->Get<std::string>("gps") << "] has an incorrect type.\n";
-    }
   }
 
   if (!this->gps)
   {
     gzwarn << "No gps sensor found on robot with address "
+      << this->address << std::endl;
+  }
+
+  // Get the IMU sensor
+  if (_sdf->HasElement("imu"))
+  {
+    this->imu =
+      boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
+        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+          _sdf->Get<std::string>("imu")));
+  }
+
+  if (!this->imu)
+  {
+    gzwarn << "No IMU sensor found on robot with address "
       << this->address << std::endl;
   }
 
