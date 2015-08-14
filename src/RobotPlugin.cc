@@ -310,9 +310,6 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
           terrainModel->GetLink()->GetCollision("collision")->GetShape());
 
-    if (!terrain)
-      gzerr << "Unable to find terrain\n";
-
     // Get the size of the terrain
     this->terrainSize = this->terrain->GetSize().Ign();
 
