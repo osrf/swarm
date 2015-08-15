@@ -162,8 +162,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
   if (this->Orientation(orient))
   {
-    gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
-    gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
+    gzmsg << "[" << this->Host() << "] Orientation: " << orient << std::endl;
   }
 
   // Only print for one robot, to minimize console output

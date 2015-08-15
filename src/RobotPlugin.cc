@@ -335,7 +335,11 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
         gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
           _sdf->Get<std::string>("imu")));
+    std::cout << "Sensor: " << this->model->GetScopedName(true) + "::" +
+        _sdf->Get<std::string>("imu") << std::endl;
   }
+  else
+    std::cerr << "No imu" << std::endl;
 
   if (!this->imu)
   {
