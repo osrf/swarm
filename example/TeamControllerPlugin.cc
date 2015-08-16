@@ -180,8 +180,8 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  gzmsg << "---" << std::endl;
-  gzmsg << "[" << this->Host() << "] New message received" << std::endl;
-  gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  gzmsg << "\tData: [" << _data << "]" << std::endl;
+  //gzmsg << "---" << std::endl;
+  //gzmsg << "[" << this->Host() << "] New message received" << std::endl;
+  //gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
+  //gzmsg << "\tData: [" << _data << "]" << std::endl;
 }
