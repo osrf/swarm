@@ -139,7 +139,12 @@
             <sensor name="gps" type="gps">
               <gps/>
               <always_on>1</always_on>
-            </sensor>            
+            </sensor>
+
+            <sensor name="imu" type="imu">
+              <imu/>
+              <always_on>1</always_on>
+            </sensor>
 
             <sensor name="camera" type="logical_camera">
               <logical_camera>
@@ -189,6 +194,7 @@
             <type>ground</type>
             <camera>link::camera</camera>
             <gps>link::gps</gps>
+            <imu>link::imu</imu>
             <address>192.168.2.<%=index+1%></address>
             <num_messages>1</num_messages>
             <%=search_area%>
