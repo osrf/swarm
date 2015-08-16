@@ -296,12 +296,51 @@ namespace swarm
     protected: void SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
-    /// \brief
-    protected: bool Velocity(ignition::math::Vector3d &_linVel,
-                             ignition::math::Vector3d &_angVel) const;
+    /// \brief Get the robot's IMU information.
+    ///
+    /// The linear velocity is set in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back velocity,
+    /// * y = left/right velociy,
+    /// * z = up/down velocity.
+    ///
+    /// The angular velocity is set in the robot's local coordinate frame, where
+    ///
+    /// * x = Velocity about x-axis (roll),
+    /// * y = Velocity about y-axis (pitch),
+    /// * z = Velocity about z-axis (yaw).
+    ///
+    /// The roll, pitch and yaw are set relative to the reference pose.
+    /// The reference pose was initialized when the robot was spawned in the
+    /// simulation.
+    ///
+    /// * roll  = Offset with respect the reference pos about x-axis,
+    /// * pitch = Offset with respect the reference pos about y-axis,
+    /// * yaw   = Offset with respect the reference pos about z-axis.
+    ///
+    /// \param[out] _linVel Linear velocity in the robot's local coordinate
+    /// frame (m/s).
+    /// \param[out] _angVel Angular velocity in the robot's local coordinate
+    /// frame (m/s).
+    /// \param[out] _roll Offset with respect the reference pos about x-axis
+    /// (radian).
+    /// \param[out] _pitch Offset with respect the reference pos about y-axis
+    /// (radian).
+    /// \param[out] _yaw Offset with respect the reference pos about z-axis
+    /// (radian).
+    protected: bool Imu(ignition::math::Vector3d &_linVel,
+                        ignition::math::Vector3d &_angVel,
+                        double &_roll,
+                        double &_pitch,
+                        double &_yaw) const;
 
-    /// \brief
-    protected: bool Orientation(ignition::math::Quaterniond &_orient) const;
+    /// \brief Angle between the true North and the robot.
+    /// For example, a vehicle facing East would have a bearing of PI/2 radians.
+    /// Note that in Gazebo the North is aligned with the +Y axis.
+    ///
+    /// \param[out] _bearing Bearing between the true North and the robot
+    /// (radian).
+    protected: bool Bearing(double &_bearing) const;
 
     /// \brief Get the robot's current pose from its GPS sensor.
     ///

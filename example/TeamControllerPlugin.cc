@@ -151,20 +151,6 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
   }
 
-  // Get velocity and orientation
-  ignition::math::Vector3d linVel, angVel;
-  ignition::math::Quaterniond orient;
-  if (this->Velocity(linVel, angVel))
-  {
-    gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
-    gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-  }
-
-  if (this->Orientation(orient))
-  {
-    gzmsg << "[" << this->Host() << "] Orientation: " << orient << std::endl;
-  }
-
   // Only print for one robot, to minimize console output
   if (this->Host() == "192.168.2.1")
   {
@@ -173,6 +159,22 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       minLongitude << " " << maxLongitude << std::endl;
     gzmsg << "[" << this->Host() << "] lat long alt: " <<
       latitude << " " << longitude << " " << altitude << std::endl;
+
+    // Get IMU information
+    ignition::math::Vector3d linVel, angVel;
+    double roll, pitch, yaw;
+    if (this->Imu(linVel, angVel, roll, pitch, yaw))
+    {
+      gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Orientation: " << roll << " "
+            << pitch << " " << yaw << std::endl;
+    }
+
+    // Get bearing
+    double bearing;
+    if (this->Bearing(bearing))
+      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
   }
 }
 
