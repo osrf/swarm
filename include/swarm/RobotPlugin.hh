@@ -310,29 +310,21 @@ namespace swarm
     /// * y = Velocity about y-axis (pitch),
     /// * z = Velocity about z-axis (yaw).
     ///
-    /// The roll, pitch and yaw are set relative to the reference pose.
-    /// The reference pose was initialized when the robot was spawned in the
-    /// simulation.
+    /// The orientation is set relative to the reference pose. The reference
+    /// pose was initialized when the robot was spawned in the simulation.
     ///
-    /// * roll  = Offset with respect the reference pos about x-axis,
-    /// * pitch = Offset with respect the reference pos about y-axis,
-    /// * yaw   = Offset with respect the reference pos about z-axis.
+    /// * x = Offset with respect the reference pos about x-axis (roll),
+    /// * y = Offset with respect the reference pos about y-axis (pitch),
+    /// * z = Offset with respect the reference pos about z-axis (yaw).
     ///
     /// \param[out] _linVel Linear velocity in the robot's local coordinate
     /// frame (m/s).
     /// \param[out] _angVel Angular velocity in the robot's local coordinate
     /// frame (m/s).
-    /// \param[out] _roll Offset with respect the reference pos about x-axis
-    /// (radian).
-    /// \param[out] _pitch Offset with respect the reference pos about y-axis
-    /// (radian).
-    /// \param[out] _yaw Offset with respect the reference pos about z-axis
-    /// (radian).
+    /// \param[out] _orient Offset with respect the reference pos (radian).
     protected: bool Imu(ignition::math::Vector3d &_linVel,
                         ignition::math::Vector3d &_angVel,
-                        double &_roll,
-                        double &_pitch,
-                        double &_yaw) const;
+                        ignition::math::Vector3d &_orient) const;
 
     /// \brief Angle between the true North and the robot.
     /// For example, a vehicle facing East would have a bearing of PI/2 radians.

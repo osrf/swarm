@@ -161,14 +161,12 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       latitude << " " << longitude << " " << altitude << std::endl;
 
     // Get IMU information
-    ignition::math::Vector3d linVel, angVel;
-    double roll, pitch, yaw;
-    if (this->Imu(linVel, angVel, roll, pitch, yaw))
+    ignition::math::Vector3d linVel, angVel, orient;
+    if (this->Imu(linVel, angVel, orient))
     {
       gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
       gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-      gzmsg << "[" << this->Host() << "] Orientation: " << roll << " "
-            << pitch << " " << yaw << std::endl;
+      gzmsg << "[" << this->Host() << "] Orientation: " << orient << std::endl;
     }
 
     // Get bearing
