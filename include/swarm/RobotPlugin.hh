@@ -310,8 +310,8 @@ namespace swarm
     /// * y = Velocity about y-axis (pitch),
     /// * z = Velocity about z-axis (yaw).
     ///
-    /// The orientation is set relative to the reference pose. The reference
-    /// pose was initialized when the robot was spawned.
+    /// The orientation is set relative to the reference pose with a range from
+    /// PI to -PI. The reference pose was initialized when the robot was spawned
     ///
     /// * x = Offset with respect the reference pos about x-axis (roll),
     /// * y = Offset with respect the reference pos about y-axis (pitch),
