@@ -311,7 +311,7 @@ namespace swarm
     /// * z = Velocity about z-axis (yaw).
     ///
     /// The orientation is set relative to the reference pose. The reference
-    /// pose was initialized when the robot was spawned in the simulation.
+    /// pose was initialized when the robot was spawned.
     ///
     /// * x = Offset with respect the reference pos about x-axis (roll),
     /// * y = Offset with respect the reference pos about y-axis (pitch),
@@ -326,7 +326,9 @@ namespace swarm
                         ignition::math::Vector3d &_angVel,
                         ignition::math::Vector3d &_orient) const;
 
-    /// \brief Angle between the true North and the robot.
+    /// \brief Angle between the true North and the robot. If the vehicle is
+    /// facing North the bearing is 0. The bearing increments clockwise up to
+    /// 2*PI radians.
     /// For example, a vehicle facing East would have a bearing of PI/2 radians.
     /// Note that in Gazebo the North is aligned with the +Y axis.
     ///

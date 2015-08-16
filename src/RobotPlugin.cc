@@ -184,7 +184,7 @@ bool RobotPlugin::Bearing(double &_bearing) const
   // with the Gazebo Y axis, so we should add an offset of PI/2 to the bearing
   // in the Gazebo world coordinates.
   _bearing = (ignition::math::Angle::HalfPi -
-     ignition::math::Angle(bearing)).Radian();
+    ignition::math::Angle(bearing)).Radian();
   // Normalize: Gazebo orientation uses PI,-PI but compasses seem to use 0,2*PI.
   if (_bearing < 0)
   {
@@ -350,11 +350,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
         gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
           _sdf->Get<std::string>("imu")));
-    std::cout << "Sensor: " << this->model->GetScopedName(true) + "::" +
-        _sdf->Get<std::string>("imu") << std::endl;
   }
-  else
-    std::cerr << "No imu" << std::endl;
 
   if (!this->imu)
   {
