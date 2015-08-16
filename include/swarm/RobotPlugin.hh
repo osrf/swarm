@@ -29,12 +29,12 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/sensors/sensors.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/sensors/sensors.hh>
 #include <ignition/transport.hh>
-#include <ignition/math/Vector3.hh>
 #include <ignition/math/Pose3.hh>
+#include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
