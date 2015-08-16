@@ -185,6 +185,7 @@ bool RobotPlugin::Bearing(double &_bearing) const
   // in the Gazebo world coordinates.
   _bearing = (ignition::math::Angle::HalfPi -
     ignition::math::Angle(bearing)).Radian();
+
   // Normalize: Gazebo orientation uses PI,-PI but compasses seem to use 0,2*PI.
   if (_bearing < 0)
   {
