@@ -49,7 +49,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     {
       std::cout << "[" << this->Host() << "] Lin. Vel: " << linVel << std::endl;
       std::cout << "[" << this->Host() << "] Ang. Vel: " << angVel << std::endl;
-      std::cout << "[" << this->Host() << "] Orient.: " << orient << std::endl;
+      std::cout << "[" << this->Host() << "] Orient.: "  << orient << std::endl;
     }
 
     // Get bearing.
