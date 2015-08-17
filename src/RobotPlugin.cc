@@ -21,6 +21,7 @@
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/math/Rand.hh>
 #include <gazebo/physics/physics.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
@@ -400,23 +401,37 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
           << "Address [" << topic << "] not found" << std::endl;
     return;
   }
+  if(_msg.neighbors().size() != _msg.neighbor_probabilities().size())
+  {
+    gzerr << "[" << this->Host() << "] RobotPlugin::OnMsgReceived(): Error "
+          << "received datagram with unequal neighbor list lengths."
+          << std::endl;
+    return;
+  }
 
   // Ignore if the address of this robot was not a neighbor of the sender.
   bool visible = false;
+  double prob = 0.0;
   for (auto i = 0; i < _msg.neighbors().size(); ++i)
   {
     if (_msg.neighbors(i) == this->Host())
     {
       visible = true;
+      prob = _msg.neighbor_probabilities(i);
       break;
     }
   }
 
   if (visible)
   {
-    // There's visibility between source and destination: run the user callback.
-    auto const &userCallback = this->callbacks[topic];
-    userCallback(_msg.src_address(), _msg.data());
+    // There's visibility between source and destination: apply the comms
+    // probability.
+    if (gazebo::math::Rand::GetDblUniform(0.0, 1.0) < prob)
+    {
+      // The packet got through: run the user callback.
+      auto const &userCallback = this->callbacks[topic];
+      userCallback(_msg.src_address(), _msg.data());
+    }
   }
 }
 
@@ -424,12 +439,23 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
 void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
     const msgs::Neighbor_V &_msg)
 {
+  if(_msg.neighbors().size() != _msg.neighbor_probabilities().size())
+  {
+    gzerr << "[" << this->Host() << "] RobotPlugin::OnNeighborsReceived(): Error "
+          << "received neighbor message with unequal list lengths."
+          << std::endl;
+    return;
+  }
   std::lock_guard<std::mutex> lock(this->mutex);
   this->neighbors.clear();
+  this->neighborProbabilities.clear();
   for (auto i = 0; i < _msg.neighbors().size(); ++i)
   {
     if (_msg.neighbors(i) != this->Host())
+    {
       this->neighbors.push_back(_msg.neighbors(i));
+      this->neighborProbabilities.push_back(_msg.neighbor_probabilities(i));
+    }
   }
 }
 

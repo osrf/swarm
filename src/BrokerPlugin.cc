@@ -21,6 +21,7 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/math/Rand.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
@@ -54,6 +55,52 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
 
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
+
+  // Get the comms model parameters.
+  if (_sdf->HasElement("comms_model"))
+  {
+    auto const &commsModelElem = _sdf->GetElement("comms_model");
+
+    if (commsModelElem->HasElement("neighbor_distance_min"))
+      this->commsModel.neighborDistanceMin =
+        commsModelElem->GetElement("neighbor_distance_min")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_max"))
+      this->commsModel.neighborDistanceMax =
+        commsModelElem->GetElement("neighbor_distance_max")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
+      this->commsModel.neighborDistancePenaltyWall =
+        commsModelElem->GetElement("neighbor_distance_penalty_wall")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
+      this->commsModel.neighborDistancePenaltyTree =
+        commsModelElem->GetElement("neighbor_distance_penalty_tree")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_min"))
+      this->commsModel.commsDistanceMin =
+        commsModelElem->GetElement("comms_distance_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_max"))
+      this->commsModel.commsDistanceMax =
+        commsModelElem->GetElement("comms_distance_max")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_penalty_wall"))
+      this->commsModel.commsDistancePenaltyWall =
+        commsModelElem->GetElement("comms_distance_penalty_wall")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_penalty_tree"))
+      this->commsModel.commsDistancePenaltyTree =
+        commsModelElem->GetElement("comms_distance_penalty_tree")->Get<double>();
+    if (commsModelElem->HasElement("comms_drop_probability_min"))
+      this->commsModel.commsDropProbabilityMin =
+        commsModelElem->GetElement("comms_drop_probability_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_drop_probability_max"))
+      this->commsModel.commsDropProbabilityMax =
+        commsModelElem->GetElement("comms_drop_probability_max")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_probability"))
+      this->commsModel.commsOutageProbability =
+        commsModelElem->GetElement("comms_outage_probability")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_duration_min"))
+      this->commsModel.commsOutageDurationMin =
+        commsModelElem->GetElement("comms_outage_duration_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_duration_max"))
+      this->commsModel.commsOutageDurationMax =
+        commsModelElem->GetElement("comms_outage_duration_max")->Get<double>();
+  }
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -121,6 +168,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
   // Update the list of neighbors for each robot.
   for (auto const &robot : this->swarm)
     this->UpdateNeighborList(robot.first);
+  printf("BrokerPlugin::Update\n");
 
   // Dispatch all incoming messages.
   while (!this->incomingMsgs.empty())
@@ -140,7 +188,10 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 
     // Add the list of neighbors of the sender to the outgoing message.
     for (auto const &neighbor : this->swarm[msg.src_address()]->neighbors)
-      msg.add_neighbors(neighbor);
+    {
+      msg.add_neighbors(neighbor.first);
+      msg.add_neighbor_probabilities(neighbor.second);
+    }
 
     // Create the topic name for the message destination.
     const std::string topic =
@@ -150,11 +201,14 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     this->node.Advertise(topic);
     this->node.Publish(topic, msg);
   }
+  printf("/BrokerPlugin::Update\n");
 }
 
 //////////////////////////////////////////////////
 void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 {
+  printf("BrokerPlugin::UpdateNeighborList\n");
+
   GZ_ASSERT(this->swarm.find(_address) != this->swarm.end(),
             "_address not found in the swarm.");
 
@@ -162,12 +216,13 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   auto myPose = swarmMember->model->GetWorldPose();
 
-  gzmsg << "UpdateNeighborList: " << swarmMember->name << std::endl;
+  //gzmsg << "UpdateNeighborList: " << swarmMember->name << std::endl;
 
   // Update the neighbor list for this robot.
   swarmMember->neighbors.clear();
   for (auto const &member : this->swarm)
   {
+    printf("BrokerPlugin::UpdateNeighborList: %s\n", member.first.c_str());
     // Decide whether this node goes into our neighbor list
 
     // Where is the other node?
@@ -176,69 +231,146 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
     // How far away is it from me?
     auto dist = (myPose.pos - otherPose.pos).GetLength();
+    auto neighborDist = dist;
+    auto commsDist = dist;
+    int numWalls = 0;
+    int numTrees = 0;
 
     // Apply the neighbor part of the comms model
     auto neighbor = true;
     if (neighbor &&
-        (this->commsModel.neighborDistanceMin >= 0.0) && 
-        (this->commsModel.neighborDistanceMin > dist))
+        (this->commsModel.neighborDistanceMin >= 0.0) &&
+        (this->commsModel.neighborDistanceMin > neighborDist))
       neighbor = false;
     if (neighbor &&
-        (this->commsModel.neighborDistanceMax >= 0.0) && 
-        (this->commsModel.neighborDistanceMax < dist))
+        (this->commsModel.neighborDistanceMax >= 0.0) &&
+        (this->commsModel.neighborDistanceMax < neighborDist))
       neighbor = false;
     if (neighbor && this->commsModel.neighborDistancePenaltyWall > 0.0)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      auto numWalls = this->NumWallsBetweenPoses(myPose, otherPose);
+      numWalls = this->NumWallsBetweenPoses(myPose, otherPose);
       if ((numWalls > 0) &&
           (this->commsModel.neighborDistancePenaltyWall < 0.0))
         neighbor = false;
       else
-        dist -= numWalls * this->commsModel.neighborDistancePenaltyWall; 
+        neighborDist -= numWalls * this->commsModel.neighborDistancePenaltyWall;
       if (neighbor &&
-          (this->commsModel.neighborDistanceMin >= 0.0) && 
-          (this->commsModel.neighborDistanceMin > dist))
+          (this->commsModel.neighborDistanceMin >= 0.0) &&
+          (this->commsModel.neighborDistanceMin > neighborDist))
         neighbor = false;
       if (neighbor &&
-          (this->commsModel.neighborDistanceMax >= 0.0) && 
-          (this->commsModel.neighborDistanceMax < dist))
+          (this->commsModel.neighborDistanceMax >= 0.0) &&
+          (this->commsModel.neighborDistanceMax < neighborDist))
         neighbor = false;
     }
     if (neighbor && this->commsModel.neighborDistancePenaltyTree > 0.0)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      auto numTrees = this->NumTreesBetweenPoses(myPose, otherPose);
+      numTrees = this->NumTreesBetweenPoses(myPose, otherPose);
       if ((numTrees > 0) &&
           (this->commsModel.neighborDistancePenaltyTree < 0.0))
         neighbor = false;
       else
-        dist -= numTrees * this->commsModel.neighborDistancePenaltyTree; 
+        neighborDist -= numTrees * this->commsModel.neighborDistancePenaltyTree;
       if (neighbor &&
-          (this->commsModel.neighborDistanceMin >= 0.0) && 
-          (this->commsModel.neighborDistanceMin > dist))
+          (this->commsModel.neighborDistanceMin >= 0.0) &&
+          (this->commsModel.neighborDistanceMin > neighborDist))
         neighbor = false;
       if (neighbor &&
-          (this->commsModel.neighborDistanceMax >= 0.0) && 
-          (this->commsModel.neighborDistanceMax < dist))
+          (this->commsModel.neighborDistanceMax >= 0.0) &&
+          (this->commsModel.neighborDistanceMax < neighborDist))
         neighbor = false;
     }
 
     if (neighbor)
     {
-      swarmMember->neighbors.push_back(member.first);
-      gzmsg << other->name << ": Yes" << std::endl;
+      // Now apply the comms model to compute a probability of a packet from
+      // this neighbor arriving successfully.
+      auto neighborProb = 1.0;
+
+      // TODO: apply outage model first, short-circuiting the rest of the work
+
+      if ((neighborProb > 0.0) &&
+          (this->commsModel.commsDistanceMin >= 0.0) &&
+          (this->commsModel.commsDistanceMin > commsDist))
+        neighborProb = 0.0;
+      if ((neighborProb > 0.0) &&
+          (this->commsModel.commsDistanceMax >= 0.0) &&
+          (this->commsModel.commsDistanceMax < commsDist))
+        neighborProb = 0.0;
+      if ((neighborProb > 0.0) && this->commsModel.commsDistancePenaltyWall > 0.0)
+      {
+        // We're within range.  Check for obstacles (don't want to waste time on
+        // that if we're not within range).
+        if ((numWalls > 0) &&
+            (this->commsModel.commsDistancePenaltyWall < 0.0))
+          neighborProb = 0.0;
+        else
+          commsDist -= numWalls * this->commsModel.commsDistancePenaltyWall;
+        if ((neighborProb > 0.0) &&
+            (this->commsModel.commsDistanceMin >= 0.0) &&
+            (this->commsModel.commsDistanceMin > commsDist))
+          neighborProb = 0.0;
+        if ((neighborProb > 0.0) &&
+            (this->commsModel.commsDistanceMax >= 0.0) &&
+            (this->commsModel.commsDistanceMax < commsDist))
+          neighborProb = 0.0;
+      }
+      if ((neighborProb > 0.0) && this->commsModel.commsDistancePenaltyTree > 0.0)
+      {
+        // We're within range.  Check for obstacles (don't want to waste time on
+        // that if we're not within range).
+        if ((numTrees > 0) &&
+            (this->commsModel.commsDistancePenaltyTree < 0.0))
+          neighborProb = 0.0;
+        else
+          commsDist -= numTrees * this->commsModel.commsDistancePenaltyTree;
+        if ((neighborProb > 0.0) &&
+            (this->commsModel.commsDistanceMin >= 0.0) &&
+            (this->commsModel.commsDistanceMin > commsDist))
+          neighborProb = 0.0;
+        if ((neighborProb > 0.0) &&
+            (this->commsModel.commsDistanceMax >= 0.0) &&
+            (this->commsModel.commsDistanceMax < commsDist))
+          neighborProb = 0.0;
+      }
+
+      printf("neighborProb: %f\n", neighborProb);
+      if (neighborProb > 0.0)
+      {
+        // We made it through the outage, distance, and obstacle filters.
+        // Compute a drop probability for this time step.
+        if (this->commsModel.commsDropProbabilityMax > 0.0)
+        {
+          printf("GetDblUniform\n");
+          neighborProb = 1.0 - gazebo::math::Rand::GetDblUniform(
+            this->commsModel.commsDropProbabilityMin,
+            this->commsModel.commsDropProbabilityMax);
+          printf("/GetDblUniform\n");
+        }
+      }
+
+      gzmsg << other->name << " : " << neighborProb << std::endl;
+
+      // Stuff the resulting information into our local representation of this
+      // node.  A message containing this information will be sent out below.
+      std::pair<std::string, double> neighborAndProb;
+      neighborAndProb.first = member.first;
+      neighborAndProb.second = neighborProb;
+      swarmMember->neighbors.push_back(neighborAndProb);
     }
-    else
-      gzmsg << other->name << ": No" << std::endl;
   }
 
   // Fill the message with the new neighbor list.
   swarm::msgs::Neighbor_V msg;
   for (auto const &neighbor : swarmMember->neighbors)
-    msg.add_neighbors(neighbor);
+  {
+    msg.add_neighbors(neighbor.first);
+    msg.add_neighbor_probabilities(neighbor.second);
+  }
 
   // Notify the node with its updated list of neighbors.
   std::string topic = "/swarm/" + swarmMember->address + "/neighbors";

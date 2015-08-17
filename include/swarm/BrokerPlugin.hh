@@ -49,8 +49,8 @@ namespace swarm
     /// \brief Model pointer.
     public: gazebo::physics::ModelPtr model;
 
-    /// \brief List of neighbors for this robot.
-    public: std::vector<std::string> neighbors;
+    /// \brief List of neighbors and comms probabilities for this robot.
+    public: std::vector<std::pair<std::string, double> > neighbors;
   };
 
   /// \brief Class used to store information about the communication model.

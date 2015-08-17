@@ -21,4 +21,8 @@ message Datagram
 
   /// \brief List of sender's neighbors.
   repeated string neighbors   = 5;
+
+  /// \brief List of probabilities of messages getting through from each
+  /// neighbor (parallel to neighbors list).
+  repeated double neighbor_probabilities = 6;
 }

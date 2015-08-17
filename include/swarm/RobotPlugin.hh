@@ -374,7 +374,10 @@ namespace swarm
     protected: static const uint32_t kDefaultPort = 4100;
 
     /// \brief Addresses of all the local neighbors.
-    protected: std::vector<std::string> neighbors;
+    private: std::vector<std::string> neighbors;
+
+    /// \brief List of comms probabilities (parallel to neighbors).
+    private: std::vector<double> neighborProbabilities;
 
     /// \brief The transport node.
     private: ignition::transport::Node node;
