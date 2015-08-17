@@ -366,6 +366,7 @@ namespace swarm
     private: void AdjustPose();
 
     /// \brief Get the height of the terrain at the specified location.
+    /// \param[in] _pos The location from which to return the height.
     /// \return Terrain height.
     private: double TerrainHeight(const ignition::math::Vector3d &_pos) const;
 
