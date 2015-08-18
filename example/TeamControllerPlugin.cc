@@ -176,10 +176,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     // Get bearing
     ignition::math::Angle bearing;
     if (this->Bearing(bearing))
-    {
-      gzmsg << "[" << this->Host() << "] Bearing: " << bearing.Radian()
-            << std::endl;
-    }
+      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
   }
 }
 
