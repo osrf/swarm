@@ -56,5 +56,4 @@ namespace swarm
     private: int msgsSent;
   };
 }
-
 #endif

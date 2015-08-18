@@ -26,6 +26,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <gazebo/transport/TransportTypes.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
@@ -109,6 +110,12 @@ namespace swarm
     ///
     /// \param[in] _sdf Pointer to the SDF element of the model.
     protected: virtual void Load(sdf::ElementPtr _sdf);
+
+    /// \brief Update the plugin. This function is called once every
+    /// iteration.
+    ///
+    /// \param[in] _info Update information provided by the server.
+    protected: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
     /// \brief This method can bind a local address and a port to a
     /// virtual socket. This is a required step if your agent needs to
@@ -327,7 +334,7 @@ namespace swarm
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
-    private: virtual void Update(const gazebo::common::UpdateInfo &_info);
+    private: virtual void Loop(const gazebo::common::UpdateInfo &_info);
 
     // Documentation Inherited.
     private: virtual void Load(gazebo::physics::ModelPtr _model,
@@ -354,6 +361,18 @@ namespace swarm
     private: void OnNeighborsReceived(const std::string &_topic,
                                       const msgs::Neighbor_V &_msg);
 
+    /// \brief Adjust the pose of the vehicle to stay within the terrain
+    /// boundaries.
+    private: void AdjustPose();
+
+    /// \brief Get terrain information at the specified location.
+    /// \param[in] _pos Reference position.
+    /// \param[out] _terrainPos The 3d point on the terrain.
+    /// \param[out] _norm Normal to the terrain.
+    private: void TerrainLookup(const ignition::math::Vector3d &_pos,
+                ignition::math::Vector3d &_terrainPos,
+                ignition::math::Vector3d &_norm) const;
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -378,6 +397,12 @@ namespace swarm
 
     /// \brief The transport node.
     private: ignition::transport::Node node;
+
+    // The gazebo transport node. Used for debugging, see source.
+    // private: gazebo::transport::NodePtr gzNode;
+
+    // Used to publish markers, Used for debugging, see source.
+    // private: gazebo::transport::PublisherPtr markerPub;
 
     /// \brief User callbacks. The key is the topic name
     /// (e.g.: "/swarm/192.168.2.1/4000") and the value is the user callback.
@@ -407,6 +432,19 @@ namespace swarm
 
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;
+
+    /// \brief Pointer to the terrain
+    private: gazebo::physics::HeightmapShapePtr terrain;
+
+    /// \brief This is the scaling from world coordinates to heightmap
+    /// coordinates.
+    private: ignition::math::Vector2d terrainScaling;
+
+    /// \brief Size of the terrain
+    private: ignition::math::Vector3d terrainSize;
+
+    /// \brief Half the height of the model.
+    private: double modelHeight2;
   };
 }
 #endif

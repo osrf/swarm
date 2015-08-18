@@ -17,8 +17,11 @@
 
     <scene>
       <shadows>false</shadows>
-      <ambient>1 1 1 1</ambient>
+      <ambient>0.5 0.5 0.5 1</ambient>
     </scene>
+    <include>
+      <uri>model://sun</uri>
+    </include>
 
     <physics type="ode">
       <ode>
@@ -132,7 +135,7 @@
              </swarm_search_area>''' %>
 
     <!-- Create the ground vehicles -->
-    <% for index in 0..1 %>
+    <% for index in 0..0 %>
       <model name="ground_<%=index%>">
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
@@ -199,39 +202,52 @@
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
 
-    <model name="ground_plane">
+    <model name="terrain">
       <static>true</static>
       <link name="link">
         <collision name="collision">
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>10000 10000</size>
-            </plane>
+            <heightmap>
+              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
+              <size>10000 10000 1000</size>
+              <pos>0 0 0</pos>
+            </heightmap>
           </geometry>
-          <surface>
-            <friction>
-              <ode>
-                <mu>100</mu>
-                <mu2>50</mu2>
-              </ode>
-            </friction>
-          </surface>
         </collision>
-        <visual name="visual">
-          <cast_shadows>false</cast_shadows>
+        <visual name="visual_abcedf">
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>10000 10000</size>
-            </plane>
+            <heightmap>
+              <use_terrain_paging>false</use_terrain_paging>
+              <texture>
+                <diffuse>file://media/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>file://media/materials/textures/flat_normal.png</normal>
+                <size>5</size>
+              </texture>
+              <texture>
+                <diffuse>file://media/materials/textures/grass_diffusespecular.png</diffuse>
+                <normal>file://media/materials/textures/flat_normal.png</normal>
+                <size>5</size>
+              </texture>
+              <texture>
+                <diffuse>file://media/materials/textures/fungus_diffusespecular.png</diffuse>
+                <normal>file://media/materials/textures/flat_normal.png</normal>
+                <size>5</size>
+              </texture>
+
+              <blend>
+                <min_height>600</min_height>
+                <fade_dist>20</fade_dist>
+              </blend>
+
+              <blend>
+                <min_height>720</min_height>
+                <fade_dist>20</fade_dist>
+              </blend>
+              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
+              <size>10000 10000 1000</size>
+              <pos>0 0 0</pos>
+            </heightmap>
           </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-          </material>
         </visual>
       </link>
     </model>
