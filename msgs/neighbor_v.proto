@@ -8,8 +8,4 @@ message Neighbor_V
 {
   /// \brief List of neighbors.
   repeated string neighbors = 1;
-
-  /// \brief List of probabilities of messages getting through from each
-  /// neighbor (parallel to neighbors list).
-  repeated double neighbor_probabilities = 2;
 }
