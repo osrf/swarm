@@ -245,7 +245,9 @@ void RobotPlugin::AdjustPose()
   pose.Pos().Y(ignition::math::clamp(pose.Pos().Y(),
         -this->terrainSize.Y() * 0.5, this->terrainSize.Y() * 0.5));
 
-  double height = this->TerrainHeight(pose.Pos());
+  ignition::math::Vector3d norm;
+  ignition::math::Vector3d terrainPos;
+  this->TerrainLookup(pose.Pos(), terrainPos, norm);
 
   // Constrain each type of robot
   switch (this->Type())
@@ -253,18 +255,47 @@ void RobotPlugin::AdjustPose()
     default:
     case GROUND:
       {
+        ignition::math::Vector3d euler = pose.Rot().Euler();
+
+        // Project normal onto xy plane
+        ignition::math::Vector3d norm2d(norm.X(), norm.Y(), 0);
+        norm2d.Normalize();
+
+        // Pitch vector
+        ignition::math::Vector3d normPitchDir(
+            cos(euler.Z()), sin(euler.Z()), 0);
+
+        // Roll vector
+        ignition::math::Vector3d normRollDir(sin(euler.Z()), cos(euler.Z()), 0);
+
+        // Compute pitch and roll
+        double pitch = norm2d.Dot(normPitchDir) * acos(norm.Z());
+        //double roll = pitch - /*norm2d.Dot(normRollDir) * */ acos(norm.Z());
+        double roll = (norm2d.Dot(normRollDir) * asin(norm.Z()));
+
+        std::cout << "Norm[" << norm << "]\n";
+        std::cout << "Euler[" << euler << "]\n";
+        std::cout << "Norm2d[" << norm2d << "]\n";
+        std::cout << "NormPitchDir[" << normPitchDir << "]\n";
+        std::cout << "NormRollDir[" << normRollDir << "]\n";
+        std::cout << "Pitch[" << pitch << "]\n";
+        std::cout << "Roll[" << roll << "]\n";
+        std::cout << "Acos[" << acos(norm.Z()) << "]\n";
+
+
         // Add half the height of the vehicle
-        pose.Pos().Z(height + this->modelHeight2);
+        pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
+        pose.Rot().Euler(roll, pitch, pose.Rot().Euler().Z());
 
         // Set the pose.
-        this->model->SetWorldPose(pose);
+        this->model->SetRelativePose(pose);
         break;
       }
     case ROTOR:
       {
-        if (pose.Pos().Z() < height + this->modelHeight2)
+        if (pose.Pos().Z() < terrainPos.Z() + this->modelHeight2)
         {
-          pose.Pos().Z(height + this->modelHeight2);
+          pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
 
           // Set the pose.
           this->model->SetWorldPose(pose);
@@ -273,9 +304,9 @@ void RobotPlugin::AdjustPose()
       }
     case FIXED_WING:
       {
-        if (pose.Pos().Z() < height + this->modelHeight2)
+        if (pose.Pos().Z() < terrainPos.Z() + this->modelHeight2)
         {
-          pose.Pos().Z(height + this->modelHeight2);
+          pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
 
           // Set the pose.
           this->model->SetWorldPose(pose);
@@ -549,7 +580,9 @@ std::string RobotPlugin::Name() const
 }
 
 //////////////////////////////////////////////////
-double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
+void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
+    ignition::math::Vector3d &_terrainPos,
+    ignition::math::Vector3d &_norm) const
 {
   // The robot position in the coordinate frame of the terrain
   ignition::math::Vector3d robotPos(
@@ -570,20 +603,25 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
   {
     if (static_cast<int>(v1.Y()) % 2 == 0)
     {
-      v2.X(v1.X()-1);
-      v3.Y(v1.Y()-1);
+      v2.Y(v1.Y()-1);
+      v3.X(v1.X()-1);
     }
     else
     {
       ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
       ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
       if (robotPos.Distance(b) < robotPos.Distance(c))
-        v2 = b;
+      {
+        v3 = b;
+        v2.X(v1.X()-1);
+        v2.Y(v1.Y()-1);
+      }
       else
+      {
         v2 = c;
-
-      v3.X(v1.X()-1);
-      v3.Y(v1.Y()-1);
+        v3.X(v1.X()-1);
+        v3.Y(v1.Y()-1);
+      }
     }
   }
   else if (static_cast<int>(v1.X()) ==
@@ -595,17 +633,22 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
       ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
       ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
       if (robotPos.Distance(b) < robotPos.Distance(c))
+      {
         v2 = b;
+        v3.X(v1.X()+1);
+        v3.Y(v1.Y()-1);
+      }
       else
-        v2 = c;
-
-      v3.X(v1.X()+1);
-      v3.Y(v1.Y()-1);
+      {
+        v3 = c;
+        v2.X(v1.X()+1);
+        v2.Y(v1.Y()-1);
+      }
     }
     else
     {
-      v2.Y(v1.Y()-1);
-      v3.X(v1.X()+1);
+      v2.X(v1.X()+1);
+      v3.Y(v1.Y()-1);
     }
   }
   else if (static_cast<int>(v1.X()) ==
@@ -617,37 +660,49 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
       ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
       ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
       if (robotPos.Distance(b) < robotPos.Distance(c))
-        v2 = b;
+      {
+        v2.X(v1.X()+1);
+        v2.Y(v1.Y()+1);
+        v3 = b;
+      }
       else
+      {
         v2 = c;
-
-      v3.X(v1.X()+1);
-      v3.Y(v1.Y()+1);
+        v3.X(v1.X()+1);
+        v3.Y(v1.Y()+1);
+      }
     }
     else
     {
-      v2.X(v1.X()+1);
-      v3.Y(v1.Y()+1);
+      v2.Y(v1.Y()+1);
+      v3.X(v1.X()+1);
     }
   }
   else
   {
     if (static_cast<int>(v1.Y()) % 2 == 0)
     {
-      v2.Y() += 1;
-      v3.X() -= 1;
+      v2.X() -= 1;
+      v3.Y() += 1;
     }
     else
     {
       ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
       ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
       if (robotPos.Distance(b) < robotPos.Distance(c))
+      {
         v2 = b;
-      else
-        v2 = c;
+        v3.X(v1.X()-1);
+        v3.Y(v1.Y()+1);
 
-      v3.X(v1.X()-1);
-      v3.Y(v1.Y()+1);
+      }
+      else
+      {
+        v2.X(v1.X()-1);
+        v2.Y(v1.Y()+1);
+        v3 = c;
+      }
+
     }
   }
 
@@ -666,21 +721,10 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
   // markerMsg.set_action(gazebo::msgs::Marker::MODIFY);
   // markerMsg.set_type(gazebo::msgs::Marker::LINE_STRIP);
 
-  // ignition::math::Vector3d v1a = v1;
-  // ignition::math::Vector3d v2a = v2;
-  // ignition::math::Vector3d v3a = v3;
-  // v1a.X(v1a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  // v1a.Y(this->terrainSize.Y()*0.5 - v1a.Y()*this->terrainScaling.Y());
+
   // v1a.Z() += 0.1;
-
-  // v2a.X(v2a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  // v2a.Y(this->terrainSize.Y()*0.5 - v2a.Y()*this->terrainScaling.Y());
   // v2a.Z() += 0.1;
-
-  // v3a.X(v3a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  // v3a.Y(this->terrainSize.Y()*0.5 - v3a.Y()*this->terrainScaling.Y());
   // v3a.Z() += 0.1;
-
   // gazebo::msgs::Set(markerMsg.add_point(), v1a);
   // gazebo::msgs::Set(markerMsg.add_point(), v2a);
   // gazebo::msgs::Set(markerMsg.add_point(), v3a);
@@ -688,9 +732,22 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
   //   this->markerPub->Publish(markerMsg);
   // END DEBUG CODE
 
+  ignition::math::Vector3d v1a = v1;
+  ignition::math::Vector3d v2a = v2;
+  ignition::math::Vector3d v3a = v3;
+  v1a.X(v1a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  v1a.Y(this->terrainSize.Y()*0.5 - v1a.Y()*this->terrainScaling.Y());
+
+  v2a.X(v2a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  v2a.Y(this->terrainSize.Y()*0.5 - v2a.Y()*this->terrainScaling.Y());
+
+  v3a.X(v3a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
+  v3a.Y(this->terrainSize.Y()*0.5 - v3a.Y()*this->terrainScaling.Y());
+
+  _norm = ignition::math::Vector3d::Normal(v1a, v2a, v3a);
+
   // Triangle normal
-  ignition::math::Vector3d norm =
-    ignition::math::Vector3d::Normal(v1, v2, v3);
+  ignition::math::Vector3d norm = ignition::math::Vector3d::Normal(v1, v2, v3);
 
   // Ray direction to intersect with triangle
   ignition::math::Vector3d rayDir(0, 0, -1);
@@ -702,5 +759,5 @@ double RobotPlugin::TerrainHeight(const ignition::math::Vector3d &_pos) const
   double intersection = -norm.Dot(rayPt - v1) / norm.Dot(rayDir);
 
   // Height of the terrain
-  return (rayPt + intersection * rayDir).Z();
+  _terrainPos = rayPt + intersection * rayDir;
 }

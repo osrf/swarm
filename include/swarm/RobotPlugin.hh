@@ -365,10 +365,13 @@ namespace swarm
     /// boundaries.
     private: void AdjustPose();
 
-    /// \brief Get the height of the terrain at the specified location.
-    /// \param[in] _pos The location from which to return the height.
-    /// \return Terrain height.
-    private: double TerrainHeight(const ignition::math::Vector3d &_pos) const;
+    /// \brief Get terrain information at the specified location.
+    /// \param[in] _pos Reference position.
+    /// \param[out] _terrainPos The 3d point on the terrain.
+    /// \param[out] _norm Normal to the terrain.
+    private: void TerrainLookup(const ignition::math::Vector3d &_pos,
+                ignition::math::Vector3d &_terrainPos,
+                ignition::math::Vector3d &_norm) const;
 
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
