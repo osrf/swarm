@@ -266,22 +266,12 @@ void RobotPlugin::AdjustPose()
             cos(euler.Z()), sin(euler.Z()), 0);
 
         // Roll vector
-        ignition::math::Vector3d normRollDir(sin(euler.Z()), cos(euler.Z()), 0);
+        ignition::math::Vector3d normRollDir(sin(euler.Z()),
+            -cos(euler.Z()), 0);
 
         // Compute pitch and roll
         double pitch = norm2d.Dot(normPitchDir) * acos(norm.Z());
-        //double roll = pitch - /*norm2d.Dot(normRollDir) * */ acos(norm.Z());
-        double roll = (norm2d.Dot(normRollDir) * asin(norm.Z()));
-
-        std::cout << "Norm[" << norm << "]\n";
-        std::cout << "Euler[" << euler << "]\n";
-        std::cout << "Norm2d[" << norm2d << "]\n";
-        std::cout << "NormPitchDir[" << normPitchDir << "]\n";
-        std::cout << "NormRollDir[" << normRollDir << "]\n";
-        std::cout << "Pitch[" << pitch << "]\n";
-        std::cout << "Roll[" << roll << "]\n";
-        std::cout << "Acos[" << acos(norm.Z()) << "]\n";
-
+        double roll = norm2d.Dot(normRollDir) * acos(norm.Z());
 
         // Add half the height of the vehicle
         pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
