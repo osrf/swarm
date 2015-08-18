@@ -19,6 +19,8 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <ignition/math/Angle.hh>
+#include <ignition/math/Quaternion.hh>
 #include <sdf/sdf.hh>
 #include "TeamControllerPlugin.hh"
 
@@ -161,18 +163,23 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       latitude << " " << longitude << " " << altitude << std::endl;
 
     // Get IMU information
-    ignition::math::Vector3d linVel, angVel, orient;
+    ignition::math::Vector3d linVel, angVel;
+    ignition::math::Quaterniond orient;
     if (this->Imu(linVel, angVel, orient))
     {
       gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
       gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-      gzmsg << "[" << this->Host() << "] Orientation: " << orient << std::endl;
+      gzmsg << "[" << this->Host() << "] Orientation: " << orient.Euler()
+            << std::endl;
     }
 
     // Get bearing
-    double bearing;
+    ignition::math::Angle bearing;
     if (this->Bearing(bearing))
-      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
+    {
+      gzmsg << "[" << this->Host() << "] Bearing: " << bearing.Radian()
+            << std::endl;
+    }
   }
 }
 

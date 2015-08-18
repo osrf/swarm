@@ -32,9 +32,11 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/sensors/sensors.hh>
-#include <ignition/transport.hh>
+#include <ignition/math/Angle.hh>
 #include <ignition/math/Pose3.hh>
+#include <ignition/math/Quaternion.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
@@ -324,10 +326,10 @@ namespace swarm
     /// frame (m/s).
     /// \param[out] _angVel Angular velocity in the robot's local coordinate
     /// frame (m/s).
-    /// \param[out] _orient Offset with respect the reference pos (radian).
+    /// \param[out] _orient Offset with respect the reference pos.
     protected: bool Imu(ignition::math::Vector3d &_linVel,
                         ignition::math::Vector3d &_angVel,
-                        ignition::math::Vector3d &_orient) const;
+                        ignition::math::Quaterniond &_orient) const;
 
     /// \brief Angle between the true North and the robot. If the vehicle is
     /// facing North the bearing is 0. The bearing increments clockwise up to
@@ -335,9 +337,9 @@ namespace swarm
     /// For example, a vehicle facing East would have a bearing of PI/2 radians.
     /// Note that in Gazebo the North is aligned with the +Y axis.
     ///
-    /// \param[out] _bearing Bearing between the true North and the robot
-    /// (radian).
-    protected: bool Bearing(double &_bearing) const;
+    /// \param[out] _bearing Bearing between the true North and the robot.
+    /// \return True if the call was successful.
+    protected: bool Bearing(ignition::math::Angle &_bearing) const;
 
     /// \brief Get the robot's current pose from its GPS sensor.
     ///

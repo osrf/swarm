@@ -32,7 +32,11 @@ GZ_REGISTER_MODEL_PLUGIN(RobotPlugin)
 
 //////////////////////////////////////////////////
 RobotPlugin::RobotPlugin()
-  : type(GROUND)
+  : type(GROUND),
+    searchMinLatitude(0),
+    searchMaxLatitude(0),
+    searchMinLongitude(0),
+    searchMaxLongitude(0)
 {
 }
 
@@ -149,49 +153,48 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
-  ignition::math::Vector3d &_angVel, ignition::math::Vector3d &_orient) const
+  ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
 {
   if (!this->model || !this->imu)
   {
     gzerr << "[" << this->Host() << "] Imu() error: No model or IMU sensor"
           << " available" << std::endl;
-    _linVel = _angVel = _orient = ignition::math::Vector3d::Zero;
+    _linVel = _angVel = ignition::math::Vector3d::Zero;
+    _orient = ignition::math::Quaterniond::Identity;
     return false;
   }
 
   // TODO: Consider adding noise (or just let Gazebo do it?).
   _linVel = this->model->GetRelativeLinearVel().Ign();
   _angVel = this->imu->AngularVelocity();
-  _orient = this->imu->Orientation().Euler();
+  _orient = this->imu->Orientation();
   return true;
 }
 
 //////////////////////////////////////////////////
-bool RobotPlugin::Bearing(double &_bearing) const
+bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 {
   if (!this->model)
   {
     gzerr << "[" << this->Host() << "] Bearing() error: No model available"
           << std::endl;
-    _bearing = 0.0;
+    _bearing = ignition::math::Angle::Zero;
     return false;
   }
 
   // TODO: Consider adding noise (or just let Gazebo do it?).
   // Get the Yaw angle of the model in Gazebo world coordinates.
-  double bearing = this->model->GetWorldPose().rot.GetAsEuler().z;
+  auto bearing = ignition::math::Angle(
+    this->model->GetWorldPose().rot.GetAsEuler().z);
   // A "0" bearing value means that the model is facing North. North is aligned
   // with the Gazebo Y axis, so we should add an offset of PI/2 to the bearing
   // in the Gazebo world coordinates.
-  _bearing = (ignition::math::Angle::HalfPi -
-    ignition::math::Angle(bearing)).Radian();
+  _bearing = ignition::math::Angle::HalfPi - bearing;
 
   // Normalize: Gazebo orientation uses PI,-PI but compasses seem to use 0,2*PI.
-  if (_bearing < 0)
-  {
-    _bearing = (ignition::math::Angle::TwoPi -
-      ignition::math::Angle(-_bearing)).Radian();
-  }
+  if (_bearing.Radian() < 0)
+    _bearing = ignition::math::Angle::TwoPi + _bearing;
+
   return true;
 }
 
