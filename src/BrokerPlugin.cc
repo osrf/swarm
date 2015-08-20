@@ -177,7 +177,6 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
   }
 
   auto dt = curTime - this->lastUpdateTime;
-  std::cout << "Elapsed time: " << dt.Double() << std::endl;
 
   std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -247,7 +246,8 @@ void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
     auto swarmMember = robot.second;
 
     // Check if I am currently on outage.
-    if (swarmMember->onOutage)
+    if (swarmMember->onOutage &&
+        swarmMember->onOutageUntil != gazebo::common::Time::Zero)
     {
       // Check if the outage should finish.
       if (this->world->GetSimTime() >= swarmMember->onOutageUntil)
