@@ -28,6 +28,7 @@
 #include <vector>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/math/Pose.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
@@ -51,6 +52,12 @@ namespace swarm
 
     /// \brief List of neighbors and comms probabilities for this robot.
     public: std::vector<std::pair<std::string, double> > neighbors;
+
+    /// \brief Is this robot on outage?
+    public: bool onOutage;
+
+    /// \brief When will the last outage finish?
+    public: gazebo::common::Time onOutageUntil;
   };
 
   /// \brief Class used to store information about the communication model.
@@ -60,11 +67,11 @@ namespace swarm
     public: CommsModel();
 
     /// \brief Minimum free-space distance (m) between two nodes to be
-    /// neighbors.  Set to <0 for no limit.
+    /// neighbors. Set to <0 for no limit.
     public: double neighborDistanceMin;
 
     /// \brief Maximum free-space distance (m) between two nodes to be
-    /// neighbors.  Set to <0 for no limit.
+    /// neighbors. Set to <0 for no limit.
     public: double neighborDistanceMax;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an

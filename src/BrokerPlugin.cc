@@ -176,8 +176,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
-    gzdbg << "Processing message from " << msg.src_address() << " addressed to " <<
-      msg.dst_address() << std::endl;
+    gzdbg << "Processing message from " << msg.src_address()
+          << " addressed to " << msg.dst_address() << std::endl;
 
     // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm.find(msg.src_address()) == this->swarm.end())
@@ -230,6 +230,42 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   // Update the neighbor list for this robot.
   swarmMember->neighbors.clear();
+
+  // TODO: apply outage model first, short-circuiting the rest of the work.
+
+  // Check if I am currently on outage.
+  if (swarmMember->onOutage)
+  {
+    // Check if the outage should finish.
+    if (this->world->GetSimTime() >= swarmMember->onOutageUntil)
+    {
+      swarmMember->onOutage = false;
+      gzdbg << "Robot " << _address << " is back from an outage." << std::endl;
+    }
+    else
+    {
+      // We're currently on outage, no neighbors.
+      return;
+    }
+  }
+  else
+  {
+    // Check if we should start an outage.
+    if (ignition::math::Rand::DblUniform(0.0, 1.0) <
+        this->commsModel.commsOutageProbability)
+    {
+      swarmMember->onOutage = true;
+      gzdbg << "Robot " << _address << " has started an outage." << std::endl;
+
+      // Decide the duration of the outage.
+      swarmMember->onOutageUntil = this->world->GetSimTime() +
+        gazebo::common::Time::Second;
+
+      // We're currently on outage, no neighbors.
+      return;
+    }
+  }
+
   for (auto const &member : this->swarm)
   {
     // Decide whether this node goes into our neighbor list
@@ -244,6 +280,10 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
     auto commsDist = dist;
     int numWalls = 0;
     int numTrees = 0;
+
+    // Check if the other teammate is currenly on outage.
+    if (other->onOutage)
+      continue;
 
     // Apply the neighbor part of the comms model
     auto neighbor = true;
@@ -299,8 +339,6 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
       // Now apply the comms model to compute a probability of a packet from
       // this neighbor arriving successfully.
       auto commsProb = 1.0;
-
-      // TODO: apply outage model first, short-circuiting the rest of the work
 
       if ((commsProb > 0.0) &&
           (this->commsModel.commsDistanceMin >= 0.0) &&
