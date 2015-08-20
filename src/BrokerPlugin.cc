@@ -266,8 +266,8 @@ void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
         gzdbg << "Robot " << address << " has started an outage." << std::endl;
 
         // Decide the duration of the outage.
-        if (this->commsModel->commsOutageDurationMin < 0 ||
-            this->commsModel->commsOutageDurationMax < 0)
+        if (this->commsModel.commsOutageDurationMin < 0 ||
+            this->commsModel.commsOutageDurationMax < 0)
         {
           // Permanent outage.
           swarmMember->onOutageUntil = gazebo::common::Time::Zero;
@@ -277,8 +277,8 @@ void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
           // Temporal outage.
           swarmMember->onOutageUntil = this->world->GetSimTime() +
             ignition::math::Rand::DblUniform(
-              this->commsModel->commsOutageDurationMin,
-              this->commsModel->commsOutageDurationMax);
+              this->commsModel.commsOutageDurationMin,
+              this->commsModel.commsOutageDurationMax);
         }
       }
     }
