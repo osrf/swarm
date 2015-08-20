@@ -69,10 +69,12 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
         commsModelElem->GetElement("neighbor_distance_max")->Get<double>();
     if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
       this->commsModel.neighborDistancePenaltyWall =
-        commsModelElem->GetElement("neighbor_distance_penalty_wall")->Get<double>();
+        commsModelElem->GetElement(
+          "neighbor_distance_penalty_wall")->Get<double>();
     if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
       this->commsModel.neighborDistancePenaltyTree =
-        commsModelElem->GetElement("neighbor_distance_penalty_tree")->Get<double>();
+        commsModelElem->GetElement(
+          "neighbor_distance_penalty_tree")->Get<double>();
     if (commsModelElem->HasElement("comms_distance_min"))
       this->commsModel.commsDistanceMin =
         commsModelElem->GetElement("comms_distance_min")->Get<double>();
@@ -81,10 +83,12 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
         commsModelElem->GetElement("comms_distance_max")->Get<double>();
     if (commsModelElem->HasElement("comms_distance_penalty_wall"))
       this->commsModel.commsDistancePenaltyWall =
-        commsModelElem->GetElement("comms_distance_penalty_wall")->Get<double>();
+        commsModelElem->GetElement(
+          "comms_distance_penalty_wall")->Get<double>();
     if (commsModelElem->HasElement("comms_distance_penalty_tree"))
       this->commsModel.commsDistancePenaltyTree =
-        commsModelElem->GetElement("comms_distance_penalty_tree")->Get<double>();
+        commsModelElem->GetElement(
+          "comms_distance_penalty_tree")->Get<double>();
     if (commsModelElem->HasElement("comms_drop_probability_min"))
       this->commsModel.commsDropProbabilityMin =
         commsModelElem->GetElement("comms_drop_probability_min")->Get<double>();

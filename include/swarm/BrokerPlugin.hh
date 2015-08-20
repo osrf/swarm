@@ -25,6 +25,7 @@
 #include <mutex>
 #include <queue>
 #include <string>
+#include <utility>
 #include <vector>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>

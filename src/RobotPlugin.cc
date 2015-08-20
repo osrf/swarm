@@ -18,10 +18,10 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include <gazebo/math/Vector2i.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/math/Vector2i.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 #include "msgs/datagram.pb.h"
@@ -38,7 +38,8 @@ RobotPlugin::RobotPlugin()
     searchMinLatitude(0),
     searchMaxLatitude(0),
     searchMinLongitude(0),
-    searchMaxLongitude(0)
+    searchMaxLongitude(0),
+    modelHeight2(0)
 {
 }
 
@@ -598,7 +599,6 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
       std::cerr << "[" << this->Host() << "] Message dropped (src address "
                 << _msg.src_address() << ")" << std::endl;
     }
-
   }
 
   if (visible)
@@ -750,7 +750,6 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
         v2 = b;
         v3.X(v1.X()-1);
         v3.Y(v1.Y()+1);
-
       }
       else
       {
@@ -758,7 +757,6 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
         v2.Y(v1.Y()+1);
         v3 = c;
       }
-
     }
   }
 
