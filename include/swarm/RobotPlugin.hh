@@ -30,12 +30,14 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/sensors/sensors.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <ignition/transport.hh>
-#include <ignition/math/Vector3.hh>
+#include <gazebo/sensors/sensors.hh>
+#include <ignition/math/Angle.hh>
 #include <ignition/math/Pose3.hh>
+#include <ignition/math/Quaternion.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
@@ -83,6 +85,9 @@ namespace swarm
   ///     - SearchArea() Get the search area, in GPS coordinates.
   ///     - Image() Get the list of detected objects, and other related
   ///       information, from the camera sensor.
+  ///     - Imu() Get the robot's linear and angular velocities and position
+  ///       relative to a reference position (starting pose).
+  ///     - Bearing() Get the angle between the true North and the robot.
   ///
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
@@ -303,6 +308,46 @@ namespace swarm
     protected: void SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
+    /// \brief Get the robot's IMU information.
+    ///
+    /// The linear velocity is set in the robot's local coordinate frame, where
+    ///
+    /// * x = forward/back velocity,
+    /// * y = left/right velociy,
+    /// * z = up/down velocity.
+    ///
+    /// The angular velocity is set in the robot's local coordinate frame, where
+    ///
+    /// * x = Velocity about x-axis (roll),
+    /// * y = Velocity about y-axis (pitch),
+    /// * z = Velocity about z-axis (yaw).
+    ///
+    /// The orientation is set relative to the reference pose with a range from
+    /// PI to -PI. The reference pose was initialized when the robot was spawned
+    ///
+    /// * x = Offset with respect the reference pos about x-axis (roll),
+    /// * y = Offset with respect the reference pos about y-axis (pitch),
+    /// * z = Offset with respect the reference pos about z-axis (yaw).
+    ///
+    /// \param[out] _linVel Linear velocity in the robot's local coordinate
+    /// frame (m/s).
+    /// \param[out] _angVel Angular velocity in the robot's local coordinate
+    /// frame (m/s).
+    /// \param[out] _orient Offset with respect the reference pos.
+    protected: bool Imu(ignition::math::Vector3d &_linVel,
+                        ignition::math::Vector3d &_angVel,
+                        ignition::math::Quaterniond &_orient) const;
+
+    /// \brief Angle between the true North and the robot. If the vehicle is
+    /// facing North the bearing is 0. The bearing increments clockwise up to
+    /// 2*PI radians.
+    /// For example, a vehicle facing East would have a bearing of PI/2 radians.
+    /// Note that in Gazebo the North is aligned with the +Y axis.
+    ///
+    /// \param[out] _bearing Bearing between the true North and the robot.
+    /// \return True if the call was successful.
+    protected: bool Bearing(ignition::math::Angle &_bearing) const;
+
     /// \brief Get the robot's current pose from its GPS sensor.
     ///
     /// \param[out] _latitude Robot latitude will be written here.
@@ -422,6 +467,9 @@ namespace swarm
 
     /// \brief Pointer to GPS sensor
     private: gazebo::sensors::GpsSensorPtr gps;
+
+    /// \brief Pointer to IMU sensor
+    private: gazebo::sensors::ImuSensorPtr imu;
 
     /// \brief Pointer to LogicalCamera sensor
     private: gazebo::sensors::LogicalCameraSensorPtr camera;
