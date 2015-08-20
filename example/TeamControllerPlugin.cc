@@ -19,6 +19,8 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <ignition/math/Angle.hh>
+#include <ignition/math/Quaternion.hh>
 #include <sdf/sdf.hh>
 #include "TeamControllerPlugin.hh"
 
@@ -136,7 +138,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       }
   };
 
-  // Get pose and velocity
+  // Get pose
   double latitude, longitude, altitude;
   this->Pose(latitude, longitude, altitude);
   double minLatitude, maxLatitude, minLongitude, maxLongitude;
@@ -159,6 +161,22 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       minLongitude << " " << maxLongitude << std::endl;
     gzmsg << "[" << this->Host() << "] lat long alt: " <<
       latitude << " " << longitude << " " << altitude << std::endl;
+
+    // Get IMU information
+    ignition::math::Vector3d linVel, angVel;
+    ignition::math::Quaterniond orient;
+    if (this->Imu(linVel, angVel, orient))
+    {
+      gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Orientation: " << orient.Euler()
+            << std::endl;
+    }
+
+    // Get bearing
+    ignition::math::Angle bearing;
+    if (this->Bearing(bearing))
+      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
   }
 }
 
@@ -166,8 +184,5 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  gzmsg << "---" << std::endl;
-  gzmsg << "[" << this->Host() << "] New message received" << std::endl;
-  gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  gzmsg << "\tData: [" << _data << "]" << std::endl;
+  // New data received from a teammate.
 }

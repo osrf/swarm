@@ -42,18 +42,7 @@ namespace swarm
 
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
-
-    /// \brief Callback executed when a new message is received.
-    /// \param[in] _srcAddress Source address of the message.
-    /// \param[in] _data Message payload.
-    private: void OnDataReceived(const std::string &_srcAddress,
-                                 const std::string &_data);
-
-    /// \brief Total number of messages to be sent by this agent.
-    private: int numMessageToSend;
-
-    /// \brief Current number of messages sent.
-    private: int msgsSent;
   };
 }
+
 #endif
