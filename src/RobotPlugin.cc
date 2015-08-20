@@ -406,13 +406,17 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   bool visible = false;
   for (auto i = 0; i < _msg.recipients().size(); ++i)
   {
-    // A node will always receive its own messages.
-    if (_msg.recipients(i) == this->Host() ||
-        _msg.src_address() == this->Host())
+    if (_msg.recipients(i) == this->Host())
     {
       visible = true;
       break;
     }
+    else
+    {
+      std::cerr << "[" << this->Host() << "] Message dropped (src address "
+                << _msg.src_address() << ")" << std::endl;
+    }
+
   }
 
   if (visible)

@@ -163,7 +163,21 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
+  gazebo::common::Time curTime = this->world->GetSimTime();
+
+  // In case we reset simulation.
+  if (curTime <= this->lastUpdateTime)
+  {
+    lastUpdateTime = curTime;
+    return;
+  }
+
+  auto dt = curTime - this->lastUpdateTime;
+  std::cout << "Elapsed time: " << dt.Double() << std::endl;
+
   std::lock_guard<std::mutex> lock(this->mutex);
+
+  this->UpdateOutages(dt);
 
   // Update the list of neighbors for each robot.
   for (auto const &robot : this->swarm)
@@ -216,6 +230,55 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     this->node.Advertise(topic);
     this->node.Publish(topic, msg);
   }
+
+  this->lastUpdateTime = curTime;
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
+{
+  for (auto const &robot : this->swarm)
+  {
+    auto address = robot.first;
+    auto swarmMember = robot.second;
+
+    // Check if I am currently on outage.
+    if (swarmMember->onOutage)
+    {
+      // Check if the outage should finish.
+      if (this->world->GetSimTime() >= swarmMember->onOutageUntil)
+      {
+        swarmMember->onOutage = false;
+        gzdbg << "Robot " << address << " is back from an outage." << std::endl;
+      }
+    }
+    else
+    {
+      // Check if we should go into an outage.
+      if (ignition::math::Rand::DblUniform(0.0, 1.0) <
+          this->commsModel.commsOutageProbability * _dt.Double())
+      {
+        swarmMember->onOutage = true;
+        gzdbg << "Robot " << address << " has started an outage." << std::endl;
+
+        // Decide the duration of the outage.
+        if (this->commsModel->commsOutageDurationMin < 0 ||
+            this->commsModel->commsOutageDurationMax < 0)
+        {
+          // Permanent outage.
+          swarmMember->onOutageUntil = gazebo::common::Time::Zero;
+        }
+        else
+        {
+          // Temporal outage.
+          swarmMember->onOutageUntil = this->world->GetSimTime() +
+            ignition::math::Rand::DblUniform(
+              this->commsModel->commsOutageDurationMin,
+              this->commsModel->commsOutageDurationMax);
+        }
+      }
+    }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -228,42 +291,21 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   auto myPose = swarmMember->model->GetWorldPose();
 
+  auto topic = "/swarm/" + swarmMember->address + "/neighbors";
+
   // Update the neighbor list for this robot.
-  swarmMember->neighbors.clear();
+  swarmMember->neighbors = {{_address, 1.0}};
 
-  // TODO: apply outage model first, short-circuiting the rest of the work.
-
-  // Check if I am currently on outage.
+  // If I am on outage, my only neighbor is myself.
   if (swarmMember->onOutage)
   {
-    // Check if the outage should finish.
-    if (this->world->GetSimTime() >= swarmMember->onOutageUntil)
-    {
-      swarmMember->onOutage = false;
-      gzdbg << "Robot " << _address << " is back from an outage." << std::endl;
-    }
-    else
-    {
-      // We're currently on outage, no neighbors.
-      return;
-    }
-  }
-  else
-  {
-    // Check if we should start an outage.
-    if (ignition::math::Rand::DblUniform(0.0, 1.0) <
-        this->commsModel.commsOutageProbability)
-    {
-      swarmMember->onOutage = true;
-      gzdbg << "Robot " << _address << " has started an outage." << std::endl;
+    // Fill the message with only one neighbor (myself).
+    swarm::msgs::Neighbor_V msg;
+    msg.add_neighbors(_address);
 
-      // Decide the duration of the outage.
-      swarmMember->onOutageUntil = this->world->GetSimTime() +
-        gazebo::common::Time::Second;
-
-      // We're currently on outage, no neighbors.
-      return;
-    }
+    // Notify the node with its updated list of neighbors.
+    this->node.Publish(topic, msg);
+    return;
   }
 
   for (auto const &member : this->swarm)
@@ -414,7 +456,6 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
     msg.add_neighbors(neighbor.first);
 
   // Notify the node with its updated list of neighbors.
-  std::string topic = "/swarm/" + swarmMember->address + "/neighbors";
   this->node.Publish(topic, msg);
 }
 

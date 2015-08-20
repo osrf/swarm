@@ -110,14 +110,14 @@ namespace swarm
     /// Used with uniform drop probability model.
     public: double commsDropProbabilityMax;
 
-    /// \brief Probability of going into a comms outage at each time step.
+    /// \brief Probability of going into a comms outage at each second.
     public: double commsOutageProbability;
 
-    /// \brief Minimum length of comms outage.  Set to <0 for no limit.
+    /// \brief Minimum length of comms outage (secs). Set to <0 for no limit.
     /// Used with uniform outage duration probability model.
     public: double commsOutageDurationMin;
 
-    /// \brief Maximum length of comms outage. Set to <0 for no limit.
+    /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
     /// Used with uniform outage duration probability model.
     public: double commsOutageDurationMax;
   };
@@ -154,6 +154,10 @@ namespace swarm
     ///
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
+
+    /// \brief For each member of the team, decide ifs outage state.
+    /// \param[in] _dt Delta time since the last update.
+    private: void UpdateOutages(const gazebo::common::Time &_dt);
 
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
@@ -199,6 +203,9 @@ namespace swarm
 
     /// \brief Comms model that we're using.
     private: CommsModel commsModel;
+
+    /// \brief Keep track of update sim-time.
+    private: gazebo::common::Time lastUpdateTime;
   };
 }
 #endif
