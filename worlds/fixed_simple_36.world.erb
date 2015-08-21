@@ -131,11 +131,12 @@
               <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
             </swarm_search_area>''' %>
     <!-- Create the fixed wing vehicles -->
-    <% for y in 0..5 %>
-      <% for x in 0..5 %>
+    <!--< for y in 0..5 %>-->
+    <% y = 0 %>
+      <% for x in 0..0 %>
         <% index = y * 6 + x %>
         <model name="fixed_wing_<%=index%>">
-          <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
+          <pose><%=x*0.4%> <%=y*0.4%> 1.05 0 0 0</pose>
           <link name="link">
             <sensor name="gps" type="gps">
               <gps/>
@@ -231,7 +232,7 @@
           </plugin>
         </model>
       <% end %>
-    <% end %>
+      <!--< end %>-->
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
