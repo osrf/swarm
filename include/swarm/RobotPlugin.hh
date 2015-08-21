@@ -506,7 +506,7 @@ namespace swarm
     /// \brief Offset with respect the reference pos.
     private: ignition::math::Quaterniond orientation;
 
-    /// Bearing between the true North and the robot.
+    /// \brief Bearing between the true North and the robot.
     private: ignition::math::Angle bearing;
   };
 }
