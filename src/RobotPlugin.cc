@@ -143,24 +143,19 @@ void RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
       {
         double yawRate = 0.0;
         double rollRate = 0.0;
+
+        // Current orientation as Euler angles
         ignition::math::Vector3d rpy = this->orientation.Euler();
 
+        // Make sure we don't divide by zero. The vehicle should also
+        // be moving before it can bank.
         if (!ignition::math::equal(this->linearVelocity.X(), 0.0))
         {
           yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocity.X();
+          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
+          rollRate = ignition::math::clamp(_velocity[0],
+              -IGN_DTOR(5), IGN_DTOR(5));
         }
-
-        yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
-        rollRate = ignition::math::clamp(_velocity[0],
-            -IGN_DTOR(5), IGN_DTOR(5));
-
-        std::cout << "LinearVelocity [" << this->linearVelocity << "]\n";
-        std::cout << "Orientation [" << rpy << "]\n";
-        std::cout << "AngularVelocity [" << this->angularVelocity << "]\n";
-
-        std::cout << "Set Angular Vel[" << rollRate << " "
-          << _velocity[1] << " " << yawRate << "]\n";
-        std::cout << std::endl;
 
         this->model->SetAngularVel(
             ignition::math::Vector3d(rollRate, _velocity[1], yawRate));

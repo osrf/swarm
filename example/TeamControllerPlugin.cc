@@ -128,7 +128,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     case FIXED_WING:
       {
         this->SetLinearVelocity(ignition::math::Vector3d(1, 0, 0));
-        this->SetAngularVelocity(ignition::math::Vector3d(0.1, -0.1, 0));
+        this->SetAngularVelocity(ignition::math::Vector3d(0.1, 0, 0));
         break;
       }
     default:
