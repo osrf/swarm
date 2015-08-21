@@ -366,7 +366,6 @@ void RobotPlugin::AdjustPose()
         {
           pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
 
-
           // Set the pose.
           this->model->SetWorldPose(pose);
         }
