@@ -132,7 +132,7 @@
             </swarm_search_area>''' %>
     <!-- Create the fixed wing vehicles -->
     <% for y in 0..5 %>
-      <% for x in 0..0 %>
+      <% for x in 0..5 %>
         <% index = y * 6 + x %>
         <model name="fixed_wing_<%=index%>">
           <pose><%=x*0.4%> <%=y*0.4%> 1.05 0 0 0</pose>
