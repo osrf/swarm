@@ -27,8 +27,10 @@
 #include <ignition/math.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
+
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/comms/CommsModel.hh"
 #include "swarm/BrokerPlugin.hh"
 
 using namespace swarm;
@@ -44,6 +46,8 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->world = _world;
 
+  this->swarm = std::make_shared<SwarmMembership_M>();
+
   // This is the subscription that will allow us to receive incoming messages.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
   if (!this->node.Subscribe(kBrokerIncomingTopic,
@@ -56,8 +60,11 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
 
+  this->commsModel.reset(new comms::CommsModel(
+      this->swarm, this->world, nullptr));
+
   // Get the comms model parameters.
-  if (_sdf->HasElement("comms_model"))
+  /*if (_sdf->HasElement("comms_model"))
   {
     auto const &commsModelElem = _sdf->GetElement("comms_model");
 
@@ -104,7 +111,7 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
     if (commsModelElem->HasElement("comms_outage_duration_max"))
       this->commsModel.commsOutageDurationMax =
         commsModelElem->GetElement("comms_outage_duration_max")->Get<double>();
-  }
+  }*/
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -140,7 +147,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
           newMember->address = address;
           newMember->name = name;
           newMember->model = model;
-          this->swarm[address] = newMember;
+          (*this->swarm)[address] = newMember;
 
           // Advertise the topic for future neighbor updates for this vehicle.
           std::string topic = "/swarm/" + address + "/neighbors";
@@ -157,10 +164,10 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
     modelElem = modelElem->GetNextElement("model");
   }
 
-  if (this->swarm.empty())
+  if (this->swarm->empty())
     gzerr << "BrokerPlugin::ReadSwarmFromSDF: No members found" << std::endl;
   else
-    gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm.size()
+    gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm->size()
           << " swarm members found" << std::endl;
 }
 
@@ -180,11 +187,11 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  this->UpdateOutages(dt);
+  this->commsModel->UpdateOutages(dt);
 
   // Update the list of neighbors for each robot.
-  for (auto const &robot : this->swarm)
-    this->UpdateNeighborList(robot.first);
+  //  for (auto const &robot : (*this->swarm))
+  this->commsModel->UpdateNeighbors();
 
   // Dispatch all incoming messages.
   while (!this->incomingMsgs.empty())
@@ -197,7 +204,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
           << " addressed to " << msg.dst_address() << std::endl;
 
     // Sanity check: Make sure that the sender is a member of the swarm.
-    if (this->swarm.find(msg.src_address()) == this->swarm.end())
+    if (this->swarm->find(msg.src_address()) == this->swarm->end())
     {
       gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
             << msg.src_address() << "] is not registered as a member of the "
@@ -206,7 +213,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     }
 
     // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighbor : this->swarm[msg.src_address()]->neighbors)
+    for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
     {
       // Decide whether this neighbor gets this message, according to the
       // probability of communication between them right now.
@@ -238,9 +245,9 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 }
 
 //////////////////////////////////////////////////
-void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
+/*void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
 {
-  for (auto const &robot : this->swarm)
+  for (auto const &robot : (*this->swarm))
   {
     auto address = robot.first;
     auto swarmMember = robot.second;
@@ -284,14 +291,15 @@ void BrokerPlugin::UpdateOutages(const gazebo::common::Time &_dt)
     }
   }
 }
+*/
 
 //////////////////////////////////////////////////
-void BrokerPlugin::UpdateNeighborList(const std::string &_address)
+/*void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 {
-  GZ_ASSERT(this->swarm.find(_address) != this->swarm.end(),
+  GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
             "_address not found in the swarm.");
 
-  auto swarmMember = this->swarm[_address];
+  auto swarmMember = (*this->swarm)[_address];
 
   auto myPose = swarmMember->model->GetWorldPose();
 
@@ -312,7 +320,7 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
     return;
   }
 
-  for (auto const &member : this->swarm)
+  for (auto const &member : (*this->swarm))
   {
     // Decide whether this node goes into our neighbor list
 
@@ -461,7 +469,7 @@ void BrokerPlugin::UpdateNeighborList(const std::string &_address)
 
   // Notify the node with its updated list of neighbors.
   this->node.Publish(topic, msg);
-}
+}*/
 
 //////////////////////////////////////////////////
 void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
@@ -472,7 +480,7 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
   // Queue the new message.
   this->incomingMsgs.push(_msg);
 }
-
+/*
 unsigned int BrokerPlugin::NumWallsBetweenPoses(const gazebo::math::Pose& p1,
                                                 const gazebo::math::Pose& p2)
 {
@@ -486,22 +494,23 @@ unsigned int BrokerPlugin::NumTreesBetweenPoses(const gazebo::math::Pose& p1,
   // TODO: raytrace to answer this question
   return 0;
 }
+*/
 
 //////////////////////////////////////////////////
-CommsModel::CommsModel()
-{
-  // Default to perfect comms.
-  this->neighborDistanceMin = -1.0;
-  this->neighborDistanceMax = -1.0;
-  this->neighborDistancePenaltyWall = 0.0;
-  this->neighborDistancePenaltyTree = 0.0;
-  this->commsDistanceMin = -1.0;
-  this->commsDistanceMax = -1.0;
-  this->commsDistancePenaltyWall = 0.0;
-  this->commsDistancePenaltyTree = 0.0;
-  this->commsDropProbabilityMin = 0.0;
-  this->commsDropProbabilityMax = 0.0;
-  this->commsOutageProbability = 0.0;
-  this->commsOutageDurationMin = -1.0;
-  this->commsOutageDurationMax = -1.0;
-}
+//CommsModel::CommsModel()
+//{
+//  // Default to perfect comms.
+//  this->neighborDistanceMin = -1.0;
+//  this->neighborDistanceMax = -1.0;
+//  this->neighborDistancePenaltyWall = 0.0;
+//  this->neighborDistancePenaltyTree = 0.0;
+//  this->commsDistanceMin = -1.0;
+//  this->commsDistanceMax = -1.0;
+//  this->commsDistancePenaltyWall = 0.0;
+//  this->commsDistancePenaltyTree = 0.0;
+//  this->commsDropProbabilityMin = 0.0;
+//  this->commsDropProbabilityMax = 0.0;
+//  this->commsOutageProbability = 0.0;
+//  this->commsOutageDurationMin = -1.0;
+//  this->commsOutageDurationMax = -1.0;
+//}

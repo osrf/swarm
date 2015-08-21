@@ -21,7 +21,7 @@
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
-#include <map>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -35,34 +35,15 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
+
+#include "swarm/comms/CommsModel.hh"
+#include "swarm/SwarmTypes.hh"
 #include "msgs/datagram.pb.h"
 
 namespace swarm
 {
-  /// \brief Class used to store information about a member of the Swarm.
-  class IGNITION_VISIBLE SwarmMember
-  {
-    /// \brief Gazebo name used for this model.
-    public: std::string name;
-
-    /// \brief Address of the robot. E.g.: 192.168.1.2
-    public: std::string address;
-
-    /// \brief Model pointer.
-    public: gazebo::physics::ModelPtr model;
-
-    /// \brief List of neighbors and comms probabilities for this robot.
-    public: std::vector<std::pair<std::string, double> > neighbors;
-
-    /// \brief Is this robot on outage?
-    public: bool onOutage;
-
-    /// \brief When will the last outage finish?
-    public: gazebo::common::Time onOutageUntil;
-  };
-
   /// \brief Class used to store information about the communication model.
-  class IGNITION_VISIBLE CommsModel
+  /*class IGNITION_VISIBLE CommsModel
   {
     /// \brief Class constructor
     public: CommsModel();
@@ -121,7 +102,7 @@ namespace swarm
     /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
     /// Used with uniform outage duration probability model.
     public: double commsOutageDurationMax;
-  };
+  };*/
 
   /// \brief This is a world plugin designed to centralize all the messages
   /// sent by the members of the swarm. This plugin subscribes to the
@@ -158,13 +139,13 @@ namespace swarm
 
     /// \brief For each member of the team, decide ifs outage state.
     /// \param[in] _dt Delta time since the last update.
-    private: void UpdateOutages(const gazebo::common::Time &_dt);
+    //private: void UpdateOutages(const gazebo::common::Time &_dt);
 
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
     ///
     /// \param[in] _address Address of the robot to be updated.
-    private: void UpdateNeighborList(const std::string &_address);
+    //private: void UpdateNeighborList(const std::string &_address);
 
     /// \brief Callback executed when a new message is received.
     ///
@@ -173,11 +154,13 @@ namespace swarm
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
+    /*
     private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& p1,
                                                const gazebo::math::Pose& p2);
 
     private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& p1,
                                                const gazebo::math::Pose& p2);
+    */
 
     /// \brief World pointer.
     private: gazebo::physics::WorldPtr world;
@@ -195,15 +178,13 @@ namespace swarm
     private: std::queue<msgs::Datagram> incomingMsgs;
 
     /// \brief Map containing information about the members of the swarm.
-    /// The key is the robot address. The value is a pointer to a SwarmMember
-    /// object that contains multiple information about the robot.
-    private: std::map<std::string, std::shared_ptr<SwarmMember>> swarm;
+    private: SwarmMembershipPtr swarm;
 
     /// \brief Mutex for protecting the queue.
     private: std::mutex mutex;
 
     /// \brief Comms model that we're using.
-    private: CommsModel commsModel;
+    private: std::unique_ptr<comms::CommsModel> commsModel;
 
     /// \brief Keep track of update sim-time.
     private: gazebo::common::Time lastUpdateTime;

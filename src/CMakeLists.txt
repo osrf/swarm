@@ -13,6 +13,8 @@ set (gtest_sources
   RobotPlugin_TEST.cc
 )
 
+add_subdirectory(comms)
+
 set_source_files_properties(${PROTO_SRC} ${PROTO_HEADER} PROPERTIES
                             GENERATED TRUE)
 include_directories(${CMAKE_BINARY_DIR}/)
