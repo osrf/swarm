@@ -40,7 +40,8 @@ RobotPlugin::RobotPlugin()
     searchMinLatitude(0),
     searchMaxLatitude(0),
     searchMinLongitude(0),
-    searchMaxLongitude(0)
+    searchMaxLongitude(0),
+    modelHeight2(0)
 {
 }
 
@@ -760,7 +761,6 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
         v2 = b;
         v3.X(v1.X()-1);
         v3.Y(v1.Y()+1);
-
       }
       else
       {
@@ -768,7 +768,6 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
         v2.Y(v1.Y()+1);
         v3 = c;
       }
-
     }
   }
 
