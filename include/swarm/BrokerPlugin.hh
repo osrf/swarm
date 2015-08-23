@@ -25,85 +25,19 @@
 #include <mutex>
 #include <queue>
 #include <string>
-#include <utility>
-#include <vector>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/math/Pose.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
-#include "swarm/comms/CommsModel.hh"
+#include "swarm/CommsModel.hh"
 #include "swarm/SwarmTypes.hh"
 #include "msgs/datagram.pb.h"
 
 namespace swarm
 {
-  /// \brief Class used to store information about the communication model.
-  /*class IGNITION_VISIBLE CommsModel
-  {
-    /// \brief Class constructor
-    public: CommsModel();
-
-    /// \brief Minimum free-space distance (m) between two nodes to be
-    /// neighbors. Set to <0 for no limit.
-    public: double neighborDistanceMin;
-
-    /// \brief Maximum free-space distance (m) between two nodes to be
-    /// neighbors. Set to <0 for no limit.
-    public: double neighborDistanceMax;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
-    public: double neighborDistancePenaltyWall;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening non-solid obstacle (forest, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
-    public: double neighborDistancePenaltyTree;
-
-    /// \brief Minimum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors).  Set to <0 for no limit.
-    public: double commsDistanceMin;
-
-    /// \brief Maximum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors).  Set to <0 for no limit.
-    public: double commsDistanceMax;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
-    public: double commsDistancePenaltyWall;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening non-solid obstacle (forest, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
-    public: double commsDistancePenaltyTree;
-
-    /// \brief Minimum probability of dropping a given packet.
-    /// Used with uniform drop probability model.
-    public: double commsDropProbabilityMin;
-
-    /// \brief Maximum probability of dropping a given packet.
-    /// Used with uniform drop probability model.
-    public: double commsDropProbabilityMax;
-
-    /// \brief Probability of going into a comms outage at each second.
-    public: double commsOutageProbability;
-
-    /// \brief Minimum length of comms outage (secs). Set to <0 for no limit.
-    /// Used with uniform outage duration probability model.
-    public: double commsOutageDurationMin;
-
-    /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
-    /// Used with uniform outage duration probability model.
-    public: double commsOutageDurationMax;
-  };*/
-
   /// \brief This is a world plugin designed to centralize all the messages
   /// sent by the members of the swarm. This plugin subscribes to the
   /// "/swarm/broker/incoming" topic, on which all the agents publish their
@@ -137,15 +71,9 @@ namespace swarm
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
 
-    /// \brief For each member of the team, decide ifs outage state.
-    /// \param[in] _dt Delta time since the last update.
-    //private: void UpdateOutages(const gazebo::common::Time &_dt);
-
-    /// \brief Update the neighbor list for a single robot and notifies the
-    /// robot with the updated list.
-    ///
-    /// \param[in] _address Address of the robot to be updated.
-    //private: void UpdateNeighborList(const std::string &_address);
+    /// \brief Send to each member of the swarm a message containing its
+    /// current list of neighbors.
+    private: void NotifyNeighbors();
 
     /// \brief Callback executed when a new message is received.
     ///
@@ -153,14 +81,6 @@ namespace swarm
     /// \param[in] _msg The new message received.
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
-
-    /*
-    private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& p1,
-                                               const gazebo::math::Pose& p2);
-
-    private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& p1,
-                                               const gazebo::math::Pose& p2);
-    */
 
     /// \brief World pointer.
     private: gazebo::physics::WorldPtr world;
@@ -184,10 +104,7 @@ namespace swarm
     private: std::mutex mutex;
 
     /// \brief Comms model that we're using.
-    private: std::unique_ptr<comms::CommsModel> commsModel;
-
-    /// \brief Keep track of update sim-time.
-    private: gazebo::common::Time lastUpdateTime;
+    private: std::unique_ptr<CommsModel> commsModel;
   };
 }
 #endif

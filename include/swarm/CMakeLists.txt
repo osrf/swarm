@@ -2,12 +2,11 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
   BrokerPlugin.hh
+  CommsModel.hh
   Helpers.hh
   RobotPlugin.hh
   SwarmTypes.hh
 )
-
-add_subdirectory(comms)
 
 #################################################
 ### Do not change the following

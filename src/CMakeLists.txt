@@ -2,6 +2,7 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (broker_plugin_sources
   BrokerPlugin.cc
+  CommsModel.cc
 )
 
 set (robot_plugin_sources
@@ -12,8 +13,6 @@ set (gtest_sources
   BrokerPlugin_TEST.cc
   RobotPlugin_TEST.cc
 )
-
-add_subdirectory(comms)
 
 set_source_files_properties(${PROTO_SRC} ${PROTO_HEADER} PROPERTIES
                             GENERATED TRUE)
