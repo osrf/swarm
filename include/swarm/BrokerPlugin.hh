@@ -52,7 +52,7 @@ namespace swarm
     public: BrokerPlugin() = default;
 
     /// \brief Class destructor.
-    public: virtual ~BrokerPlugin() = default;
+    public: virtual ~BrokerPlugin();
 
     // Documentation Inherited.
     public: virtual void Load(gazebo::physics::WorldPtr _world,
@@ -71,8 +71,8 @@ namespace swarm
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
 
-    /// \brief Send to each member of the swarm a message containing its
-    /// current list of neighbors.
+    /// \brief Send a message to each swarm member
+    /// with its updated neighbors list.
     private: void NotifyNeighbors();
 
     /// \brief Callback executed when a new message is received.

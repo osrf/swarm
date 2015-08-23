@@ -16,7 +16,7 @@
 */
 
 /// \file CommsModel.hh
-/// \brief
+/// \brief Manages how the communication behave between the members of the team.
 
 #ifndef __SWARM_COMMS_MODEL_HH__
 #define __SWARM_COMMS_MODEL_HH__
@@ -35,6 +35,10 @@ namespace swarm
   class IGNITION_VISIBLE CommsModel
   {
     /// \brief Class constructor.
+    ///
+    /// \param[in] _swarm Pointer to the swarm.
+    /// \param[in] _world Pointer to the Gazebo world.
+    /// \param[in] _sdf Pointer to the SDF element of the plugin.
     public: CommsModel(SwarmMembershipPtr _swarm,
                        gazebo::physics::WorldPtr _world,
                        sdf::ElementPtr _sdf);
@@ -42,14 +46,11 @@ namespace swarm
     /// \brief Class destructor.
     public: virtual ~CommsModel() = default;
 
-    /// \brief For each member of the team, decide its outage state.
+    /// \brief Decide if each member of the swarm enters into a comms outage.
     public: void UpdateOutages();
 
-    /// \brief ToDo.
+    /// \brief Update the neighbors list of each member of the swarm.
     public: void UpdateNeighbors();
-
-    /// \brief ToDo.
-    private: void LoadParameters(sdf::ElementPtr _sdf);
 
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
@@ -57,13 +58,28 @@ namespace swarm
     /// \param[in] _address Address of the robot to be updated.
     private: void UpdateNeighborList(const std::string &_address);
 
-    /// \brief ToDo.
+    /// \brief Get the number of walls between two points in the world.
+    ///
+    /// \param[in] _p1 A 3D point.
+    /// \param[in] _p2 Another 3D point.
+    /// \return Number of walls between the points.
     private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
                                                const gazebo::math::Pose& _p2);
 
-    /// \brief ToDo.
+    /// \brief Get the number of tree lines between two points in the world.
+    ///
+    /// \param[in] _p1 A 3D point.
+    /// \param[in] _p2 Another 3D point.
+    /// \return Number of tree lines between the points.
     private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& _p1,
                                                const gazebo::math::Pose& _p2);
+
+    /// \brief Check if a "comms_model" block exists in the SDF element of the
+    /// plugin. If so, update the value of the default parameters with the one
+    /// read from the world file.
+    /// \param[in] _sdf Pointer to the SDF element of the plugin.
+    private: void LoadParameters(sdf::ElementPtr _sdf);
+
 
     /// \brief Minimum free-space distance (m) between two nodes to be
     /// neighbors. Set to <0 for no limit.
@@ -120,10 +136,10 @@ namespace swarm
     /// Used with uniform outage duration probability model.
     private: double commsOutageDurationMax = -1.0;
 
-    /// \brief ToDo
+    /// \brief Pointer to the swarm.
     private: SwarmMembershipPtr swarm;
 
-    /// \brief ToDo
+    /// \brief Pointer to the Gazebo world.
     private: gazebo::physics::WorldPtr world;
 
     /// \brief Keep track of update sim-time.

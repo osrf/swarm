@@ -38,6 +38,12 @@ using namespace swarm;
 GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 
 //////////////////////////////////////////////////
+BrokerPlugin::~BrokerPlugin()
+{
+  gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+}
+
+//////////////////////////////////////////////////
 void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_world, "BrokerPlugin::Load() error: _world pointer is NULL");
@@ -124,13 +130,13 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  // For each member, decide if it enters into a comms outage.
+  // Decide if each member of the swarm enters into a comms outage.
   this->commsModel->UpdateOutages();
 
-  // For each member, update its neighbors list.
+  // Update the neighbors list of each member of the swarm.
   this->commsModel->UpdateNeighbors();
 
-  // Send messages to all the swarm members with the updated neighbors list.
+  // Send a message to each swarm member with its updated neighbors list.
   this->NotifyNeighbors();
 
   // Dispatch all incoming messages.

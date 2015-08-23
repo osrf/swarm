@@ -39,63 +39,7 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   GZ_ASSERT(_world, "CommsModel() error: _world pointer is NULL");
   GZ_ASSERT(_sdf, "CommsModel() error: _sdf pointer is NULL");
 
-  // Get the comms model parameters.
   this->LoadParameters(_sdf);
-}
-
-//////////////////////////////////////////////////
-void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
-{
-  GZ_ASSERT(_sdf, "CommsModel::LoadParameters() error: _sdf pointer is NULL");
-
-  if (_sdf->HasElement("comms_model"))
-  {
-    auto const &commsModelElem = _sdf->GetElement("comms_model");
-
-    if (commsModelElem->HasElement("neighbor_distance_min"))
-      this->neighborDistanceMin =
-        commsModelElem->GetElement("neighbor_distance_min")->Get<double>();
-    if (commsModelElem->HasElement("neighbor_distance_max"))
-      this->neighborDistanceMax =
-        commsModelElem->GetElement("neighbor_distance_max")->Get<double>();
-    if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
-      this->neighborDistancePenaltyWall =
-        commsModelElem->GetElement(
-          "neighbor_distance_penalty_wall")->Get<double>();
-    if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
-      this->neighborDistancePenaltyTree =
-        commsModelElem->GetElement(
-          "neighbor_distance_penalty_tree")->Get<double>();
-    if (commsModelElem->HasElement("comms_distance_min"))
-      this->commsDistanceMin =
-        commsModelElem->GetElement("comms_distance_min")->Get<double>();
-    if (commsModelElem->HasElement("comms_distance_max"))
-      this->commsDistanceMax =
-        commsModelElem->GetElement("comms_distance_max")->Get<double>();
-    if (commsModelElem->HasElement("comms_distance_penalty_wall"))
-      this->commsDistancePenaltyWall =
-        commsModelElem->GetElement(
-          "comms_distance_penalty_wall")->Get<double>();
-    if (commsModelElem->HasElement("comms_distance_penalty_tree"))
-      this->commsDistancePenaltyTree =
-        commsModelElem->GetElement(
-          "comms_distance_penalty_tree")->Get<double>();
-    if (commsModelElem->HasElement("comms_drop_probability_min"))
-      this->commsDropProbabilityMin =
-        commsModelElem->GetElement("comms_drop_probability_min")->Get<double>();
-    if (commsModelElem->HasElement("comms_drop_probability_max"))
-      this->commsDropProbabilityMax =
-        commsModelElem->GetElement("comms_drop_probability_max")->Get<double>();
-    if (commsModelElem->HasElement("comms_outage_probability"))
-      this->commsOutageProbability =
-        commsModelElem->GetElement("comms_outage_probability")->Get<double>();
-    if (commsModelElem->HasElement("comms_outage_duration_min"))
-      this->commsOutageDurationMin =
-        commsModelElem->GetElement("comms_outage_duration_min")->Get<double>();
-    if (commsModelElem->HasElement("comms_outage_duration_max"))
-      this->commsOutageDurationMax =
-        commsModelElem->GetElement("comms_outage_duration_max")->Get<double>();
-  }
 }
 
 //////////////////////////////////////////////////
@@ -132,6 +76,9 @@ void CommsModel::UpdateOutages()
     else
     {
       // Check if we should go into an outage.
+      // Notice that "commsOutageProbability" specifies the probability of going
+      // into a comms outage at each second. This probability is adjusted using
+      // the elapsed time since the last call to "UpdateOutages()".
       if (ignition::math::Rand::DblUniform(0.0, 1.0) <
           this->commsOutageProbability * dt.Double())
       {
@@ -329,4 +276,59 @@ unsigned int CommsModel::NumTreesBetweenPoses(const gazebo::math::Pose& /*_p1*/,
 {
   // TODO: raytrace to answer this question
   return 0;
+}
+
+//////////////////////////////////////////////////
+void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
+{
+  GZ_ASSERT(_sdf, "CommsModel::LoadParameters() error: _sdf pointer is NULL");
+
+  if (_sdf->HasElement("comms_model"))
+  {
+    auto const &commsModelElem = _sdf->GetElement("comms_model");
+
+    if (commsModelElem->HasElement("neighbor_distance_min"))
+      this->neighborDistanceMin =
+        commsModelElem->GetElement("neighbor_distance_min")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_max"))
+      this->neighborDistanceMax =
+        commsModelElem->GetElement("neighbor_distance_max")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
+      this->neighborDistancePenaltyWall =
+        commsModelElem->GetElement(
+          "neighbor_distance_penalty_wall")->Get<double>();
+    if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
+      this->neighborDistancePenaltyTree =
+        commsModelElem->GetElement(
+          "neighbor_distance_penalty_tree")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_min"))
+      this->commsDistanceMin =
+        commsModelElem->GetElement("comms_distance_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_max"))
+      this->commsDistanceMax =
+        commsModelElem->GetElement("comms_distance_max")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_penalty_wall"))
+      this->commsDistancePenaltyWall =
+        commsModelElem->GetElement(
+          "comms_distance_penalty_wall")->Get<double>();
+    if (commsModelElem->HasElement("comms_distance_penalty_tree"))
+      this->commsDistancePenaltyTree =
+        commsModelElem->GetElement(
+          "comms_distance_penalty_tree")->Get<double>();
+    if (commsModelElem->HasElement("comms_drop_probability_min"))
+      this->commsDropProbabilityMin =
+        commsModelElem->GetElement("comms_drop_probability_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_drop_probability_max"))
+      this->commsDropProbabilityMax =
+        commsModelElem->GetElement("comms_drop_probability_max")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_probability"))
+      this->commsOutageProbability =
+        commsModelElem->GetElement("comms_outage_probability")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_duration_min"))
+      this->commsOutageDurationMin =
+        commsModelElem->GetElement("comms_outage_duration_min")->Get<double>();
+    if (commsModelElem->HasElement("comms_outage_duration_max"))
+      this->commsOutageDurationMax =
+        commsModelElem->GetElement("comms_outage_duration_max")->Get<double>();
+  }
 }
