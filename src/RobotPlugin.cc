@@ -611,11 +611,6 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
       visible = true;
       break;
     }
-    else
-    {
-      std::cerr << "[" << this->Host() << "] Message dropped (src address "
-                << _msg.src_address() << ")" << std::endl;
-    }
   }
 
   if (visible)
