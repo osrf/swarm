@@ -418,6 +418,9 @@ namespace swarm
                 ignition::math::Vector3d &_terrainPos,
                 ignition::math::Vector3d &_norm) const;
 
+    /// \brief Update and store sensor information.
+    private: void UpdateSensors();
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -496,6 +499,18 @@ namespace swarm
 
     /// \brief Half the height of the model.
     private: double modelHeight2;
+
+    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
+    private: ignition::math::Vector3d linearVelocity;
+
+    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
+    private: ignition::math::Vector3d angularVelocity;
+
+    /// \brief Offset with respect the reference pos.
+    private: ignition::math::Quaterniond orientation;
+
+    /// \brief Bearing between the true North and the robot.
+    private: ignition::math::Angle bearing;
   };
 }
 #endif

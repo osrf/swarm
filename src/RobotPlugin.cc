@@ -18,6 +18,8 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <ignition/math/Helpers.hh>
+
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
@@ -140,8 +142,24 @@ void RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
       }
     case RobotPlugin::FIXED_WING:
       {
-        this->model->SetAngularVel(_velocity *
-            ignition::math::Vector3d(1, 1, 0));
+        double yawRate = 0.0;
+        double rollRate = 0.0;
+
+        // Current orientation as Euler angles
+        ignition::math::Vector3d rpy = this->orientation.Euler();
+
+        // Make sure we don't divide by zero. The vehicle should also
+        // be moving before it can bank.
+        if (!ignition::math::equal(this->linearVelocity.X(), 0.0))
+        {
+          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocity.X();
+          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
+          rollRate = ignition::math::clamp(_velocity[0],
+              -IGN_DTOR(5), IGN_DTOR(5));
+        }
+
+        this->model->SetAngularVel(
+            ignition::math::Vector3d(rollRate, _velocity[1], yawRate));
         break;
       }
   };
@@ -155,49 +173,47 @@ void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 }
 
 //////////////////////////////////////////////////
-bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
-  ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
+void RobotPlugin::UpdateSensors()
 {
-  if (!this->model || !this->imu)
+  if (this->imu)
   {
-    gzerr << "[" << this->Host() << "] Imu() error: No model or IMU sensor"
-          << " available" << std::endl;
-    _linVel = _angVel = ignition::math::Vector3d::Zero;
-    _orient = ignition::math::Quaterniond::Identity;
-    return false;
+    // \TODO: Consider adding noise (or just let Gazebo do it?).
+    this->linearVelocity = this->model->GetRelativeLinearVel().Ign();
+    this->angularVelocity = this->imu->AngularVelocity();
+    this->orientation = this->imu->Orientation();
   }
 
   // TODO: Consider adding noise (or just let Gazebo do it?).
-  _linVel = this->model->GetRelativeLinearVel().Ign();
-  _angVel = this->imu->AngularVelocity();
-  _orient = this->imu->Orientation();
+  // Get the Yaw angle of the model in Gazebo world coordinates.
+  this->bearing = ignition::math::Angle(
+      this->model->GetWorldPose().rot.GetAsEuler().z);
+
+  // A "0" bearing value means that the model is facing North.
+  // North is aligned with the Gazebo Y axis, so we should add an offset of
+  // PI/2 to the bearing in the Gazebo world coordinates.
+  this->bearing = ignition::math::Angle::HalfPi - this->bearing;
+
+  // Normalize: Gazebo orientation uses PI,-PI but compasses seem
+  // to use 0,2*PI.
+  if (this->bearing.Radian() < 0)
+    this->bearing = ignition::math::Angle::TwoPi + this->bearing;
+}
+
+//////////////////////////////////////////////////
+bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
+  ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
+{
+  // TODO: Consider adding noise (or just let Gazebo do it?).
+  _linVel = this->linearVelocity;
+  _angVel = this->angularVelocity;
+  _orient = this->orientation;
   return true;
 }
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 {
-  if (!this->model)
-  {
-    gzerr << "[" << this->Host() << "] Bearing() error: No model available"
-          << std::endl;
-    _bearing = ignition::math::Angle::Zero;
-    return false;
-  }
-
-  // TODO: Consider adding noise (or just let Gazebo do it?).
-  // Get the Yaw angle of the model in Gazebo world coordinates.
-  auto bearing = ignition::math::Angle(
-    this->model->GetWorldPose().rot.GetAsEuler().z);
-  // A "0" bearing value means that the model is facing North. North is aligned
-  // with the Gazebo Y axis, so we should add an offset of PI/2 to the bearing
-  // in the Gazebo world coordinates.
-  _bearing = ignition::math::Angle::HalfPi - bearing;
-
-  // Normalize: Gazebo orientation uses PI,-PI but compasses seem to use 0,2*PI.
-  if (_bearing.Radian() < 0)
-    _bearing = ignition::math::Angle::TwoPi + _bearing;
-
+  _bearing = this->bearing;
   return true;
 }
 
@@ -276,6 +292,7 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  this->UpdateSensors();
   this->Update(_info);
   this->AdjustPose();
 }
