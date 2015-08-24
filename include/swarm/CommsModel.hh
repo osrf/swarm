@@ -58,21 +58,17 @@ namespace swarm
     /// \param[in] _address Address of the robot to be updated.
     private: void UpdateNeighborList(const std::string &_address);
 
-    /// \brief Get the number of walls between two points in the world.
+    /// \brief Check if there is line of sight between two points in the world.
     ///
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
-    /// \return Number of walls between the points.
-    private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
-                                               const gazebo::math::Pose& _p2);
-
-    /// \brief Get the number of tree lines between two points in the world.
-    ///
-    /// \param[in] _p1 A 3D point.
-    /// \param[in] _p2 Another 3D point.
-    /// \return Number of tree lines between the points.
-    private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& _p1,
-                                               const gazebo::math::Pose& _p2);
+    /// \param[out] _entityName If the points don't have line of sight,
+    /// this will contain the name of the first entity on the way from
+    /// the starting point to the end point.
+    /// \return True if the points have line of sight or false otherwise.
+    private: bool LineOfSight(const gazebo::math::Pose& _p1,
+                              const gazebo::math::Pose& _p2,
+                              std::string &_entityName);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the
     /// plugin. If so, update the value of the default parameters with the one

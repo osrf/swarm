@@ -156,36 +156,49 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto dist = (myPose.pos - otherPose.pos).GetLength();
     auto neighborDist = dist;
     auto commsDist = dist;
-    int numWalls = 0;
-    int numTrees = 0;
+    bool terrainBlocking = false;
+    bool wallsBlocking = false;
+    bool treesBlocking = false;
 
     // Check if the other teammate is currenly on outage.
     if (other->onOutage)
       continue;
 
+    // Check if there's line of sight between the two vehicles.
+    // If there's no line of sight, guess what type of object is in between.
+    std::string entityName;
+    bool visible = this->LineOfSight(myPose, otherPose, entityName);
+    if (!visible && entityName.find("terrain") != std::string::npos)
+      terrainBlocking = true;
+    if (!visible && entityName.find("wall") != std::string::npos)
+      wallsBlocking = true;
+    if (!visible && entityName.find("tree") != std::string::npos)
+      treesBlocking = true;
+
+    // Hidden by terrain.
+    if (terrainBlocking)
+      continue;
+
     // Apply the neighbor part of the comms model.
     if ((this->neighborDistancePenaltyWall < 0.0) ||
        (this->neighborDistancePenaltyWall > 0.0))
-
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      numWalls = this->NumWallsBetweenPoses(myPose, otherPose);
-      if ((numWalls > 0) && (this->neighborDistancePenaltyWall < 0.0))
+      if ((wallsBlocking) && (this->neighborDistancePenaltyWall < 0.0))
         continue;
       else
-        neighborDist += numWalls * this->neighborDistancePenaltyWall;
+        neighborDist += this->neighborDistancePenaltyWall;
     }
     if ((this->neighborDistancePenaltyTree < 0.0f) ||
         (this->neighborDistancePenaltyTree > 0.0f))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      numTrees = this->NumTreesBetweenPoses(myPose, otherPose);
-      if ((numTrees > 0) && (this->neighborDistancePenaltyTree < 0.0))
+      if ((treesBlocking) && (this->neighborDistancePenaltyTree < 0.0))
         continue;
       else
-        neighborDist += numTrees * this->neighborDistancePenaltyTree;
+        neighborDist += this->neighborDistancePenaltyTree;
     }
     if ((this->neighborDistanceMin > 0.0) &&
         (this->neighborDistanceMin > neighborDist))
@@ -204,10 +217,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     {
       // We're within range.  Check for obstacles (don't want to waste time on11
       // that if we're not within range).
-      if ((numWalls > 0) && (this->commsDistancePenaltyWall < 0.0))
+      if ((wallsBlocking) && (this->commsDistancePenaltyWall < 0.0))
         commsProb = 0.0;
       else
-        commsDist += numWalls * this->commsDistancePenaltyWall;
+        commsDist += this->commsDistancePenaltyWall;
     }
     if ((commsProb > 0.0) &&
         ((this->commsDistancePenaltyTree < 0.0) ||
@@ -215,10 +228,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      if ((numTrees > 0) && (this->commsDistancePenaltyTree < 0.0))
+      if ((treesBlocking) && (this->commsDistancePenaltyTree < 0.0))
         commsProb = 0.0;
       else
-        commsDist += numTrees * this->commsDistancePenaltyTree;
+        commsDist += this->commsDistancePenaltyTree;
     }
     if ((commsProb > 0.0) &&
         (this->commsDistanceMin > 0.0) &&
@@ -254,8 +267,9 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
-                                              const gazebo::math::Pose& _p2)
+bool CommsModel::LineOfSight(const gazebo::math::Pose& _p1,
+                             const gazebo::math::Pose& _p2,
+                             std::string &_entityName)
 {
   std::string entityName;
   double dist;
@@ -263,23 +277,9 @@ unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
   ignition::math::Vector3d end = _p2.pos.Ign();
 
   this->ray->SetPoints(start, end);
-  this->ray->GetIntersection(dist, entityName);
+  this->ray->GetIntersection(dist, _entityName);
 
-  if (entityName.empty())
-    return 0;
-  else
-  {
-    // TODO: Keep raytracing from the intersection point to the end point.
-    return 1;
-  }
-}
-
-//////////////////////////////////////////////////
-unsigned int CommsModel::NumTreesBetweenPoses(const gazebo::math::Pose& /*_p1*/,
-                                              const gazebo::math::Pose& /*_p2*/)
-{
-  // TODO: raytrace to answer this question
-  return 0;
+  return !entityName.empty();
 }
 
 //////////////////////////////////////////////////
