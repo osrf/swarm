@@ -97,7 +97,7 @@ void CommsModel::UpdateOutages()
         else
         {
           // Temporal outage.
-          swarmMember->onOutageUntil = this->world->GetSimTime() +
+          swarmMember->onOutageUntil = curTime +
             ignition::math::Rand::DblUniform(
               this->commsOutageDurationMin,
               this->commsOutageDurationMax);
@@ -124,7 +124,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
             "_address not found in the swarm.");
 
   auto swarmMember = (*this->swarm)[_address];
-  auto myPose = swarmMember->model->GetWorldPose();
+  auto myPose = swarmMember->model->GetWorldPose().Ign();
 
   // Initialize the neighbors list with my own address.
   // A node will always receive its own messages (prob = 1.0).
@@ -139,14 +139,14 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   {
     // Where is the other node?
     auto other = member.second;
-    auto otherPose = other->model->GetWorldPose();
+    auto otherPose = other->model->GetWorldPose().Ign();
 
     // This is my own address and it's already in the list of neighbors.
     if (other->address == _address)
       continue;
 
     // How far away is it from me?
-    auto dist = (myPose.pos - otherPose.pos).GetLength();
+    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
     auto neighborDist = dist;
     auto commsDist = dist;
     int numWalls = 0;
@@ -168,8 +168,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       else
         neighborDist += numWalls * this->neighborDistancePenaltyWall;
     }
-    if ((this->neighborDistancePenaltyTree < 0.0f) ||
-        (this->neighborDistancePenaltyTree > 0.0f))
+    if (!ignition::math::equal(this->neighborDistancePenaltyTree, 0.0))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -202,8 +201,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
         commsDist += numWalls * this->commsDistancePenaltyWall;
     }
     if ((commsProb > 0.0) &&
-        ((this->commsDistancePenaltyTree < 0.0) ||
-         (this->commsDistancePenaltyTree > 0.0)))
+        (!ignition::math::equal(this->commsDistancePenaltyTree, 0.0)))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -246,16 +244,16 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& /*_p1*/,
-                                              const gazebo::math::Pose& /*_p2*/)
+unsigned int CommsModel::NumWallsBetweenPoses(
+  const ignition::math::Pose3d &/*_p1*/, const ignition::math::Pose3d &/*_p2*/)
 {
   // TODO: raytrace to answer this question
   return 0;
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumTreesBetweenPoses(const gazebo::math::Pose& /*_p1*/,
-                                              const gazebo::math::Pose& /*_p2*/)
+unsigned int CommsModel::NumTreesBetweenPoses(
+  const ignition::math::Pose3d &/*_p1*/, const ignition::math::Pose3d &/*_p2*/)
 {
   // TODO: raytrace to answer this question
   return 0;

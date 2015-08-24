@@ -23,8 +23,8 @@
 
 #include <string>
 #include <gazebo/common/Time.hh>
-#include <gazebo/math/Pose.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
+#include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
 #include "swarm/SwarmTypes.hh"
@@ -63,16 +63,18 @@ namespace swarm
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
     /// \return Number of walls between the points.
-    private: unsigned int NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
-                                               const gazebo::math::Pose& _p2);
+    private: unsigned int NumWallsBetweenPoses(
+                                             const ignition::math::Pose3d &_p1,
+                                             const ignition::math::Pose3d &_p2);
 
     /// \brief Get the number of tree lines between two points in the world.
     ///
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
     /// \return Number of tree lines between the points.
-    private: unsigned int NumTreesBetweenPoses(const gazebo::math::Pose& _p1,
-                                               const gazebo::math::Pose& _p2);
+    private: unsigned int NumTreesBetweenPoses(
+                                             const ignition::math::Pose3d &_p1,
+                                             const ignition::math::Pose3d &_p2);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the
     /// plugin. If so, update the value of the default parameters with the one
