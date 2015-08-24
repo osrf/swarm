@@ -159,7 +159,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Apply the neighbor part of the comms model.
     if ((this->neighborDistancePenaltyWall < 0.0) ||
        (this->neighborDistancePenaltyWall > 0.0))
-
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -247,8 +246,8 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
-                                              const gazebo::math::Pose& _p2)
+unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& /*_p1*/,
+                                              const gazebo::math::Pose& /*_p2*/)
 {
   // TODO: raytrace to answer this question
   return 0;
