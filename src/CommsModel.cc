@@ -23,6 +23,7 @@
 #include <gazebo/physics/Collision.hh>
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/PhysicsEngine.hh>
+#include <gazebo/physics/RayShape.hh>
 #include <gazebo/physics/World.hh>
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
@@ -42,6 +43,12 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   GZ_ASSERT(_sdf, "CommsModel() error: _sdf pointer is NULL");
 
   this->LoadParameters(_sdf);
+
+  // This ray will be used in GetSignalStrength() for checking obstacles
+  // between the transmitter and a given point.
+  this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
+    this->world->GetPhysicsEngine()->CreateShape("ray",
+      gazebo::physics::CollisionPtr()));
 }
 
 //////////////////////////////////////////////////
@@ -159,6 +166,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Apply the neighbor part of the comms model.
     if ((this->neighborDistancePenaltyWall < 0.0) ||
        (this->neighborDistancePenaltyWall > 0.0))
+
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -246,11 +254,24 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& /*_p1*/,
-                                              const gazebo::math::Pose& /*_p2*/)
+unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
+                                              const gazebo::math::Pose& _p2)
 {
-  // TODO: raytrace to answer this question
-  return 0;
+  std::string entityName;
+  double dist;
+  ignition::math::Vector3d start = _p1.pos.Ign();
+  ignition::math::Vector3d end = _p2.pos.Ign();
+
+  this->ray->SetPoints(start, end);
+  this->ray->GetIntersection(dist, entityName);
+
+  if (entityName.empty())
+    return 0;
+  else
+  {
+    // TODO: Keep raytracing from the intersection point to the end point.
+    return 1;
+  }
 }
 
 //////////////////////////////////////////////////

@@ -143,6 +143,9 @@ namespace swarm
 
     /// \brief Keep track of update sim-time.
     private: gazebo::common::Time lastUpdateTime;
+
+    // \brief Ray used to test for line of sight between vehicles.
+    private: gazebo::physics::RayShapePtr ray;
   };
 }  // namespace
 #endif
