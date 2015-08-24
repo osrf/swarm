@@ -185,4 +185,8 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
   // New data received from a teammate.
+  gzmsg << "---" << std::endl;
+  gzmsg << "[" << this->Host() << "] New message received" << std::endl;
+  gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
+  gzmsg << "\tData: [" << _data << "]" << std::endl;
 }

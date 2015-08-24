@@ -158,6 +158,10 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
       continue;
     }
 
+    gzdbg << "Neighbors: " << std::endl;
+    for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
+      gzdbg << "\t" << neighbor.first << std::endl;
+
     // Add the list of neighbors of the sender to the outgoing message.
     for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
     {

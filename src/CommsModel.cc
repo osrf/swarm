@@ -139,6 +139,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto other = member.second;
     auto otherPose = other->model->GetWorldPose();
 
+    // This is my own address and it's already in the list of neighbors.
+    if (other->address == _address)
+      continue;
+
     // How far away is it from me?
     auto dist = (myPose.pos - otherPose.pos).GetLength();
     auto neighborDist = dist;
@@ -150,14 +154,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if (other->onOutage)
       continue;
 
-    // Apply the neighbor part of the comms model
-    if ((this->neighborDistanceMin >= 0.0) &&
-        (this->neighborDistanceMin > neighborDist))
-      continue;
-    if ((this->neighborDistanceMax >= 0.0) &&
-        (this->neighborDistanceMax < neighborDist))
-      continue;
-    if (this->neighborDistancePenaltyWall > 0.0)
+    // Apply the neighbor part of the comms model.
+    if ((this->neighborDistancePenaltyWall < 0.0) ||
+       (this->neighborDistancePenaltyWall > 0.0))
+
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -165,15 +165,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       if ((numWalls > 0) && (this->neighborDistancePenaltyWall < 0.0))
         continue;
       else
-        neighborDist -= numWalls * this->neighborDistancePenaltyWall;
-      if ((this->neighborDistanceMin >= 0.0) &&
-          (this->neighborDistanceMin > neighborDist))
-        continue;
-      if ((this->neighborDistanceMax >= 0.0) &&
-          (this->neighborDistanceMax < neighborDist))
-        continue;
+        neighborDist += numWalls * this->neighborDistancePenaltyWall;
     }
-    if (this->neighborDistancePenaltyTree > 0.0)
+    if ((this->neighborDistancePenaltyTree < 0.0f) ||
+        (this->neighborDistancePenaltyTree > 0.0f))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -181,63 +176,50 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       if ((numTrees > 0) && (this->neighborDistancePenaltyTree < 0.0))
         continue;
       else
-        neighborDist -= numTrees * this->neighborDistancePenaltyTree;
-      if ((this->neighborDistanceMin >= 0.0) &&
-          (this->neighborDistanceMin > neighborDist))
-        continue;
-      if ((this->neighborDistanceMax >= 0.0) &&
-          (this->neighborDistanceMax < neighborDist))
-        continue;
+        neighborDist += numTrees * this->neighborDistancePenaltyTree;
     }
+    if ((this->neighborDistanceMin > 0.0) &&
+        (this->neighborDistanceMin > neighborDist))
+      continue;
+    if ((this->neighborDistanceMax >= 0.0) &&
+        (this->neighborDistanceMax < neighborDist))
+      continue;
 
     // Now apply the comms model to compute a probability of a packet from
     // this neighbor arriving successfully.
     auto commsProb = 1.0;
 
     if ((commsProb > 0.0) &&
-        (this->commsDistanceMin >= 0.0) &&
+        ((this->commsDistancePenaltyWall < 0.0) ||
+         (this->commsDistancePenaltyWall > 0.0)))
+    {
+      // We're within range.  Check for obstacles (don't want to waste time on11
+      // that if we're not within range).
+      if ((numWalls > 0) && (this->commsDistancePenaltyWall < 0.0))
+        commsProb = 0.0;
+      else
+        commsDist += numWalls * this->commsDistancePenaltyWall;
+    }
+    if ((commsProb > 0.0) &&
+        ((this->commsDistancePenaltyTree < 0.0) ||
+         (this->commsDistancePenaltyTree > 0.0)))
+    {
+      // We're within range.  Check for obstacles (don't want to waste time on
+      // that if we're not within range).
+      if ((numTrees > 0) && (this->commsDistancePenaltyTree < 0.0))
+        commsProb = 0.0;
+      else
+        commsDist += numTrees * this->commsDistancePenaltyTree;
+    }
+    if ((commsProb > 0.0) &&
+        (this->commsDistanceMin > 0.0) &&
         (this->commsDistanceMin > commsDist))
       commsProb = 0.0;
     if ((commsProb > 0.0) &&
         (this->commsDistanceMax >= 0.0) &&
         (this->commsDistanceMax < commsDist))
       commsProb = 0.0;
-    if ((commsProb > 0.0) && this->commsDistancePenaltyWall > 0.0)
-    {
-      // We're within range.  Check for obstacles (don't want to waste time on
-      // that if we're not within range).
-      if ((numWalls > 0) &&
-          (this->commsDistancePenaltyWall < 0.0))
-        commsProb = 0.0;
-      else
-        commsDist -= numWalls * this->commsDistancePenaltyWall;
-      if ((commsProb > 0.0) &&
-          (this->commsDistanceMin >= 0.0) &&
-          (this->commsDistanceMin > commsDist))
-        commsProb = 0.0;
-      if ((commsProb > 0.0) &&
-          (this->commsDistanceMax >= 0.0) &&
-          (this->commsDistanceMax < commsDist))
-        commsProb = 0.0;
-    }
-    if ((commsProb > 0.0) && this->commsDistancePenaltyTree > 0.0)
-    {
-      // We're within range.  Check for obstacles (don't want to waste time on
-      // that if we're not within range).
-      if ((numTrees > 0) &&
-          (this->commsDistancePenaltyTree < 0.0))
-        commsProb = 0.0;
-      else
-        commsDist -= numTrees * this->commsDistancePenaltyTree;
-      if ((commsProb > 0.0) &&
-          (this->commsDistanceMin >= 0.0) &&
-          (this->commsDistanceMin > commsDist))
-        commsProb = 0.0;
-      if ((commsProb > 0.0) &&
-          (this->commsDistanceMax >= 0.0) &&
-          (this->commsDistanceMax < commsDist))
-        commsProb = 0.0;
-    }
+
 
     if (commsProb > 0.0)
     {
