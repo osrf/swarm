@@ -63,7 +63,7 @@ namespace swarm
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
     /// \param[out] _entityName If the points don't have line of sight,
-    /// this will contain the name of the first entity on the way from
+    /// this parameter contains the name of the first entity on the way from
     /// the starting point to the end point.
     /// \return True if the points have line of sight or false otherwise.
     private: bool LineOfSight(const gazebo::math::Pose& _p1,
