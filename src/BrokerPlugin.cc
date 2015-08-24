@@ -133,6 +133,9 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
   // Decide if each member of the swarm enters into a comms outage.
   this->commsModel->UpdateOutages();
 
+  // Update the visibility state between vehicles.
+  this->commsModel->UpdateVisibility();
+
   // Update the neighbors list of each member of the swarm.
   this->commsModel->UpdateNeighbors();
 

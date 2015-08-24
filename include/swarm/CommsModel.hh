@@ -52,6 +52,9 @@ namespace swarm
     /// \brief Update the neighbors list of each member of the swarm.
     public: void UpdateNeighbors();
 
+    /// \brief Update the visibility state between vehicles.
+    public: void UpdateVisibility();
+
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
     ///
@@ -142,6 +145,13 @@ namespace swarm
 
     // \brief Ray used to test for line of sight between vehicles.
     private: gazebo::physics::RayShapePtr ray;
+
+    /// \brief Visibility between vehicles. The key is a pair with the
+    /// addresses of the vehicles involved. The value is a string that stores
+    /// the entity name of the first obstacle between the vehicles. If there is
+    /// line of sight the value contains an empty string.
+    private: std::map<std::pair<std::string, std::string>,
+               std::string> visibility;
   };
 }  // namespace
 #endif

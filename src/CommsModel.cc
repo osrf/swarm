@@ -49,6 +49,14 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
     this->world->GetPhysicsEngine()->CreateShape("ray",
       gazebo::physics::CollisionPtr()));
+
+  // Initialize visibility.
+  for (auto const &robotA : (*this->swarm))
+    for (auto const &robotB : (*this->swarm))
+    {
+      this->visibility[std::make_pair(robotA.second->address,
+                                      robotB.second->address)] = "";
+    }
 }
 
 //////////////////////////////////////////////////
@@ -125,6 +133,39 @@ void CommsModel::UpdateNeighbors()
 }
 
 //////////////////////////////////////////////////
+void CommsModel::UpdateVisibility()
+{
+  this->visibility.clear();
+  for (auto const &robotA : (*this->swarm))
+    for (auto const &robotB : (*this->swarm))
+    {
+      auto addressA = robotA.second->address;
+      auto addressB = robotB.second->address;
+      auto keyA = std::make_pair(addressA, addressB);
+      auto keyB = std::make_pair(addressB, addressA);
+
+      // There's always line of sight between a vehicle and itself.
+      if (addressA == addressB)
+      {
+        this->visibility[keyA] = "";
+        continue;
+      }
+
+      // Check if we already have the symmetric case.
+      if (this->visibility.find(keyB) != this->visibility.end())
+        this->visibility[keyA] = this->visibility[keyB];
+      else
+      {
+        auto poseA = robotA.second->model->GetWorldPose();
+        auto poseB = robotB.second->model->GetWorldPose();
+        std::string entityName;
+        this->LineOfSight(poseA, poseB, entityName);
+        this->visibility[keyA] = entityName;
+      }
+    }
+}
+
+//////////////////////////////////////////////////
 void CommsModel::UpdateNeighborList(const std::string &_address)
 {
   GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
@@ -166,13 +207,15 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 
     // Check if there's line of sight between the two vehicles.
     // If there's no line of sight, guess what type of object is in between.
-    std::string entityName;
-    bool visible = this->LineOfSight(myPose, otherPose, entityName);
+    auto key = std::make_pair(_address, other->address);
+    std::string entityName = this->visibility[key];
+    bool visible = entityName == "";
+
     if (!visible && entityName.find("terrain") != std::string::npos)
       terrainBlocking = true;
-    if (!visible && entityName.find("wall") != std::string::npos)
+    else if (!visible && entityName.find("wall") != std::string::npos)
       wallsBlocking = true;
-    if (!visible && entityName.find("tree") != std::string::npos)
+    else if (!visible && entityName.find("tree") != std::string::npos)
       treesBlocking = true;
 
     // Hidden by terrain.
