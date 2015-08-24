@@ -145,39 +145,39 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   this->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
 
   // Get the camera information
-  //ImageData img;
-  //if (this->Image(img))
-  //{
-  //  // check if we can see the lost person
-  //  if (img.objects.find("lost_person") != img.objects.end())
-  //    gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
-  //}
-//
-  //// Only print for one robot, to minimize console output
-  //if (this->Host() == "192.168.2.1")
-  //{
-  //  gzmsg << "[" << this->Host() << "] search area: " <<
-  //    minLatitude << " " << maxLatitude << " " <<
-  //    minLongitude << " " << maxLongitude << std::endl;
-  //  gzmsg << "[" << this->Host() << "] lat long alt: " <<
-  //    latitude << " " << longitude << " " << altitude << std::endl;
-//
-  //  // Get IMU information
-  //  ignition::math::Vector3d linVel, angVel;
-  //  ignition::math::Quaterniond orient;
-  //  if (this->Imu(linVel, angVel, orient))
-  //  {
-  //    gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
-  //    gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-  //    gzmsg << "[" << this->Host() << "] Orientation: " << orient.Euler()
-  //          << std::endl;
-  //  }
-//
-  //  // Get bearing
-  //  ignition::math::Angle bearing;
-  //  if (this->Bearing(bearing))
-  //    gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
-  //}
+  ImageData img;
+  if (this->Image(img))
+  {
+    // check if we can see the lost person
+    if (img.objects.find("lost_person") != img.objects.end())
+      gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
+  }
+
+  // Only print for one robot, to minimize console output
+  if (this->Host() == "192.168.2.1")
+  {
+    gzmsg << "[" << this->Host() << "] search area: " <<
+      minLatitude << " " << maxLatitude << " " <<
+      minLongitude << " " << maxLongitude << std::endl;
+    gzmsg << "[" << this->Host() << "] lat long alt: " <<
+      latitude << " " << longitude << " " << altitude << std::endl;
+
+    // Get IMU information
+    ignition::math::Vector3d linVel, angVel;
+    ignition::math::Quaterniond orient;
+    if (this->Imu(linVel, angVel, orient))
+    {
+      gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
+      gzmsg << "[" << this->Host() << "] Orientation: " << orient.Euler()
+            << std::endl;
+    }
+
+    // Get bearing
+    ignition::math::Angle bearing;
+    if (this->Bearing(bearing))
+      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -185,8 +185,4 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
   // New data received from a teammate.
-  gzmsg << "---" << std::endl;
-  gzmsg << "[" << this->Host() << "] New message received" << std::endl;
-  gzmsg << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  gzmsg << "\tData: [" << _data << "]" << std::endl;
 }

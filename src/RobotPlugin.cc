@@ -616,10 +616,8 @@ void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
   std::lock_guard<std::mutex> lock(this->mutex);
   this->neighbors.clear();
   this->neighborProbabilities.clear();
-  std::cout << "---" << std::endl;
   for (auto i = 0; i < _msg.neighbors().size(); ++i)
   {
-    std::cout << "New neighbor: " << _msg.neighbors(i) << std::endl;
     if (_msg.neighbors(i) != this->Host())
       this->neighbors.push_back(_msg.neighbors(i));
   }

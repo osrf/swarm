@@ -20,7 +20,9 @@
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Time.hh>
+#include <gazebo/physics/Collision.hh>
 #include <gazebo/physics/Model.hh>
+#include <gazebo/physics/PhysicsEngine.hh>
 #include <gazebo/physics/World.hh>
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
@@ -245,8 +247,8 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& /*_p1*/,
-                                              const gazebo::math::Pose& /*_p2*/)
+unsigned int CommsModel::NumWallsBetweenPoses(const gazebo::math::Pose& _p1,
+                                              const gazebo::math::Pose& _p2)
 {
   // TODO: raytrace to answer this question
   return 0;

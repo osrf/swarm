@@ -24,7 +24,7 @@
 #include <string>
 #include <gazebo/common/Time.hh>
 #include <gazebo/math/Pose.hh>
-#include <gazebo/physics/World.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
 #include <sdf/sdf.hh>
 
 #include "swarm/SwarmTypes.hh"
@@ -100,11 +100,11 @@ namespace swarm
     private: double neighborDistancePenaltyTree = 0.0;
 
     /// \brief Minimum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors).  Set to <0 for no limit.
+    /// (must also be neighbors). Set to <0 for no limit.
     private: double commsDistanceMin = -1.0;
 
     /// \brief Maximum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors).  Set to <0 for no limit.
+    /// (must also be neighbors). Set to <0 for no limit.
     private: double commsDistanceMax = -1.0;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an
