@@ -140,12 +140,106 @@
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
           <sensor name="gps" type="gps">
-            <gps/>
+            <gps>
+              <position_sensing>
+                <horizontal>
+                  <noise type="gaussian_quantized">
+                    <mean>0</mean>
+                    <stddev>4</stddev>
+                    <bias_mean>0</bias_mean>
+                    <bias_stddev>0</bias_stddev>
+                    <precision>0.001</precision>
+                  </noise>
+                </horizontal>
+                <vertical>
+                  <noise type="gaussian_quantized">
+                    <mean>0</mean>
+                    <stddev>8</stddev>
+                    <bias_mean>0</bias_mean>
+                    <bias_stddev>0</bias_stddev>
+                    <precision>0.01</precision>
+                  </noise>
+                </vertical>
+              </position_sensing>
+              <velocity_sensing>
+                <horizontal>
+                  <noise type="gaussian_quantized">
+                    <mean>0</mean>
+                    <stddev>4</stddev>
+                    <bias_mean>0</bias_mean>
+                    <bias_stddev>0</bias_stddev>
+                    <precision>0.001</precision>
+                  </noise>
+                </horizontal>
+                <vertical>
+                  <noise type="gaussian_quantized">
+                    <mean>0</mean>
+                    <stddev>8</stddev>
+                    <bias_mean>0</bias_mean>
+                    <bias_stddev>0</bias_stddev>
+                    <precision>0.01</precision>
+                  </noise>
+                </vertical>
+              </velocity_sensing>
+            </gps>
             <always_on>1</always_on>
           </sensor>
 
           <sensor name="imu" type="imu">
-            <imu/>
+            <imu>
+              <angular_velocity>
+                <x>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </x>
+                <y>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </y>
+                <z>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </z>
+              </angular_velocity>
+              <linear_acceleration>
+                <x>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </x>
+                <y>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </y>
+                <z>
+                  <noise type="gaussian">
+                    <mean>0</mean>
+                    <stddev>0.0002</stddev>
+                    <bias_mean>7.5e-06</bias_mean>
+                    <bias_stddev>8e-07</bias_stddev>
+                  </noise>
+                </z>
+              </linear_acceleration>
+            </imu>
             <always_on>1</always_on>
           </sensor>
 
