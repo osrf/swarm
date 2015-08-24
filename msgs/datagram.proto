@@ -20,5 +20,5 @@ message Datagram
   required string data        = 4;
 
   /// \brief List of sender's neighbors who should receive the message;
-  repeated string recipients   = 5;
+  repeated string recipients  = 5;
 }
