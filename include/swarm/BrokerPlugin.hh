@@ -75,6 +75,9 @@ namespace swarm
     /// with its updated neighbors list.
     private: void NotifyNeighbors();
 
+    /// \brief Dispatch all incoming messages.
+    private: void DispatchMessages();
+
     /// \brief Callback executed when a new message is received.
     ///
     /// \param[in] _topic Topic name associated to the new message received.
