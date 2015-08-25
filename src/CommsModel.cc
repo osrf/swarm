@@ -67,8 +67,8 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
               << std::endl;
   }
 
-  // This ray will be used in GetSignalStrength() for checking obstacles
-  // between the transmitter and a given point.
+  // This ray will be used in LineOfSight() for checking obstacles
+  // between a pair of vehicles.
   this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
     this->world->GetPhysicsEngine()->CreateShape("ray",
       gazebo::physics::CollisionPtr()));
