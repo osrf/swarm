@@ -171,43 +171,6 @@ void CommsModel::UpdateNeighbors()
 }
 
 //////////////////////////////////////////////////
-void CommsModel::UpdateVisibility()
-{
-  this->visibility.clear();
-  for (auto const &robotA : (*this->swarm))
-    for (auto const &robotB : (*this->swarm))
-    {
-      auto addressA = robotA.second->address;
-      auto addressB = robotB.second->address;
-      auto keyA = std::make_pair(addressA, addressB);
-      auto keyB = std::make_pair(addressB, addressA);
-
-      // There's always line of sight between a vehicle and itself.
-      if (addressA == addressB)
-      {
-        this->visibility[keyA] = {""};
-        continue;
-      }
-
-      // Check if we already have the symmetric case.
-      if (this->visibility.find(keyB) != this->visibility.end())
-      {
-        auto v = this->visibility[keyB];
-        std::reverse(v.begin(), v.end());
-        this->visibility[keyA] = v;
-      }
-      else
-      {
-        auto poseA = robotA.second->model->GetWorldPose().Ign();
-        auto poseB = robotB.second->model->GetWorldPose().Ign();
-        std::vector<std::string> entities;
-        this->LineOfSight(poseA, poseB, entities);
-        this->visibility[keyA] = entities;
-      }
-    }
-}
-
-//////////////////////////////////////////////////
 void CommsModel::UpdateNeighborList(const std::string &_address)
 {
   GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
@@ -235,11 +198,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if (other->address == _address)
       continue;
 
-    // How far away is it from me?
-    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
-    auto neighborDist = dist;
-    auto commsDist = dist;
-
     // Check if the other teammate is currenly on outage.
     if (other->onOutage)
       continue;
@@ -264,6 +222,11 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       continue;
 
     bool treesBlocking = !visible && obstacle.find("tree") != std::string::npos;
+
+    // How far away is it from me?
+    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
+    auto neighborDist = dist;
+    auto commsDist = dist;
 
     // Apply the neighbor part of the comms model.
     if (!ignition::math::equal(this->neighborDistancePenaltyTree, 0.0))
@@ -329,6 +292,46 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
+void CommsModel::UpdateVisibility()
+{
+  this->visibility.clear();
+
+  // All combinations between a pair of vehicles.
+  for (auto const &robotA : (*this->swarm))
+    for (auto const &robotB : (*this->swarm))
+    {
+      auto addressA = robotA.second->address;
+      auto addressB = robotB.second->address;
+      auto keyA = std::make_pair(addressA, addressB);
+      auto keyB = std::make_pair(addressB, addressA);
+
+      // There's always line of sight between a vehicle and itself.
+      if (addressA == addressB)
+      {
+        // The empty string represents line of sight between vehicles.
+        this->visibility[keyA] = {""};
+        continue;
+      }
+
+      // Check if we already have the symmetric case.
+      if (this->visibility.find(keyB) != this->visibility.end())
+      {
+        auto v = this->visibility[keyB];
+        std::reverse(v.begin(), v.end());
+        this->visibility[keyA] = v;
+      }
+      else
+      {
+        auto poseA = robotA.second->model->GetWorldPose().Ign();
+        auto poseB = robotB.second->model->GetWorldPose().Ign();
+        std::vector<std::string> entities;
+        this->LineOfSight(poseA, poseB, entities);
+        this->visibility[keyA] = entities;
+      }
+    }
+}
+
+//////////////////////////////////////////////////
 bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
                              const ignition::math::Pose3d& _p2,
                              std::vector<std::string> &_entities)
@@ -342,12 +345,14 @@ bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
   _entities.clear();
 
   this->ray->SetPoints(start, end);
+  // Get the first obstacle from _p1 to _p2.
   this->ray->GetIntersection(dist, firstEntity);
   _entities.push_back(firstEntity);
 
   if (!firstEntity.empty())
   {
     this->ray->SetPoints(end, start);
+    // Get the last obstacle from _p1 to _p2.
     this->ray->GetIntersection(dist, lastEntity);
 
     if (firstEntity != lastEntity)

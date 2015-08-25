@@ -59,14 +59,14 @@ namespace swarm
     /// \brief Update the neighbors list of each member of the swarm.
     private: void UpdateNeighbors();
 
-    /// \brief Update the visibility state between vehicles.
-    private: void UpdateVisibility();
-
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
     ///
     /// \param[in] _address Address of the robot to be updated.
     private: void UpdateNeighborList(const std::string &_address);
+
+    /// \brief Update the visibility state between vehicles.
+    private: void UpdateVisibility();
 
     /// \brief Check if there is line of sight between two points in the world.
     ///
