@@ -21,7 +21,9 @@
 #ifndef __SWARM_COMMS_MODEL_HH__
 #define __SWARM_COMMS_MODEL_HH__
 
+#include <map>
 #include <string>
+#include <utility>
 #include <gazebo/common/Time.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/math.hh>
