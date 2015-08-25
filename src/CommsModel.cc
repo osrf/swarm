@@ -45,6 +45,28 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
 
   this->LoadParameters(_sdf);
 
+  // Sanity check: Confirm that the penalty for crossing two lines of trees is
+  // bigger than the maximum neighbor distance.
+  if (this->neighborDistancePenaltyTree * 2 <= this->neighborDistanceMax)
+  {
+    std::cerr << "The combination of <neighborDistancePenaltyTree> and "
+              << " <neighborDistanceMax> violates the rule that no more than "
+              << "one line of trees is allowed between vehicles to communicate "
+              << "(2*neighborDistancePenaltyTree > neighborDistanceMax)"
+              << std::endl;
+  }
+
+  // Sanity check: Confirm that the penalty for crossing two lines of trees is
+  // bigger than the maximum comms distance.
+  if (this->commsDistancePenaltyTree * 2 <= this->commsDistanceMax)
+  {
+    std::cerr << "The combination of <commsDistancePenaltyTree> and "
+              << " <commsDistanceMax> violates the rule that no more than "
+              << "one line of trees is allowed between vehicles to communicate "
+              << "(2*commsDistancePenaltyTree > commsDistanceMax)"
+              << std::endl;
+  }
+
   // This ray will be used in GetSignalStrength() for checking obstacles
   // between the transmitter and a given point.
   this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
