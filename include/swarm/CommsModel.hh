@@ -49,14 +49,18 @@ namespace swarm
     /// \brief Class destructor.
     public: virtual ~CommsModel() = default;
 
+    /// \brief Update the state of the communication model (outages, visibility
+    /// between nodes and neighbors).
+    public: void Update();
+
     /// \brief Decide if each member of the swarm enters into a comms outage.
-    public: void UpdateOutages();
+    private: void UpdateOutages();
 
     /// \brief Update the neighbors list of each member of the swarm.
-    public: void UpdateNeighbors();
+    private: void UpdateNeighbors();
 
     /// \brief Update the visibility state between vehicles.
-    public: void UpdateVisibility();
+    private: void UpdateVisibility();
 
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.

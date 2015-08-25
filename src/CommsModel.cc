@@ -83,6 +83,21 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
 }
 
 //////////////////////////////////////////////////
+void CommsModel::Update()
+{
+  // Decide if each member of the swarm enters into a comms outage.
+  this->UpdateOutages();
+
+  // Update the visibility state between vehicles.
+  // Make sure that this happens after UpdateOutages().
+  this->UpdateVisibility();
+
+  // Update the neighbors list of each member of the swarm.
+  // Make sure that this happens after UpdateVisibility().
+  this->UpdateNeighbors();
+}
+
+//////////////////////////////////////////////////
 void CommsModel::UpdateOutages()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();

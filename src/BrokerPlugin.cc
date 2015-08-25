@@ -130,14 +130,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  // Decide if each member of the swarm enters into a comms outage.
-  this->commsModel->UpdateOutages();
-
-  // Update the visibility state between vehicles.
-  this->commsModel->UpdateVisibility();
-
-  // Update the neighbors list of each member of the swarm.
-  this->commsModel->UpdateNeighbors();
+  // Update the state of the communication model.
+  this->commsModel->Update();
 
   // Send a message to each swarm member with its updated neighbors list.
   this->NotifyNeighbors();
