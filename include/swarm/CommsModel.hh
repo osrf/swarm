@@ -67,13 +67,17 @@ namespace swarm
     ///
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
-    /// \param[out] _entityName If the points don't have line of sight,
-    /// this parameter contains the name of the first entity on the way from
+    /// \param[out] _entities Vector of obstacle between the objects.
+    /// If the points have line of sight, the vector has only one element and
+    /// it's the empty string. If there's no line of sight this parameter
+    /// contains the name of the first and last entities on the way from
     /// the starting point to the end point.
+    /// ToDo: Improve this function if needed to return all the obstacles and
+    /// not only the first and last.
     /// \return True if the points have line of sight or false otherwise.
     private: bool LineOfSight(const ignition::math::Pose3d &_p1,
                               const ignition::math::Pose3d &_p2,
-                              std::string &_entityName);
+                              std::vector<std::string> &_entities);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the
     /// plugin. If so, update the value of the default parameters with the one
@@ -90,11 +94,6 @@ namespace swarm
     private: double neighborDistanceMax = -1.0;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
-    private: double neighborDistancePenaltyWall = 0.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
     /// intervening non-solid obstacle (forest, etc.).
     /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
     private: double neighborDistancePenaltyTree = 0.0;
@@ -106,11 +105,6 @@ namespace swarm
     /// \brief Maximum free-space distance (m) between two nodes to communicate
     /// (must also be neighbors). Set to <0 for no limit.
     private: double commsDistanceMax = -1.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
-    private: double commsDistancePenaltyWall = 0.0;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an
     /// intervening non-solid obstacle (forest, etc.).
@@ -153,7 +147,7 @@ namespace swarm
     /// the entity name of the first obstacle between the vehicles. If there is
     /// line of sight the value contains an empty string.
     private: std::map<std::pair<std::string, std::string>,
-               std::string> visibility;
+               std::vector<std::string>> visibility;
   };
 }  // namespace
 #endif

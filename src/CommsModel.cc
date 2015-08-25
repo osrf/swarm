@@ -15,6 +15,7 @@
  *
 */
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <gazebo/common/Assert.hh>
@@ -54,8 +55,8 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   for (auto const &robotA : (*this->swarm))
     for (auto const &robotB : (*this->swarm))
     {
-      this->visibility[std::make_pair(robotA.second->address,
-                                      robotB.second->address)] = "";
+      this->visibility[
+        std::make_pair(robotA.second->address, robotB.second->address)] = {};
     }
 }
 
@@ -147,20 +148,24 @@ void CommsModel::UpdateVisibility()
       // There's always line of sight between a vehicle and itself.
       if (addressA == addressB)
       {
-        this->visibility[keyA] = "";
+        this->visibility[keyA] = {""};
         continue;
       }
 
       // Check if we already have the symmetric case.
       if (this->visibility.find(keyB) != this->visibility.end())
-        this->visibility[keyA] = this->visibility[keyB];
+      {
+        auto v = this->visibility[keyB];
+        std::reverse(v.begin(), v.end());
+        this->visibility[keyA] = v;
+      }
       else
       {
         auto poseA = robotA.second->model->GetWorldPose().Ign();
         auto poseB = robotB.second->model->GetWorldPose().Ign();
-        std::string entityName;
-        this->LineOfSight(poseA, poseB, entityName);
-        this->visibility[keyA] = entityName;
+        std::vector<std::string> entities;
+        this->LineOfSight(poseA, poseB, entities);
+        this->visibility[keyA] = entities;
       }
     }
 }
@@ -197,9 +202,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto dist = (myPose.Pos() - otherPose.Pos()).Length();
     auto neighborDist = dist;
     auto commsDist = dist;
-    bool terrainBlocking = false;
-    bool wallsBlocking = false;
-    bool treesBlocking = false;
 
     // Check if the other teammate is currenly on outage.
     if (other->onOutage)
@@ -208,31 +210,25 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Check if there's line of sight between the two vehicles.
     // If there's no line of sight, guess what type of object is in between.
     auto key = std::make_pair(_address, other->address);
-    std::string entityName = this->visibility[key];
-    bool visible = entityName == "";
+    GZ_ASSERT(this->visibility.find(key) != this->visibility.end(),
+      "vehicle key not found in visibility");
+    auto entities = this->visibility[key];
+    GZ_ASSERT(!entities.empty(), "Found a visibility element empty");
+    bool visible = (entities.size() == 1) && (entities.at(0).empty());
 
-    if (!visible && entityName.find("terrain") != std::string::npos)
-      terrainBlocking = true;
-    else if (!visible && entityName.find("wall") != std::string::npos)
-      wallsBlocking = true;
-    else if (!visible && entityName.find("tree") != std::string::npos)
-      treesBlocking = true;
-
-    // Hidden by terrain.
-    if (terrainBlocking)
+    // There's no communication allowed between two vehicles that have more
+    // than one obstacles in between.
+    if (!visible && entities.size() > 1)
       continue;
 
+    auto obstacle = entities.at(0);
+    if (!visible && ((obstacle.find("wall") != std::string::npos) ||
+                     (obstacle.find("terrain") != std::string::npos)))
+      continue;
+
+    bool treesBlocking = !visible && obstacle.find("tree") != std::string::npos;
+
     // Apply the neighbor part of the comms model.
-    if ((this->neighborDistancePenaltyWall < 0.0) ||
-       (this->neighborDistancePenaltyWall > 0.0))
-    {
-      // We're within range.  Check for obstacles (don't want to waste time on
-      // that if we're not within range).
-      if ((wallsBlocking) && (this->neighborDistancePenaltyWall < 0.0))
-        continue;
-      else
-        neighborDist += this->neighborDistancePenaltyWall;
-    }
     if (!ignition::math::equal(this->neighborDistancePenaltyTree, 0.0))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
@@ -254,17 +250,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto commsProb = 1.0;
 
     if ((commsProb > 0.0) &&
-        ((this->commsDistancePenaltyWall < 0.0) ||
-         (this->commsDistancePenaltyWall > 0.0)))
-    {
-      // We're within range.  Check for obstacles (don't want to waste time on11
-      // that if we're not within range).
-      if ((wallsBlocking) && (this->commsDistancePenaltyWall < 0.0))
-        commsProb = 0.0;
-      else
-        commsDist += this->commsDistancePenaltyWall;
-    }
-    if ((commsProb > 0.0) &&
         (!ignition::math::equal(this->commsDistancePenaltyTree, 0.0)))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
@@ -282,7 +267,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
         (this->commsDistanceMax >= 0.0) &&
         (this->commsDistanceMax < commsDist))
       commsProb = 0.0;
-
 
     if (commsProb > 0.0)
     {
@@ -310,17 +294,30 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 //////////////////////////////////////////////////
 bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
                              const ignition::math::Pose3d& _p2,
-                             std::string &_entityName)
+                             std::vector<std::string> &_entities)
 {
-  std::string entityName;
+  std::string firstEntity;
+  std::string lastEntity;
   double dist;
   ignition::math::Vector3d start = _p1.Pos();
   ignition::math::Vector3d end = _p2.Pos();
 
-  this->ray->SetPoints(start, end);
-  this->ray->GetIntersection(dist, _entityName);
+  _entities.clear();
 
-  return !entityName.empty();
+  this->ray->SetPoints(start, end);
+  this->ray->GetIntersection(dist, firstEntity);
+  _entities.push_back(firstEntity);
+
+  if (!firstEntity.empty())
+  {
+    this->ray->SetPoints(end, start);
+    this->ray->GetIntersection(dist, lastEntity);
+
+    if (firstEntity != lastEntity)
+      _entities.push_back(lastEntity);
+  }
+
+  return firstEntity.empty();
 }
 
 //////////////////////////////////////////////////
@@ -342,11 +339,6 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
       this->neighborDistanceMax =
         commsModelElem->Get<double>("neighbor_distance_max");
     }
-    if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
-    {
-      this->neighborDistancePenaltyWall =
-        commsModelElem->Get<double>("neighbor_distance_penalty_wall");
-    }
     if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
     {
       this->neighborDistancePenaltyTree =
@@ -361,11 +353,6 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     {
       this->commsDistanceMax =
         commsModelElem->Get<double>("comms_distance_max");
-    }
-    if (commsModelElem->HasElement("comms_distance_penalty_wall"))
-    {
-      this->commsDistancePenaltyWall =
-        commsModelElem->Get<double>("comms_distance_penalty_wall");
     }
     if (commsModelElem->HasElement("comms_distance_penalty_tree"))
     {
