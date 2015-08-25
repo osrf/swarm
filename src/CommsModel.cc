@@ -52,7 +52,7 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     std::cerr << "The combination of <neighborDistancePenaltyTree> and "
               << " <neighborDistanceMax> violates the rule that no more than "
               << "one line of trees is allowed between vehicles to communicate "
-              << "(2*neighborDistancePenaltyTree > neighborDistanceMax)"
+              << "(2*neighborDistancePenaltyTree > neighborDistanceMax)."
               << std::endl;
   }
 
@@ -63,7 +63,7 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     std::cerr << "The combination of <commsDistancePenaltyTree> and "
               << " <commsDistanceMax> violates the rule that no more than "
               << "one line of trees is allowed between vehicles to communicate "
-              << "(2*commsDistancePenaltyTree > commsDistanceMax)"
+              << "(2*commsDistancePenaltyTree > commsDistanceMax)."
               << std::endl;
   }
 

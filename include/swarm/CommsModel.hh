@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 #include <gazebo/common/Time.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/math.hh>
