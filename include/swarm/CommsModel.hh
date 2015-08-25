@@ -72,7 +72,7 @@ namespace swarm
     ///
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
-    /// \param[out] _entities Vector of obstacle between the objects.
+    /// \param[out] _entities Vector of obstacles between the objects.
     /// If the points have line of sight, the vector has only one element and
     /// it's the empty string. If there's no line of sight this parameter
     /// contains the name of the first and last entities on the way from
