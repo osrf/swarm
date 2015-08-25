@@ -217,7 +217,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     bool visible = (entities.size() == 1) && (entities.at(0).empty());
 
     // There's no communication allowed between two vehicles that have more
-    // than one obstacles in between.
+    // than one obstacle in between.
     if (!visible && entities.size() > 1)
       continue;
 
