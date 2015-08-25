@@ -23,8 +23,8 @@
 
 #include <string>
 #include <gazebo/common/Time.hh>
-#include <gazebo/math/Pose.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
+#include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
 #include "swarm/SwarmTypes.hh"
@@ -69,8 +69,8 @@ namespace swarm
     /// this parameter contains the name of the first entity on the way from
     /// the starting point to the end point.
     /// \return True if the points have line of sight or false otherwise.
-    private: bool LineOfSight(const gazebo::math::Pose& _p1,
-                              const gazebo::math::Pose& _p2,
+    private: bool LineOfSight(const ignition::math::Pose3d &_p1,
+                              const ignition::math::Pose3d &_p2,
                               std::string &_entityName);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the

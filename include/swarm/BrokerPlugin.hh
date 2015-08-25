@@ -97,7 +97,7 @@ namespace swarm
     /// \brief Queue to store the incoming messages received from the agents.
     private: std::queue<msgs::Datagram> incomingMsgs;
 
-    /// \brief Map containing information about the members of the swarm.
+    /// \brief Information about the members of the swarm.
     private: SwarmMembershipPtr swarm;
 
     /// \brief Mutex for protecting the queue.

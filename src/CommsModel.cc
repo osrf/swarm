@@ -112,7 +112,7 @@ void CommsModel::UpdateOutages()
         else
         {
           // Temporal outage.
-          swarmMember->onOutageUntil = this->world->GetSimTime() +
+          swarmMember->onOutageUntil = curTime +
             ignition::math::Rand::DblUniform(
               this->commsOutageDurationMin,
               this->commsOutageDurationMax);
@@ -156,8 +156,8 @@ void CommsModel::UpdateVisibility()
         this->visibility[keyA] = this->visibility[keyB];
       else
       {
-        auto poseA = robotA.second->model->GetWorldPose();
-        auto poseB = robotB.second->model->GetWorldPose();
+        auto poseA = robotA.second->model->GetWorldPose().Ign();
+        auto poseB = robotB.second->model->GetWorldPose().Ign();
         std::string entityName;
         this->LineOfSight(poseA, poseB, entityName);
         this->visibility[keyA] = entityName;
@@ -172,7 +172,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
             "_address not found in the swarm.");
 
   auto swarmMember = (*this->swarm)[_address];
-  auto myPose = swarmMember->model->GetWorldPose();
+  auto myPose = swarmMember->model->GetWorldPose().Ign();
 
   // Initialize the neighbors list with my own address.
   // A node will always receive its own messages (prob = 1.0).
@@ -187,14 +187,14 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   {
     // Where is the other node?
     auto other = member.second;
-    auto otherPose = other->model->GetWorldPose();
+    auto otherPose = other->model->GetWorldPose().Ign();
 
     // This is my own address and it's already in the list of neighbors.
     if (other->address == _address)
       continue;
 
     // How far away is it from me?
-    auto dist = (myPose.pos - otherPose.pos).GetLength();
+    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
     auto neighborDist = dist;
     auto commsDist = dist;
     bool terrainBlocking = false;
@@ -233,8 +233,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       else
         neighborDist += this->neighborDistancePenaltyWall;
     }
-    if ((this->neighborDistancePenaltyTree < 0.0f) ||
-        (this->neighborDistancePenaltyTree > 0.0f))
+    if (!ignition::math::equal(this->neighborDistancePenaltyTree, 0.0))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -266,8 +265,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
         commsDist += this->commsDistancePenaltyWall;
     }
     if ((commsProb > 0.0) &&
-        ((this->commsDistancePenaltyTree < 0.0) ||
-         (this->commsDistancePenaltyTree > 0.0)))
+        (!ignition::math::equal(this->commsDistancePenaltyTree, 0.0)))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -310,14 +308,14 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-bool CommsModel::LineOfSight(const gazebo::math::Pose& _p1,
-                             const gazebo::math::Pose& _p2,
+bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
+                             const ignition::math::Pose3d& _p2,
                              std::string &_entityName)
 {
   std::string entityName;
   double dist;
-  ignition::math::Vector3d start = _p1.pos.Ign();
-  ignition::math::Vector3d end = _p2.pos.Ign();
+  ignition::math::Vector3d start = _p1.Pos();
+  ignition::math::Vector3d end = _p2.Pos();
 
   this->ray->SetPoints(start, end);
   this->ray->GetIntersection(dist, _entityName);
@@ -335,47 +333,69 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     auto const &commsModelElem = _sdf->GetElement("comms_model");
 
     if (commsModelElem->HasElement("neighbor_distance_min"))
+    {
       this->neighborDistanceMin =
-        commsModelElem->GetElement("neighbor_distance_min")->Get<double>();
+        commsModelElem->Get<double>("neighbor_distance_min");
+    }
     if (commsModelElem->HasElement("neighbor_distance_max"))
+    {
       this->neighborDistanceMax =
-        commsModelElem->GetElement("neighbor_distance_max")->Get<double>();
+        commsModelElem->Get<double>("neighbor_distance_max");
+    }
     if (commsModelElem->HasElement("neighbor_distance_penalty_wall"))
+    {
       this->neighborDistancePenaltyWall =
-        commsModelElem->GetElement(
-          "neighbor_distance_penalty_wall")->Get<double>();
+        commsModelElem->Get<double>("neighbor_distance_penalty_wall");
+    }
     if (commsModelElem->HasElement("neighbor_distance_penalty_tree"))
+    {
       this->neighborDistancePenaltyTree =
-        commsModelElem->GetElement(
-          "neighbor_distance_penalty_tree")->Get<double>();
+        commsModelElem->Get<double>("neighbor_distance_penalty_tree");
+    }
     if (commsModelElem->HasElement("comms_distance_min"))
+    {
       this->commsDistanceMin =
-        commsModelElem->GetElement("comms_distance_min")->Get<double>();
+        commsModelElem->Get<double>("comms_distance_min");
+    }
     if (commsModelElem->HasElement("comms_distance_max"))
+    {
       this->commsDistanceMax =
-        commsModelElem->GetElement("comms_distance_max")->Get<double>();
+        commsModelElem->Get<double>("comms_distance_max");
+    }
     if (commsModelElem->HasElement("comms_distance_penalty_wall"))
+    {
       this->commsDistancePenaltyWall =
-        commsModelElem->GetElement(
-          "comms_distance_penalty_wall")->Get<double>();
+        commsModelElem->Get<double>("comms_distance_penalty_wall");
+    }
     if (commsModelElem->HasElement("comms_distance_penalty_tree"))
+    {
       this->commsDistancePenaltyTree =
-        commsModelElem->GetElement(
-          "comms_distance_penalty_tree")->Get<double>();
+        commsModelElem->Get<double>("comms_distance_penalty_tree");
+    }
     if (commsModelElem->HasElement("comms_drop_probability_min"))
+    {
       this->commsDropProbabilityMin =
-        commsModelElem->GetElement("comms_drop_probability_min")->Get<double>();
+        commsModelElem->Get<double>("comms_drop_probability_min");
+    }
     if (commsModelElem->HasElement("comms_drop_probability_max"))
+    {
       this->commsDropProbabilityMax =
-        commsModelElem->GetElement("comms_drop_probability_max")->Get<double>();
+        commsModelElem->Get<double>("comms_drop_probability_max");
+    }
     if (commsModelElem->HasElement("comms_outage_probability"))
+    {
       this->commsOutageProbability =
-        commsModelElem->GetElement("comms_outage_probability")->Get<double>();
+        commsModelElem->Get<double>("comms_outage_probability");
+    }
     if (commsModelElem->HasElement("comms_outage_duration_min"))
+    {
       this->commsOutageDurationMin =
-        commsModelElem->GetElement("comms_outage_duration_min")->Get<double>();
+        commsModelElem->Get<double>("comms_outage_duration_min");
+    }
     if (commsModelElem->HasElement("comms_outage_duration_max"))
+    {
       this->commsOutageDurationMax =
-        commsModelElem->GetElement("comms_outage_duration_max")->Get<double>();
+        commsModelElem->Get<double>("comms_outage_duration_max");
+    }
   }
 }
