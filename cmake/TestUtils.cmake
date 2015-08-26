@@ -19,15 +19,18 @@ macro (ign_build_tests)
       ${PROJECT_LIB_ROBOT_NAME}
       ${PROJECT_LIB_MSGS_NAME}
       gtest gtest_main
+      gazebo_test_fixture
     )
 
     target_link_libraries(${BINARY_NAME}
       ${PROJECT_LIB_BROKER_NAME}
       ${PROJECT_LIB_ROBOT_NAME}
       ${PROJECT_LIB_MSGS_NAME}
-      libgtest.a
-      libgtest_main.a
+      gtest
+      gtest_main
+      gazebo_test_fixture
       pthread
+      ${GAZEBO_LIBRARIES}
       ${PROTOBUF_LIBRARY}
       ${Boost_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}

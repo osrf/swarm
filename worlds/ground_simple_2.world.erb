@@ -134,8 +134,18 @@
                <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
              </swarm_search_area>''' %>
 
+    <% ground_battery = '''<battery>
+      <!-- Capacity in mAh -->
+      <capacity>35000</capacity>
+      <!-- Consumption in mA -->
+      <consumption>1500</consumption>
+      <!-- A factor that should be between 0 and 1. A value of < 1 can be used
+           to account for capacity loss in addition to the <consumption>. -->
+      <consumption_factor>0.7</consumption_factor>
+      </battery>'''%>
+
     <!-- Create the ground vehicles -->
-    <% for index in 0..0 %>
+    <% for index in 0..1 %>
       <model name="ground_<%=index%>">
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
@@ -201,6 +211,7 @@
           <address>192.168.2.<%=index+1%></address>
           <num_messages>1</num_messages>
           <%=search_area%>
+          <%=ground_battery%>
         </plugin>
       </model>
     <% end %>

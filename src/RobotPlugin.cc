@@ -26,8 +26,6 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
-#include "msgs/datagram.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -293,6 +291,7 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
   this->UpdateSensors();
+  this->UpdateBattery();
   this->Update(_info);
   this->AdjustPose();
 }
@@ -389,6 +388,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
   this->modelHeight2 = this->model->GetBoundingBox().GetZLength()*0.5;
 
+  // We assume that the physics step size will not change during simulation.
+  this->world = this->model->GetWorld();
+
   // Get the terrain, if it's present
   gazebo::physics::ModelPtr terrainModel =
     this->model->GetWorld()->GetModel("terrain");
@@ -410,6 +412,20 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
         (this->terrain->GetVertexCount().y-1));
   }
 
+
+  // Load battery information
+  if (_sdf->HasElement("battery"))
+  {
+    sdf::ElementPtr battery = _sdf->GetElement("battery");
+
+    this->startCapacity = battery->Get<double>("capacity");
+    this->capacity = this->startCapacity;
+
+    this->consumption = battery->Get<double>("consumption");
+
+    this->consumptionFactor = ignition::math::clamp(
+        battery->Get<double>("consumption_factor"), 0.0, 1.0);
+  }
 
   // Load the vehicle type
   if (_sdf->HasElement("type"))
@@ -825,4 +841,45 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
 
   // Height of the terrain
   _terrainPos = rayPt + intersection * rayDir;
+}
+
+/////////////////////////////////////////////////
+void RobotPlugin::UpdateBattery()
+{
+  // The amount of the capacity consumed.
+  double mAhConsumed = (this->consumption * this->consumptionFactor *
+      (this->world->GetPhysicsEngine()->GetMaxStepSize() / 3600.0));
+
+  this->capacity = std::max(0.0, this->capacity - mAhConsumed);
+}
+
+/////////////////////////////////////////////////
+double RobotPlugin::BatteryStartCapacity() const
+{
+  return this->startCapacity;
+}
+
+/////////////////////////////////////////////////
+double RobotPlugin::BatteryCapacity() const
+{
+  return this->capacity;
+}
+
+/////////////////////////////////////////////////
+double RobotPlugin::BatteryConsumption() const
+{
+  return this->consumption;
+}
+
+/////////////////////////////////////////////////
+double RobotPlugin::BatteryConsumptionFactor() const
+{
+  return this->consumptionFactor;
+}
+
+/////////////////////////////////////////////////
+double RobotPlugin::ExpectedBatteryLife() const
+{
+  return ((this->capacity / this->consumption) * this->consumptionFactor) *
+    3600;
 }
