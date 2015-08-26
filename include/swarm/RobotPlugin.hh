@@ -253,7 +253,9 @@ namespace swarm
     ///
     /// \param[in] _velocity The velocity vector in the robot's local
     /// coordinate frame (m/s).
-    protected: void SetLinearVelocity(
+    /// \return True if the command was successful. False if the linear
+    /// velocity could not be set, such as due to low battery.
+    protected: bool SetLinearVelocity(
                    const ignition::math::Vector3d &_velocity);
 
     /// \brief Set the robot's linear velocity.
@@ -271,7 +273,9 @@ namespace swarm
     /// \param[in] _x X velocity in the robot's local coordinate frame (m/s).
     /// \param[in] _y Y velocity in the robot's local coordinate frame (m/s).
     /// \param[in] _z Z velocity in the robot's local coordinate frame (m/s).
-    protected: void SetLinearVelocity(const double _x,
+    /// \return True if the command was successful. False if the linear
+    /// velocity could not be set, such as due to low battery.
+    protected: bool SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
     /// \brief Set the robot's angular velocity, using Euler angles.
@@ -288,7 +292,9 @@ namespace swarm
     ///
     /// \param[in] _velocity Velocity about the robot's local XYZ axes
     /// (radian/s).
-    protected: void SetAngularVelocity(
+    /// \return True if the command was successful. False if the angular
+    /// velocity could not be set, such as due to low battery.
+    protected: bool SetAngularVelocity(
                    const ignition::math::Vector3d &_velocity);
 
     /// \brief Set the robot's angular velocity, using Euler angles.
@@ -306,7 +312,9 @@ namespace swarm
     /// \param[in] _x Velocity about the robot's local X axis (radian/s).
     /// \param[in] _y Velocity about the robot's local Y axis (radian/s).
     /// \param[in] _z Velocity about the robot's local Z axis (radian/s).
-    protected: void SetAngularVelocity(const double _x, const double _y,
+    /// \return True if the command was successful. False if the angular
+    /// velocity could not be set, such as due to low battery.
+    protected: bool SetAngularVelocity(const double _x, const double _y,
                    const double _z);
 
     /// \brief Get the robot's IMU information.

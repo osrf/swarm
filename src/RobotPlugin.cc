@@ -80,8 +80,11 @@ bool RobotPlugin::SendTo(const std::string &_data,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
+bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
 {
+  if (this->capacity <= 0)
+    return false;
+
   ignition::math::Pose3d myPose = this->model->GetWorldPose().Ign();
 
   switch (this->type)
@@ -112,18 +115,23 @@ void RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
         break;
       }
   };
+
+  return true;
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::SetLinearVelocity(const double _x, const double _y,
+bool RobotPlugin::SetLinearVelocity(const double _x, const double _y,
     const double _z)
 {
-  this->SetLinearVelocity(ignition::math::Vector3d(_x, _y, _z));
+  return this->SetLinearVelocity(ignition::math::Vector3d(_x, _y, _z));
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
+bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
 {
+  if (this->capacity <= 0)
+    return false;
+
   switch (this->type)
   {
     default:
@@ -161,13 +169,15 @@ void RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
         break;
       }
   };
+
+  return true;
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::SetAngularVelocity(const double _x, const double _y,
+bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
     const double _z)
 {
-  this->SetAngularVelocity(ignition::math::Vector3d(_x, _y, _z));
+  return this->SetAngularVelocity(ignition::math::Vector3d(_x, _y, _z));
 }
 
 //////////////////////////////////////////////////
@@ -290,9 +300,17 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
-  this->UpdateSensors();
+  // Update the state of the battery
   this->UpdateBattery();
+
+  // Only update sensors if we have enough juice
+  if (this->capacity > 0)
+    this->UpdateSensors();
+
+  // Always give the team controller an update.
   this->Update(_info);
+
+  // Adjust pose as necessary.
   this->AdjustPose();
 }
 
