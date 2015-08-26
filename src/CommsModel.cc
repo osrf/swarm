@@ -157,7 +157,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       continue;
 
     // Apply the neighbor part of the comms model.
-    if (!ignition::math::equal(neighborDistancePenaltyWall, 0.0)
+    if (!ignition::math::equal(neighborDistancePenaltyWall, 0.0))
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
