@@ -157,8 +157,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       continue;
 
     // Apply the neighbor part of the comms model.
-    if ((this->neighborDistancePenaltyWall < 0.0) ||
-       (this->neighborDistancePenaltyWall > 0.0))
+    if (!ignition::math::equal(neighborDistancePenaltyWall, 0.0)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
@@ -190,8 +189,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto commsProb = 1.0;
 
     if ((commsProb > 0.0) &&
-        ((this->commsDistancePenaltyWall < 0.0) ||
-         (this->commsDistancePenaltyWall > 0.0)))
+        (!ignition::math::equal(this->commsDistancePenaltyWall, 0.0)))
     {
       // We're within range.  Check for obstacles (don't want to waste time on11
       // that if we're not within range).
@@ -218,7 +216,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
         (this->commsDistanceMax >= 0.0) &&
         (this->commsDistanceMax < commsDist))
       commsProb = 0.0;
-
 
     if (commsProb > 0.0)
     {

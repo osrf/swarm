@@ -415,8 +415,8 @@ namespace swarm
     /// \param[out] _terrainPos The 3d point on the terrain.
     /// \param[out] _norm Normal to the terrain.
     private: void TerrainLookup(const ignition::math::Vector3d &_pos,
-                ignition::math::Vector3d &_terrainPos,
-                ignition::math::Vector3d &_norm) const;
+                                ignition::math::Vector3d &_terrainPos,
+                                ignition::math::Vector3d &_norm) const;
 
     /// \brief Update and store sensor information.
     private: void UpdateSensors();
