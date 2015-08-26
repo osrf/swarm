@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- Anchor our GPS sensors to a real place: Camp Roberts
+         http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
+    <spherical_coordinates>
+      <latitude_deg>35.7753257</latitude_deg>
+      <longitude_deg>-120.774063</longitude_deg>
+      <elevation>208</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <scene>
+      <shadows>false</shadows>
+      <ambient>0.5 0.5 0.5 1</ambient>
+    </scene>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <physics type="ode">
+      <ode>
+        <solver>
+          <type>world</type>
+        </solver>
+      </ode>
+      <max_step_size>0.01</max_step_size>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+  </world>
+</sdf>
