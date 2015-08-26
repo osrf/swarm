@@ -148,9 +148,10 @@ namespace swarm
     private: gazebo::physics::RayShapePtr ray;
 
     /// \brief Visibility between vehicles. The key is a pair with the
-    /// addresses of the vehicles involved. The value is a string that stores
-    /// the entity name of the first obstacle between the vehicles. If there is
-    /// line of sight the value contains an empty string.
+    /// addresses of the vehicles involved. The value is a vector of strings
+    /// that stores the entity names of the first and last obstacles between the
+    /// vehicles. If there is line of sight the value contains a vector of one
+    /// element (empty string).
     private: std::map<std::pair<std::string, std::string>,
                std::vector<std::string>> visibility;
   };
