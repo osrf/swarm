@@ -18,6 +18,7 @@
 #ifndef __SWARM_COMMS_PLUGIN_HH__
 #define __SWARM_COMMS_PLUGIN_HH__
 
+#include <string>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <sdf/sdf.hh>

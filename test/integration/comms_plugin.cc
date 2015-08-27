@@ -102,6 +102,7 @@ void CommsPlugin::Load(sdf::ElementPtr _sdf)
 void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
   std::string dstAddress;
+  int expectedNumMsgs = 0;
 
   if (this->iterations < 100)
   {
@@ -129,25 +130,23 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   if ((this->iterations == 100) && (this->Host() == "192.168.2.2"))
   {
     // All packages drop.
-    if (((ignition::math::equal(this->commsDropProbabilityMin, 1.0))  &&
-         (ignition::math::equal(this->commsDropProbabilityMax, 1.0))) ||
-        (ignition::math::equal(this->commsOutageProbability,   1.0))  ||
-        (this->neighborDistanceMax < 1.0)                             ||
-        (this->commsDistanceMax    < 1.0)                             ||
+    if (((ignition::math::equal(this->commsDropProbabilityMin, 1.0))       &&
+         (ignition::math::equal(this->commsDropProbabilityMax, 1.0)))      ||
+        (ignition::math::equal(this->commsOutageProbability,   1.0))       ||
+        (this->neighborDistanceMax < 1.0)                                  ||
+        (this->commsDistanceMax    < 1.0)                                  ||
         (ignition::math::equal(this->neighborDistancePenaltyTree, 201.0)))
     {
       // We should only see your own broadcast/multicast messages.
-      auto expectedNumMsgs = this->numBroadcastSent + this->numMulticastSent;
-      EXPECT_EQ(this->numMsgsRecv, expectedNumMsgs);
+      expectedNumMsgs = this->numBroadcastSent + this->numMulticastSent;
     }
     // No drops or outages.
     else if ((ignition::math::equal(this->commsDropProbabilityMin, 0.0)) &&
              (ignition::math::equal(this->commsDropProbabilityMax, 0.0)) &&
              (ignition::math::equal(this->commsOutageProbability,  0.0)))
     {
-      auto expectedNumMsgs = this->numUnicastSent + 2 * this->numBroadcastSent +
+      expectedNumMsgs = this->numUnicastSent + 2 * this->numBroadcastSent +
         2 * this->numMulticastSent;
-      EXPECT_EQ(this->numMsgsRecv, expectedNumMsgs);
     }
     // 50% packages drop to remote destinations drop.
     else if ((ignition::math::equal(this->commsDropProbabilityMin, 0.5)) &&
@@ -158,8 +157,15 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // 100 of your own multicast messages.
       // 50% of the 300 messages sent from the other robot.
       // Using 13458 as seed, the expected number of messages is 350, yes!.
-      auto expectedNumMsgs = 350;
-      EXPECT_EQ(this->numMsgsRecv, expectedNumMsgs);
+      expectedNumMsgs = 350;
+    }
+    // Temporary outage.
+    else if (ignition::math::equal(this->commsOutageProbability, 0.5))
+    {
+      // The expectation is to have one outage. The length of the outage is
+      // going to be 10 iterations. We should miss 30 messages.
+      // Using 13220 as seed, we get one outage.
+      expectedNumMsgs = 470;
     }
     else
     {
@@ -167,6 +173,7 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
             << std::endl;
       FAIL();
     }
+    EXPECT_EQ(this->numMsgsRecv, expectedNumMsgs);
   }
 
   this->iterations++;
