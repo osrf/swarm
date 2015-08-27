@@ -21,16 +21,19 @@
 
 class CommsTest : public gazebo::ServerFixture
 {
+  public: CommsTest()
+  {
+    gazebo::common::SystemPaths::Instance()->AddPluginPaths(
+      SWARM_PROJECT_TEST_PLUGIN_PATH);
+    gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
+      SWARM_PROJECT_TEST_WORLD_PATH);
+  }
 };
 
 /////////////////////////////////////////////////
 /// \brief No drops or outages and the two vehicles are always within range.
 TEST_F(CommsTest, PerfectComms)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_0.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -45,10 +48,6 @@ TEST_F(CommsTest, PerfectComms)
 /// are set to 1.0 .
 TEST_F(CommsTest, AllPackagesDrop)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_1.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -63,10 +62,6 @@ TEST_F(CommsTest, AllPackagesDrop)
 /// is set to 1.0 .
 TEST_F(CommsTest, TotalOutage)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_2.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -81,10 +76,6 @@ TEST_F(CommsTest, TotalOutage)
 /// the communication range.
 TEST_F(CommsTest, OutOfRange)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_3.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -98,10 +89,6 @@ TEST_F(CommsTest, OutOfRange)
 /// \brief All messages go through with one line of trees between vehicles.
 TEST_F(CommsTest, OneTreeCommsOK)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_4.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -116,10 +103,6 @@ TEST_F(CommsTest, OneTreeCommsOK)
 /// Now, the vehicles are not close enough to get over the tree penalty.
 TEST_F(CommsTest, OneTreeCommsFail)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_5.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -133,10 +116,6 @@ TEST_F(CommsTest, OneTreeCommsFail)
 /// \brief All messages drop with two lines of trees between vehicles.
 TEST_F(CommsTest, TwoTreesCommsFail)
 {
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_6.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -151,10 +130,6 @@ TEST_F(CommsTest, TwoTreesCommsFail)
 TEST_F(CommsTest, HalfMsgsDrop)
 {
   ignition::math::Rand::Seed(13458);
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_7.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -169,10 +144,6 @@ TEST_F(CommsTest, HalfMsgsDrop)
 TEST_F(CommsTest, TemporaryOutage)
 {
   ignition::math::Rand::Seed(13220);
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_8.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -187,10 +158,6 @@ TEST_F(CommsTest, TemporaryOutage)
 TEST_F(CommsTest, PermanentOutage)
 {
   ignition::math::Rand::Seed(13111);
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_9.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -206,10 +173,6 @@ TEST_F(CommsTest, PermanentOutage)
 TEST_F(CommsTest, OutagesAndDrops)
 {
   ignition::math::Rand::Seed(13111);
-  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
-  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_10.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
