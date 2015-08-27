@@ -159,13 +159,30 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // Using 13458 as seed, the expected number of messages is 350, yes!.
       expectedNumMsgs = 350;
     }
-    // Temporary outage.
-    else if (ignition::math::equal(this->commsOutageProbability, 0.5))
+    // Outage.
+    else if ((ignition::math::equal(this->commsOutageProbability, 0.5)) &&
+             (ignition::math::equal(this->commsOutageDurationMin, 0.1)) &&
+             (ignition::math::equal(this->commsOutageDurationMax, 0.1)))
     {
+      // Temporary outage.
       // The expectation is to have one outage. The length of the outage is
       // going to be 10 iterations. We should miss 30 messages.
       // Using 13220 as seed, we get one outage.
       expectedNumMsgs = 470;
+    }
+    else if ((ignition::math::equal(this->commsOutageProbability,  0.5)) &&
+             (ignition::math::equal(this->commsOutageDurationMin, -1.0)) &&
+             (ignition::math::equal(this->commsOutageDurationMax, -1.0)))
+    {
+      // Permanent outage. The expectation is to have one outage
+      // after 0.5 secs. We shouldn't receive any messages after that.
+      // Using seed 13111, we got the outage after 0.3 secs.
+      // The robot with address 192.168.2.1 didn't have an outage.
+      // This means we executed 29 iterations before the outage.
+      // In the first iteration nobody received a message.
+      // A vehicle always receives its own multicast/broadcast messages.
+      // The expected number of messages is: 200 + 28 * 3 = 284
+      expectedNumMsgs = 284;
     }
     else
     {

@@ -165,7 +165,7 @@ TEST_F(CommsTest, HalfMsgsDrop)
 }
 
 /////////////////////////////////////////////////
-/// \brief Check outages.
+/// \brief Check temporary outages.
 TEST_F(CommsTest, TemporaryOutage)
 {
   ignition::math::Rand::Seed(13220);
@@ -174,6 +174,24 @@ TEST_F(CommsTest, TemporaryOutage)
   gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
       SWARM_PROJECT_TEST_WORLD_PATH);
   Load("comms_8.world", true);
+
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Step the world so that the test library experiences update events.
+  world->Step(101);
+}
+
+/////////////////////////////////////////////////
+/// \brief Check permanent outages.
+TEST_F(CommsTest, PermanentOutage)
+{
+  ignition::math::Rand::Seed(13111);
+  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
+      SWARM_PROJECT_TEST_PLUGIN_PATH);
+  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
+      SWARM_PROJECT_TEST_WORLD_PATH);
+  Load("comms_9.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);

@@ -140,6 +140,7 @@ void CommsModel::UpdateOutages()
       {
         swarmMember->onOutage = true;
         gzdbg << "Robot " << address << " has started an outage." << std::endl;
+        gzdbg << "Sim time: " << curTime << std::endl;
 
         // Decide the duration of the outage.
         if (this->commsOutageDurationMin < 0 ||
