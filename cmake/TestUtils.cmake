@@ -19,7 +19,6 @@ macro (ign_build_tests)
       ${PROJECT_LIB_ROBOT_NAME}
       ${PROJECT_LIB_MSGS_NAME}
       gtest gtest_main
-      gazebo_test_fixture
     )
 
     target_link_libraries(${BINARY_NAME}
