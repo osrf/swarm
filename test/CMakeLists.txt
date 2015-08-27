@@ -4,7 +4,7 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/test
 )
 
-configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
+configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test/test_config.h)
 
 add_subdirectory(worlds)
 

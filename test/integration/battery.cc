@@ -17,7 +17,7 @@
 
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/physics/physics.hh>
-#include "test_config.h"
+#include "test/test_config.h"
 
 class BatteryTest : public gazebo::ServerFixture
 {

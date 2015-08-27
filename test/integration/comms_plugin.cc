@@ -102,7 +102,6 @@ void CommsPlugin::Load(sdf::ElementPtr _sdf)
 void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
   std::string dstAddress;
-  int expectedNumMsgs = 0;
 
   if (this->iterations < 100)
   {
@@ -129,6 +128,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   // Check for results only in one robot.
   if ((this->iterations == 100) && (this->Host() == "192.168.2.2"))
   {
+    int expectedNumMsgs = 0;
+
     // All packages drop.
     if (((ignition::math::equal(this->commsDropProbabilityMin, 1.0))       &&
          (ignition::math::equal(this->commsDropProbabilityMax, 1.0)))      ||
@@ -177,12 +178,33 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // Permanent outage. The expectation is to have one outage
       // after 0.5 secs. We shouldn't receive any messages after that.
       // Using seed 13111, we got the outage after 0.3 secs.
-      // The robot with address 192.168.2.1 didn't have an outage.
+      // The robot with address 192.168.2.1 didn't have any outage.
       // This means we executed 29 iterations before the outage.
       // In the first iteration nobody received a message.
       // A vehicle always receives its own multicast/broadcast messages.
       // The expected number of messages is: 200 + 28 * 3 = 284
       expectedNumMsgs = 284;
+    }
+    else if ((ignition::math::equal(this->commsOutageProbability,  0.5))  &&
+             (ignition::math::equal(this->commsOutageDurationMin,  0.2))  &&
+             (ignition::math::equal(this->commsOutageDurationMax,  0.2))  &&
+             (ignition::math::equal(this->commsDropProbabilityMin, 0.05)) &&
+             (ignition::math::equal(this->commsDropProbabilityMax, 0.05)))
+    {
+      // Temporary outage + drops. The expectation is to have one outage
+      // after 0.5 secs with a duration of 0.2 secs.
+      // Using seed 13111, we got a first outage during the interval 0.3-0.5 sec
+      // and a second outage starting on 0.92 (the test ends at 1.0).
+      // The robot with address 192.168.2.1 didn't have any outage.
+      // This means we were under outage during 20 + 9 iterations. Also, during
+      // the first iteration nobody receives messages. This is a total of
+      // 30 * 3 = 90 missing messages.
+      // Also 8 packages were dropped targeted to 192.168.2.2
+      // From the ideal case in which we should receive 500 messages, we missed
+      // 90 + 8 = 98.
+      // The expected number of messages is: 500 - 98 = 402.
+
+      expectedNumMsgs = 402;
     }
     else
     {
