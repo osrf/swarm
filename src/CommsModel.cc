@@ -117,7 +117,7 @@ void CommsModel::UpdateOutages()
     auto address = robot.first;
     auto swarmMember = robot.second;
 
-    // Check if I am currently on outage.
+    // Check if I am currently on a temporary outage.
     if (swarmMember->onOutage &&
         swarmMember->onOutageUntil != gazebo::common::Time::Zero)
     {
@@ -128,14 +128,15 @@ void CommsModel::UpdateOutages()
         gzdbg << "Robot " << address << " is back from an outage." << std::endl;
       }
     }
-    else
+    else if (!swarmMember->onOutage)
     {
       // Check if we should go into an outage.
       // Notice that "commsOutageProbability" specifies the probability of going
       // into a comms outage at each second. This probability is adjusted using
       // the elapsed time since the last call to "UpdateOutages()".
-      if (ignition::math::Rand::DblUniform(0.0, 1.0) <
-          this->commsOutageProbability * dt.Double())
+      if ((ignition::math::equal(this->commsOutageProbability, 1.0)) ||
+          (ignition::math::Rand::DblUniform(0.0, 1.0) <
+           this->commsOutageProbability * dt.Double()))
       {
         swarmMember->onOutage = true;
         gzdbg << "Robot " << address << " has started an outage." << std::endl;
@@ -233,11 +234,15 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      if ((treesBlocking) && (this->neighborDistancePenaltyTree < 0.0))
-        continue;
-      else
-        neighborDist += this->neighborDistancePenaltyTree;
+      if (treesBlocking)
+      {
+        if (this->neighborDistancePenaltyTree < 0.0)
+          continue;
+        else
+          neighborDist += this->neighborDistancePenaltyTree;
+      }
     }
+
     if ((this->neighborDistanceMin > 0.0) &&
         (this->neighborDistanceMin > neighborDist))
       continue;
@@ -254,10 +259,13 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     {
       // We're within range.  Check for obstacles (don't want to waste time on
       // that if we're not within range).
-      if ((treesBlocking) && (this->commsDistancePenaltyTree < 0.0))
-        commsProb = 0.0;
-      else
-        commsDist += this->commsDistancePenaltyTree;
+      if (treesBlocking)
+      {
+        if (this->commsDistancePenaltyTree < 0.0)
+          commsProb = 0.0;
+        else
+          commsDist += this->commsDistancePenaltyTree;
+      }
     }
     if ((commsProb > 0.0) &&
         (this->commsDistanceMin > 0.0) &&
