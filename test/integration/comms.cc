@@ -200,6 +200,25 @@ TEST_F(CommsTest, PermanentOutage)
   world->Step(101);
 }
 
+/////////////////////////////////////////////////
+/// \brief Check temporary outages + drops.
+/// The expectation is to drop 5% of packages and to have one outage of 0.2 sec.
+TEST_F(CommsTest, OutagesAndDrops)
+{
+  ignition::math::Rand::Seed(13111);
+  gazebo::common::SystemPaths::Instance()->AddPluginPaths(
+      SWARM_PROJECT_TEST_PLUGIN_PATH);
+  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
+      SWARM_PROJECT_TEST_WORLD_PATH);
+  Load("comms_10.world", true);
+
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Step the world so that the test library experiences update events.
+  world->Step(101);
+}
+
 int main(int argc, char **argv)
 {
   // Set a specific seed to avoid occasional test failures due to

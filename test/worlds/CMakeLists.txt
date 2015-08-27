@@ -14,6 +14,7 @@ set (world_erb_files
   comms_7.world.erb
   comms_8.world.erb
   comms_9.world.erb
+  comms_10.world.erb
 )
 
 # Process the erb files
