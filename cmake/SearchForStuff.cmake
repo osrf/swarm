@@ -39,7 +39,7 @@ endmacro()
 # gtest apparently needs boost::system. Boost_LIBRARIES is added to the link
 # line for tests in TestUtils.cmake.
 include(FindBoost)
-find_package(Boost REQUIRED system)
+find_package(Boost REQUIRED system thread filesystem)
 
 # We need erb to process the .world.erb files.
 find_program(ERB_EXE_PATH erb)
