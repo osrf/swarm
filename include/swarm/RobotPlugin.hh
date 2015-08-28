@@ -90,6 +90,18 @@ namespace swarm
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
   ///
+  ///  * Introspection.
+  ///     - Type() Get the vehicle type.
+  ///     - Name() Get the name of the vehicle.
+  ///     - SearchArea() Get the GPS coordinates of the search area.
+  ///     - BatteryStartCapacity() Starting battery capacity (mAh)
+  ///     - BatteryCapacity() Current battery capacity (mAh)
+  ///     - BatteryConsumption() Battery consumption (mA)
+  ///     - BatteryConsumptionFactor() Factor applied to battery consumption
+  ///                                  to account for additional loss.
+  ///     - ExpectedBatteryLife() Battery life in seconds, based on the
+  ///                             current capacity and
+    /// consumption
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
     /// \brief The type of vehicle.
