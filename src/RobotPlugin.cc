@@ -177,16 +177,20 @@ void RobotPlugin::UpdateSensors()
 {
   if (this->imu)
   {
-    // \TODO: Consider adding noise (or just let Gazebo do it?).
-    this->linearVelocity = this->model->GetRelativeLinearVel().Ign();
+    this->linearVelocity = this->model->GetRelativeLinearVel().Ign() +
+      ignition::math::Vector3d(;
+          ignition::math::Rand::DblNormal(0, 0.0002),
+          ignition::math::Rand::DblNormal(0, 0.0002),
+          ignition::math::Rand::DblNormal(0, 0.0002));
+
     this->angularVelocity = this->imu->AngularVelocity();
     this->orientation = this->imu->Orientation();
   }
 
-  // TODO: Consider adding noise (or just let Gazebo do it?).
   // Get the Yaw angle of the model in Gazebo world coordinates.
   this->bearing = ignition::math::Angle(
-      this->model->GetWorldPose().rot.GetAsEuler().z);
+      this->model->GetWorldPose().rot.GetAsEuler().z +
+      ignition::math::Rand::DblNormal(0, 0.035));
 
   // A "0" bearing value means that the model is facing North.
   // North is aligned with the Gazebo Y axis, so we should add an offset of
@@ -203,7 +207,6 @@ void RobotPlugin::UpdateSensors()
 bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
   ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
 {
-  // TODO: Consider adding noise (or just let Gazebo do it?).
   _linVel = this->linearVelocity;
   _angVel = this->angularVelocity;
   _orient = this->orientation;
@@ -229,7 +232,6 @@ bool RobotPlugin::Pose(double &_latitude,
     return false;
   }
 
-  // TODO: Consider adding noise (or just let Gazebo do it?).
   _latitude = this->gps->Latitude().Degree();
   _longitude = this->gps->Longitude().Degree();
   _altitude = this->gps->GetAltitude();
