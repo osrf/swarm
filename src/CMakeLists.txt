@@ -2,6 +2,7 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (broker_plugin_sources
   BrokerPlugin.cc
+  CommsModel.cc
 )
 
 set (robot_plugin_sources

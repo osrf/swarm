@@ -1,9 +1,11 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
+  BrokerPlugin.hh
+  CommsModel.hh
   Helpers.hh
   RobotPlugin.hh
-  BrokerPlugin.hh
+  SwarmTypes.hh
 )
 
 #################################################
