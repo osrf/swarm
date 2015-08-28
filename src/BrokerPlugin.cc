@@ -169,8 +169,9 @@ void BrokerPlugin::DispatchMessages()
     auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
-    gzdbg << "Processing message from " << msg.src_address()
-          << " addressed to " << msg.dst_address() << std::endl;
+    // Debug output.
+    // gzdbg << "Processing message from " << msg.src_address()
+    //      << " addressed to " << msg.dst_address() << std::endl;
 
     // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm->find(msg.src_address()) == this->swarm->end())
@@ -188,17 +189,19 @@ void BrokerPlugin::DispatchMessages()
       // probability of communication between them right now.
       if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighbor.second)
       {
-        gzdbg << "Sending message from " << msg.src_address() << " to " <<
-          neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-          std::endl;
+        // Debug output
+        // gzdbg << "Sending message from " << msg.src_address() << " to " <<
+        //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+        //   std::endl;
         msg.add_recipients(neighbor.first);
       }
-      else
-      {
-        gzdbg << "Dropping message from " << msg.src_address() << " to " <<
-          neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-          std::endl;
-      }
+      // Debug output.
+      // else
+      // {
+      //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
+      //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+      //     std::endl;
+      // }
     }
 
     // Create the topic name for the message destination.

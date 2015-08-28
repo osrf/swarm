@@ -143,7 +143,7 @@ TEST_F(CommsTest, HalfMsgsDrop)
 /// \brief Check temporary outages.
 TEST_F(CommsTest, TemporaryOutage)
 {
-  ignition::math::Rand::Seed(13220);
+  ignition::math::Rand::Seed(13458);
   Load("comms_8.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -157,7 +157,7 @@ TEST_F(CommsTest, TemporaryOutage)
 /// \brief Check permanent outages.
 TEST_F(CommsTest, PermanentOutage)
 {
-  ignition::math::Rand::Seed(13111);
+  ignition::math::Rand::Seed(13458);
   Load("comms_9.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -172,7 +172,7 @@ TEST_F(CommsTest, PermanentOutage)
 /// The expectation is to drop 5% of packages and to have one outage of 0.2 sec.
 TEST_F(CommsTest, OutagesAndDrops)
 {
-  ignition::math::Rand::Seed(13111);
+  ignition::math::Rand::Seed(13458);
   Load("comms_10.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
