@@ -306,6 +306,7 @@ void CommsModel::UpdateVisibility()
 
   // All combinations between a pair of vehicles.
   for (auto const &robotA : (*this->swarm))
+  {
     for (auto const &robotB : (*this->swarm))
     {
       auto addressA = robotA.second->address;
@@ -337,6 +338,7 @@ void CommsModel::UpdateVisibility()
         this->visibility[keyA] = entities;
       }
     }
+  }
 }
 
 //////////////////////////////////////////////////

@@ -244,7 +244,21 @@
     <% end %>
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
-    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
+    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">
+      <comms_model>
+        <neighbor_distance_min>0.0</neighbor_distance_min>
+        <neighbor_distance_max>250.0</neighbor_distance_max>
+        <neighbor_distance_penalty_tree>200.0</neighbor_distance_penalty_tree>
+        <comms_distance_min>0.0</comms_distance_min>
+        <comms_distance_max>250.0</comms_distance_max>
+        <comms_distance_penalty_tree>200.0</comms_distance_penalty_tree>
+        <comms_drop_probability_min>0.0</comms_drop_probability_min>
+        <comms_drop_probability_max>0.5</comms_drop_probability_max>
+        <comms_outage_probability>0.0</comms_outage_probability>
+        <comms_outage_duration_min>1.0</comms_outage_duration_min>
+        <comms_outage_duration_max>10.0</comms_outage_duration_max>
+      </comms_model>
+    </plugin>
 
     <model name="ground_plane">
       <static>true</static>
