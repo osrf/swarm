@@ -20,10 +20,10 @@
 #include <vector>
 #include <ignition/math/Helpers.hh>
 
-#include <gazebo/math/Vector2i.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/math/Vector2i.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 #include "swarm/RobotPlugin.hh"
@@ -638,9 +638,9 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   // Ignore if the address of this robot was not a neighbor of the sender.
   bool visible = false;
-  for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  for (auto i = 0; i < _msg.recipients().size(); ++i)
   {
-    if (_msg.neighbors(i) == this->Host())
+    if (_msg.recipients(i) == this->Host())
     {
       visible = true;
       break;
@@ -649,7 +649,7 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   if (visible)
   {
-    // There's visibility between source and destination: run the user callback.
+    // Run the user callback.
     auto const &userCallback = this->callbacks[topic];
     userCallback(_msg.src_address(), _msg.data());
   }
@@ -661,6 +661,7 @@ void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
 {
   std::lock_guard<std::mutex> lock(this->mutex);
   this->neighbors.clear();
+  this->neighborProbabilities.clear();
   for (auto i = 0; i < _msg.neighbors().size(); ++i)
   {
     if (_msg.neighbors(i) != this->Host())

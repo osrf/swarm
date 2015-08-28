@@ -15,6 +15,7 @@
  *
 */
 
+#include <memory>
 #include <string>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
@@ -23,10 +24,13 @@
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
+#include <gazebo/physics/Model.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
+
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/CommsModel.hh"
 #include "swarm/BrokerPlugin.hh"
 
 using namespace swarm;
@@ -34,13 +38,20 @@ using namespace swarm;
 GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 
 //////////////////////////////////////////////////
-void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
-                             sdf::ElementPtr _sdf)
+BrokerPlugin::~BrokerPlugin()
+{
+  gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 {
   GZ_ASSERT(_world, "BrokerPlugin::Load() error: _world pointer is NULL");
   GZ_ASSERT(_sdf, "BrokerPlugin::Load() error: _sdf pointer is NULL");
 
   this->world = _world;
+
+  this->swarm = std::make_shared<SwarmMembership_M>();
 
   // This is the subscription that will allow us to receive incoming messages.
   const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
@@ -53,6 +64,8 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world,
 
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
+
+  this->commsModel.reset(new CommsModel(this->swarm, this->world, _sdf));
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -88,7 +101,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
           newMember->address = address;
           newMember->name = name;
           newMember->model = model;
-          this->swarm[address] = newMember;
+          (*this->swarm)[address] = newMember;
 
           // Advertise the topic for future neighbor updates for this vehicle.
           std::string topic = "/swarm/" + address + "/neighbors";
@@ -105,10 +118,10 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
     modelElem = modelElem->GetNextElement("model");
   }
 
-  if (this->swarm.empty())
+  if (this->swarm->empty())
     gzerr << "BrokerPlugin::ReadSwarmFromSDF: No members found" << std::endl;
   else
-    gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm.size()
+    gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm->size()
           << " swarm members found" << std::endl;
 }
 
@@ -117,19 +130,50 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  // Update the list of neighbors for each robot.
-  for (auto const &robot : this->swarm)
-    this->UpdateNeighborList(robot.first);
+  // Update the state of the communication model.
+  this->commsModel->Update();
 
-  // Dispatch all incoming messages.
+  // Send a message to each swarm member with its updated neighbors list.
+  this->NotifyNeighbors();
+
+  // Dispatch all the incoming messages, deciding whether the destination gets
+  // the message according to the communication model.
+  this->DispatchMessages();
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::NotifyNeighbors()
+{
+  // Send neighbors update to each member of the swarm.
+  for (auto const &robot : (*this->swarm))
+  {
+    auto address = robot.first;
+    auto swarmMember = (*this->swarm)[address];
+    auto topic = "/swarm/" + swarmMember->address + "/neighbors";
+
+    swarm::msgs::Neighbor_V msg;
+    for (auto const &neighbor : swarmMember->neighbors)
+      msg.add_neighbors(neighbor.first);
+
+    // Notify the node with its updated list of neighbors.
+    this->node.Publish(topic, msg);
+  }
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::DispatchMessages()
+{
   while (!this->incomingMsgs.empty())
   {
     // Get the next message to dispatch.
     auto msg = this->incomingMsgs.front();
     this->incomingMsgs.pop();
 
+    gzdbg << "Processing message from " << msg.src_address()
+          << " addressed to " << msg.dst_address() << std::endl;
+
     // Sanity check: Make sure that the sender is a member of the swarm.
-    if (this->swarm.find(msg.src_address()) == this->swarm.end())
+    if (this->swarm->find(msg.src_address()) == this->swarm->end())
     {
       gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
             << msg.src_address() << "] is not registered as a member of the "
@@ -138,8 +182,24 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     }
 
     // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighbor : this->swarm[msg.src_address()]->neighbors)
-      msg.add_neighbors(neighbor);
+    for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
+    {
+      // Decide whether this neighbor gets this message, according to the
+      // probability of communication between them right now.
+      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighbor.second)
+      {
+        gzdbg << "Sending message from " << msg.src_address() << " to " <<
+          neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+          std::endl;
+        msg.add_recipients(neighbor.first);
+      }
+      else
+      {
+        gzdbg << "Dropping message from " << msg.src_address() << " to " <<
+          neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+          std::endl;
+      }
+    }
 
     // Create the topic name for the message destination.
     const std::string topic =
@@ -149,31 +209,6 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
     this->node.Advertise(topic);
     this->node.Publish(topic, msg);
   }
-}
-
-//////////////////////////////////////////////////
-void BrokerPlugin::UpdateNeighborList(const std::string &_address)
-{
-  GZ_ASSERT(this->swarm.find(_address) != this->swarm.end(),
-            "_address not found in the swarm.");
-
-  auto swarmMember = this->swarm[_address];
-
-  // Update the neighbor list for this robot.
-  // ToDo: For now we include all the robots as neighbors.
-  //       In the future we should do something smarter.
-  swarmMember->neighbors.clear();
-  for (auto const &member : this->swarm)
-    swarmMember->neighbors.push_back(member.first);
-
-  // Fill the message with the new neighbor list.
-  swarm::msgs::Neighbor_V msg;
-  for (auto const &neighbor : swarmMember->neighbors)
-    msg.add_neighbors(neighbor);
-
-  // Notify the node with its updated list of neighbors.
-  std::string topic = "/swarm/" + swarmMember->address + "/neighbors";
-  this->node.Publish(topic, msg);
 }
 
 //////////////////////////////////////////////////
