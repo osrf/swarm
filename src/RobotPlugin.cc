@@ -305,7 +305,11 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   // Only update sensors if we have enough juice
   if (this->capacity > 0)
+  {
     this->UpdateSensors();
+    this->SetLinearVelocity(0, 0, 0);
+    this->SetAngularVelocity(0, 0, 0);
+  }
 
   // Always give the team controller an update.
   this->Update(_info);
