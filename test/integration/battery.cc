@@ -108,7 +108,7 @@ std::string batterySDF1 = R"DELIM(
 TEST_F(BatteryTest, Consumption)
 {
   gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
+      SWARM_PROJECT_TEST_INTEGRATION_PATH);
   Load("worlds/swarm_empty.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");

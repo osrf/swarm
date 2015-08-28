@@ -24,7 +24,7 @@ class CommsTest : public gazebo::ServerFixture
   public: CommsTest()
   {
     gazebo::common::SystemPaths::Instance()->AddPluginPaths(
-      SWARM_PROJECT_TEST_PLUGIN_PATH);
+      SWARM_PROJECT_TEST_INTEGRATION_PATH);
     gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
       SWARM_PROJECT_TEST_WORLD_PATH);
   }

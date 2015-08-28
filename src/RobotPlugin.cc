@@ -190,7 +190,7 @@ void RobotPlugin::UpdateSensors()
   if (this->imu)
   {
     this->linearVelocity = this->model->GetRelativeLinearVel().Ign() +
-      ignition::math::Vector3d(;
+      ignition::math::Vector3d(
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002));
