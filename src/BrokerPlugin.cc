@@ -190,13 +190,13 @@ void BrokerPlugin::DispatchMessages()
       {
         gzdbg << "Sending message from " << msg.src_address() << " to " <<
           neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-            std::endl;
+          std::endl;
         msg.add_recipients(neighbor.first);
       }
       else
       {
         gzdbg << "Dropping message from " << msg.src_address() << " to " <<
-        neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+          neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
           std::endl;
       }
     }
