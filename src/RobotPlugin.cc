@@ -39,7 +39,11 @@ RobotPlugin::RobotPlugin()
     searchMaxLatitude(0),
     searchMinLongitude(0),
     searchMaxLongitude(0),
-    modelHeight2(0)
+    modelHeight2(0),
+    startCapacity(1),
+    capacity(1),
+    consumption(0),
+    consumptionFactor(0)
 {
 }
 
