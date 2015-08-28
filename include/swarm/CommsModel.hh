@@ -21,7 +21,10 @@
 #ifndef __SWARM_COMMS_MODEL_HH__
 #define __SWARM_COMMS_MODEL_HH__
 
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
 #include <gazebo/common/Time.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/math.hh>
@@ -46,11 +49,15 @@ namespace swarm
     /// \brief Class destructor.
     public: virtual ~CommsModel() = default;
 
+    /// \brief Update the state of the communication model (outages, visibility
+    /// between nodes and neighbors).
+    public: void Update();
+
     /// \brief Decide if each member of the swarm enters into a comms outage.
-    public: void UpdateOutages();
+    private: void UpdateOutages();
 
     /// \brief Update the neighbors list of each member of the swarm.
-    public: void UpdateNeighbors();
+    private: void UpdateNeighbors();
 
     /// \brief Update the neighbor list for a single robot and notifies the
     /// robot with the updated list.
@@ -58,23 +65,24 @@ namespace swarm
     /// \param[in] _address Address of the robot to be updated.
     private: void UpdateNeighborList(const std::string &_address);
 
-    /// \brief Get the number of walls between two points in the world.
-    ///
-    /// \param[in] _p1 A 3D point.
-    /// \param[in] _p2 Another 3D point.
-    /// \return Number of walls between the points.
-    private: unsigned int NumWallsBetweenPoses(
-                                             const ignition::math::Pose3d &_p1,
-                                             const ignition::math::Pose3d &_p2);
+    /// \brief Update the visibility state between vehicles.
+    private: void UpdateVisibility();
 
-    /// \brief Get the number of tree lines between two points in the world.
+    /// \brief Check if there is line of sight between two points in the world.
     ///
     /// \param[in] _p1 A 3D point.
     /// \param[in] _p2 Another 3D point.
-    /// \return Number of tree lines between the points.
-    private: unsigned int NumTreesBetweenPoses(
-                                             const ignition::math::Pose3d &_p1,
-                                             const ignition::math::Pose3d &_p2);
+    /// \param[out] _entities Vector of obstacles between the objects.
+    /// If the points have line of sight, the vector has only one element and
+    /// it's the empty string. If there's no line of sight this parameter
+    /// contains the name of the first and last entities on the way from
+    /// the starting point to the end point.
+    /// ToDo: Improve this function if needed to return all the obstacles and
+    /// not only the first and last.
+    /// \return True if the points have line of sight or false otherwise.
+    private: bool LineOfSight(const ignition::math::Pose3d &_p1,
+                              const ignition::math::Pose3d &_p2,
+                              std::vector<std::string> &_entities);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the
     /// plugin. If so, update the value of the default parameters with the one
@@ -91,11 +99,6 @@ namespace swarm
     private: double neighborDistanceMax = -1.0;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
-    private: double neighborDistancePenaltyWall = 0.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
     /// intervening non-solid obstacle (forest, etc.).
     /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
     private: double neighborDistancePenaltyTree = 0.0;
@@ -107,11 +110,6 @@ namespace swarm
     /// \brief Maximum free-space distance (m) between two nodes to communicate
     /// (must also be neighbors). Set to <0 for no limit.
     private: double commsDistanceMax = -1.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening solid obstacle (wall, terrain, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
-    private: double commsDistancePenaltyWall = 0.0;
 
     /// \brief Equivalent free space distance (m) that is "consumed" by an
     /// intervening non-solid obstacle (forest, etc.).
@@ -145,6 +143,17 @@ namespace swarm
 
     /// \brief Keep track of update sim-time.
     private: gazebo::common::Time lastUpdateTime;
+
+    // \brief Ray used to test for line of sight between vehicles.
+    private: gazebo::physics::RayShapePtr ray;
+
+    /// \brief Visibility between vehicles. The key is a pair with the
+    /// addresses of the vehicles involved. The value is a vector of strings
+    /// that stores the entity names of the first and last obstacles between the
+    /// vehicles. If there is line of sight the value contains a vector of one
+    /// element (empty string).
+    private: std::map<std::pair<std::string, std::string>,
+               std::vector<std::string>> visibility;
   };
 }  // namespace
 #endif

@@ -130,16 +130,39 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
   std::lock_guard<std::mutex> lock(this->mutex);
 
-  // Decide if each member of the swarm enters into a comms outage.
-  this->commsModel->UpdateOutages();
-
-  // Update the neighbors list of each member of the swarm.
-  this->commsModel->UpdateNeighbors();
+  // Update the state of the communication model.
+  this->commsModel->Update();
 
   // Send a message to each swarm member with its updated neighbors list.
   this->NotifyNeighbors();
 
-  // Dispatch all incoming messages.
+  // Dispatch all the incoming messages, deciding whether the destination gets
+  // the message according to the communication model.
+  this->DispatchMessages();
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::NotifyNeighbors()
+{
+  // Send neighbors update to each member of the swarm.
+  for (auto const &robot : (*this->swarm))
+  {
+    auto address = robot.first;
+    auto swarmMember = (*this->swarm)[address];
+    auto topic = "/swarm/" + swarmMember->address + "/neighbors";
+
+    swarm::msgs::Neighbor_V msg;
+    for (auto const &neighbor : swarmMember->neighbors)
+      msg.add_neighbors(neighbor.first);
+
+    // Notify the node with its updated list of neighbors.
+    this->node.Publish(topic, msg);
+  }
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::DispatchMessages()
+{
   while (!this->incomingMsgs.empty())
   {
     // Get the next message to dispatch.
@@ -184,25 +207,6 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 
     // Forward the message to the destination.
     this->node.Advertise(topic);
-    this->node.Publish(topic, msg);
-  }
-}
-
-//////////////////////////////////////////////////
-void BrokerPlugin::NotifyNeighbors()
-{
-  // Send neighbors update to each member of the swarm.
-  for (auto const &robot : (*this->swarm))
-  {
-    auto address = robot.first;
-    auto swarmMember = (*this->swarm)[address];
-    auto topic = "/swarm/" + swarmMember->address + "/neighbors";
-
-    swarm::msgs::Neighbor_V msg;
-    for (auto const &neighbor : swarmMember->neighbors)
-      msg.add_neighbors(neighbor.first);
-
-    // Notify the node with its updated list of neighbors.
     this->node.Publish(topic, msg);
   }
 }

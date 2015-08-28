@@ -2,7 +2,6 @@ add_subdirectory(terrains)
 
 # Non-erb world files
 set (world_files
-
 )
 
 # World files that need to be processed with erb
