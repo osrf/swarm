@@ -19,6 +19,6 @@ message Datagram
   /// \brief Payload.
   required string data        = 4;
 
-  /// \brief List of sender's neighbors.
-  repeated string neighbors   = 5;
+  /// \brief List of sender's neighbors who should receive the message;
+  repeated string recipients  = 5;
 }

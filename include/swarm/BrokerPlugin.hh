@@ -21,37 +21,23 @@
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
-#include <map>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
-#include <vector>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
+
+#include "swarm/CommsModel.hh"
+#include "swarm/SwarmTypes.hh"
 #include "msgs/datagram.pb.h"
 
 namespace swarm
 {
-  /// \brief Class used to store information about a member of the Swarm.
-  class IGNITION_VISIBLE SwarmMember
-  {
-    /// \brief Gazebo name used for this model.
-    public: std::string name;
-
-    /// \brief Address of the robot. E.g.: 192.168.1.2
-    public: std::string address;
-
-    /// \brief Model pointer.
-    public: gazebo::physics::ModelPtr model;
-
-    /// \brief List of neighbors for this robot.
-    public: std::vector<std::string> neighbors;
-  };
-
   /// \brief This is a world plugin designed to centralize all the messages
   /// sent by the members of the swarm. This plugin subscribes to the
   /// "/swarm/broker/incoming" topic, on which all the agents publish their
@@ -66,7 +52,7 @@ namespace swarm
     public: BrokerPlugin() = default;
 
     /// \brief Class destructor.
-    public: virtual ~BrokerPlugin() = default;
+    public: virtual ~BrokerPlugin();
 
     // Documentation Inherited.
     public: virtual void Load(gazebo::physics::WorldPtr _world,
@@ -85,11 +71,9 @@ namespace swarm
     /// \param[in] _info Update information provided by the server.
     private: void Update(const gazebo::common::UpdateInfo &_info);
 
-    /// \brief Update the neighbor list for a single robot and notifies the
-    /// robot with the updated list.
-    ///
-    /// \param[in] _address Address of the robot to be updated.
-    private: void UpdateNeighborList(const std::string &_address);
+    /// \brief Send a message to each swarm member
+    /// with its updated neighbors list.
+    private: void NotifyNeighbors();
 
     /// \brief Callback executed when a new message is received.
     ///
@@ -113,13 +97,14 @@ namespace swarm
     /// \brief Queue to store the incoming messages received from the agents.
     private: std::queue<msgs::Datagram> incomingMsgs;
 
-    /// \brief Map containing information about the members of the swarm.
-    /// The key is the robot address. The value is a pointer to a SwarmMember
-    /// object that contains multiple information about the robot.
-    private: std::map<std::string, std::shared_ptr<SwarmMember>> swarm;
+    /// \brief Information about the members of the swarm.
+    private: SwarmMembershipPtr swarm;
 
     /// \brief Mutex for protecting the queue.
     private: std::mutex mutex;
+
+    /// \brief Comms model that we're using.
+    private: std::unique_ptr<CommsModel> commsModel;
   };
 }
 #endif

@@ -135,7 +135,7 @@
              </swarm_search_area>''' %>
 
     <!-- Create the ground vehicles -->
-    <% for index in 0..0 %>
+    <% for index in 0..1 %>
       <model name="ground_<%=index%>">
         <pose>0 <%=index%> 0.05 0 0 0</pose>
         <link name="link">
@@ -199,14 +199,30 @@
           <gps>link::gps</gps>
           <imu>link::imu</imu>
           <address>192.168.2.<%=index+1%></address>
-          <num_messages>1</num_messages>
+          <num_messages>1000</num_messages>
           <%=search_area%>
         </plugin>
       </model>
     <% end %>
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
-    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so"></plugin>
+    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">
+      <comms_model>
+        <neighbor_distance_min>0.0</neighbor_distance_min>
+        <neighbor_distance_max>250.0</neighbor_distance_max>
+        <neighbor_distance_penalty_wall>-1.0</neighbor_distance_penalty_wall>
+        <neighbor_distance_penalty_tree>200.0</neighbor_distance_penalty_tree>
+        <comms_distance_min>0.0</comms_distance_min>
+        <comms_distance_max>250.0</comms_distance_max>
+        <comms_distance_penalty_wall>-1.0</comms_distance_penalty_wall>
+        <comms_distance_penalty_tree>200.0</comms_distance_penalty_tree>
+        <comms_drop_probability_min>0.0</comms_drop_probability_min>
+        <comms_drop_probability_max>0.5</comms_drop_probability_max>
+        <comms_outage_probability>0.0</comms_outage_probability>
+        <comms_outage_duration_min>1.0</comms_outage_duration_min>
+        <comms_outage_duration_max>10.0</comms_outage_duration_max>
+      </comms_model>
+    </plugin>
 
     <model name="terrain">
       <static>true</static>
