@@ -34,7 +34,7 @@ class CommsTest : public gazebo::ServerFixture
 /// \brief No drops or outages and the two vehicles are always within range.
 TEST_F(CommsTest, PerfectComms)
 {
-  Load("comms_0.world", true);
+  Load("comms_00.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -48,7 +48,7 @@ TEST_F(CommsTest, PerfectComms)
 /// are set to 1.0 .
 TEST_F(CommsTest, AllPackagesDrop)
 {
-  Load("comms_1.world", true);
+  Load("comms_01.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -62,7 +62,7 @@ TEST_F(CommsTest, AllPackagesDrop)
 /// is set to 1.0 .
 TEST_F(CommsTest, TotalOutage)
 {
-  Load("comms_2.world", true);
+  Load("comms_02.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -76,7 +76,7 @@ TEST_F(CommsTest, TotalOutage)
 /// the communication range.
 TEST_F(CommsTest, OutOfRange)
 {
-  Load("comms_3.world", true);
+  Load("comms_03.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -89,7 +89,7 @@ TEST_F(CommsTest, OutOfRange)
 /// \brief All messages go through with one line of trees between vehicles.
 TEST_F(CommsTest, OneTreeCommsOK)
 {
-  Load("comms_4.world", true);
+  Load("comms_04.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -103,7 +103,7 @@ TEST_F(CommsTest, OneTreeCommsOK)
 /// Now, the vehicles are not close enough to get over the tree penalty.
 TEST_F(CommsTest, OneTreeCommsFail)
 {
-  Load("comms_5.world", true);
+  Load("comms_05.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -116,7 +116,7 @@ TEST_F(CommsTest, OneTreeCommsFail)
 /// \brief All messages drop with two lines of trees between vehicles.
 TEST_F(CommsTest, TwoTreesCommsFail)
 {
-  Load("comms_6.world", true);
+  Load("comms_06.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -130,7 +130,7 @@ TEST_F(CommsTest, TwoTreesCommsFail)
 TEST_F(CommsTest, HalfMsgsDrop)
 {
   ignition::math::Rand::Seed(13458);
-  Load("comms_7.world", true);
+  Load("comms_07.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -144,7 +144,7 @@ TEST_F(CommsTest, HalfMsgsDrop)
 TEST_F(CommsTest, TemporaryOutage)
 {
   ignition::math::Rand::Seed(13458);
-  Load("comms_8.world", true);
+  Load("comms_08.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -158,7 +158,7 @@ TEST_F(CommsTest, TemporaryOutage)
 TEST_F(CommsTest, PermanentOutage)
 {
   ignition::math::Rand::Seed(13458);
-  Load("comms_9.world", true);
+  Load("comms_09.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -182,6 +182,22 @@ TEST_F(CommsTest, OutagesAndDrops)
   world->Step(101);
 }
 
+/////////////////////////////////////////////////
+/// \brief Check that there's no communication between two robots separated
+/// by terrain.
+TEST_F(CommsTest, Terrain)
+{
+  ignition::math::Rand::Seed(13458);
+  Load("comms_11.world", true);
+
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Step the world so that the test library experiences update events.
+  world->Step(101);
+}
+
+/////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
   // Set a specific seed to avoid occasional test failures due to

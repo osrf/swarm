@@ -133,32 +133,10 @@
           <num_messages>1000</num_messages>
           <%=search_area%>
           <%=ground_battery%>
-          <%=comms_model%>
+          <test_case>0</test_case>
         </plugin>
       </model>
     <% end %>
-
-    <!-- Create one line of simulated trees -->
-    <model name='tree_line_0'>
-      <pose>0 0.5 0.5 0 -0 0</pose>
-      <static>true</static>
-      <link name='link'>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>3 0.1 1</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>3 0.1 1</size>
-            </box>
-          </geometry>
-        </visual>
-      </link>
-    </model>
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">

@@ -42,61 +42,31 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
+    /// \brief Callback executed when a new message is received.
+    /// \param[in] _srcAddress Source address of the message.
+    /// \param[in] _data Message payload.
     private: void OnDataReceived(const std::string &_srcAddress,
                                  const std::string &_data);
 
+    // Number of server iterations executed.
     private: int iterations = 0;
 
+    // Number of unicast messages sent.
     private: int numUnicastSent = 0;
+
+    // Number of multicast messages sent.
     private: int numMulticastSent = 0;
+
+    // Number of broadcast messages sent.
     private: int numBroadcastSent = 0;
 
+    // Number of messages received.
     private: int numMsgsRecv = 0;
 
-    /// \brief Minimum free-space distance (m) between two nodes to be
-    /// neighbors. Set to <0 for no limit.
-    private: double neighborDistanceMin = -1.0;
-
-    /// \brief Maximum free-space distance (m) between two nodes to be
-    /// neighbors. Set to <0 for no limit.
-    private: double neighborDistanceMax = -1.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening non-solid obstacle (forest, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks neighbors).
-    private: double neighborDistancePenaltyTree = 0.0;
-
-    /// \brief Minimum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors). Set to <0 for no limit.
-    private: double commsDistanceMin = -1.0;
-
-    /// \brief Maximum free-space distance (m) between two nodes to communicate
-    /// (must also be neighbors). Set to <0 for no limit.
-    private: double commsDistanceMax = -1.0;
-
-    /// \brief Equivalent free space distance (m) that is "consumed" by an
-    /// intervening non-solid obstacle (forest, etc.).
-    /// Set to <0 for infinite penalty (i.e., one obstacle blocks comms).
-    private: double commsDistancePenaltyTree = 0.0;
-
-    /// \brief Minimum probability of dropping a given packet.
-    /// Used with uniform drop probability model.
-    private: double commsDropProbabilityMin = 0.0;
-
-    /// \brief Maximum probability of dropping a given packet.
-    /// Used with uniform drop probability model.
-    private: double commsDropProbabilityMax = 0.0;
-
-    /// \brief Probability of going into a comms outage at each second.
-    private: double commsOutageProbability = 0.0;
-
-    /// \brief Minimum length of comms outage (secs). Set to <0 for no limit.
-    /// Used with uniform outage duration probability model.
-    private: double commsOutageDurationMin = -1.0;
-
-    /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
-    /// Used with uniform outage duration probability model.
-    private: double commsOutageDurationMax = -1.0;
+    // Every test in test/integration/test.cc has a unique number and
+    // different expectations. We read this test number from the SDF to
+    // be able to know which test is executing.
+    private: int testCase = -1;
   };
 }
 #endif

@@ -12,7 +12,7 @@
       <comms_distance_penalty_tree>200.0</comms_distance_penalty_tree>
       <comms_drop_probability_min>0.0</comms_drop_probability_min>
       <comms_drop_probability_max>0.0</comms_drop_probability_max>
-      <comms_outage_probability>0.0</comms_outage_probability>
+      <comms_outage_probability>1.0</comms_outage_probability>
       <comms_outage_duration_min>1.0</comms_outage_duration_min>
       <comms_outage_duration_max>10.0</comms_outage_duration_max>
     </comms_model>'''%>
@@ -133,7 +133,7 @@
           <num_messages>1000</num_messages>
           <%=search_area%>
           <%=ground_battery%>
-          <%=comms_model%>
+          <test_case>2</test_case>
         </plugin>
       </model>
     <% end %>

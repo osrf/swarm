@@ -4,17 +4,18 @@ set (world_files
 
 # World files that need to be processed with erb
 set (world_erb_files
-  comms_0.world.erb
-  comms_1.world.erb
-  comms_2.world.erb
-  comms_3.world.erb
-  comms_4.world.erb
-  comms_5.world.erb
-  comms_6.world.erb
-  comms_7.world.erb
-  comms_8.world.erb
-  comms_9.world.erb
+  comms_00.world.erb
+  comms_01.world.erb
+  comms_02.world.erb
+  comms_03.world.erb
+  comms_04.world.erb
+  comms_05.world.erb
+  comms_06.world.erb
+  comms_07.world.erb
+  comms_08.world.erb
+  comms_09.world.erb
   comms_10.world.erb
+  comms_11.world.erb
 )
 
 # Process the erb files
