@@ -125,7 +125,10 @@ void CommsModel::UpdateOutages()
       if (this->world->GetSimTime() >= swarmMember->onOutageUntil)
       {
         swarmMember->onOutage = false;
-        gzdbg << "Robot " << address << " is back from an outage." << std::endl;
+
+        // Debug output.
+        // gzdbg << "[" << curTime << "] Robot " << address
+        //       << " is back from an outage." << std::endl;
       }
     }
     else if (!swarmMember->onOutage)
@@ -139,7 +142,9 @@ void CommsModel::UpdateOutages()
            this->commsOutageProbability * dt.Double()))
       {
         swarmMember->onOutage = true;
-        gzdbg << "Robot " << address << " has started an outage." << std::endl;
+        // Debug output.
+        // gzdbg << "[" << curTime << "] Robot " << address
+        //       << " has started an outage." << std::endl;
 
         // Decide the duration of the outage.
         if (this->commsOutageDurationMin < 0 ||

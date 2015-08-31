@@ -1,0 +1,147 @@
+<?xml version="1.0" ?>
+<%camera_near = 0.12%>
+<%camera_far = 20%>
+<%camera_fov = 1.04719755%>
+<%camera_aspect_ratio = 1.778%>
+<% comms_model = '''<comms_model>
+      <neighbor_distance_min>0.0</neighbor_distance_min>
+      <neighbor_distance_max>250.0</neighbor_distance_max>
+      <neighbor_distance_penalty_tree>200.0</neighbor_distance_penalty_tree>
+      <comms_distance_min>0.0</comms_distance_min>
+      <comms_distance_max>250.0</comms_distance_max>
+      <comms_distance_penalty_tree>200.0</comms_distance_penalty_tree>
+      <comms_drop_probability_min>0</comms_drop_probability_min>
+      <comms_drop_probability_max>0</comms_drop_probability_max>
+      <comms_outage_probability>0.5</comms_outage_probability>
+      <comms_outage_duration_min>-1.0</comms_outage_duration_min>
+      <comms_outage_duration_max>-1.0</comms_outage_duration_max>
+    </comms_model>'''%>
+
+<sdf version="1.5">
+  <world name="default">
+    <!-- Anchor our GPS sensors to a real place: Camp Roberts
+         http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
+    <spherical_coordinates>
+      <latitude_deg>35.7753257</latitude_deg>
+      <longitude_deg>-120.774063</longitude_deg>
+      <elevation>208</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <scene>
+      <shadows>false</shadows>
+      <ambient>0.5 0.5 0.5 1</ambient>
+    </scene>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <physics type="ode">
+      <ode>
+        <solver>
+          <type>world</type>
+        </solver>
+      </ode>
+      <max_step_size>0.01</max_step_size>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+
+    <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
+         So +/- 0.01 deg defines a ~2km X ~2km region. -->
+    <% search_area = '''<swarm_search_area>
+               <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
+               <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
+               <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
+               <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
+             </swarm_search_area>''' %>
+
+    <% ground_battery = '''<battery>
+      <!-- Capacity in mAh -->
+      <capacity>110000</capacity>
+      <!-- Consumption in mA -->
+      <consumption>55000</consumption>
+      <!-- A factor that should be between 0 and 1. A value of < 1 can be used
+           to account for capacity loss in addition to the <consumption>. -->
+      <consumption_factor>0.7</consumption_factor>
+      </battery>'''%>
+
+    <!-- Create the ground vehicles -->
+    <% for index in 0..1 %>
+      <model name="ground_<%=index%>">
+        <pose>0 <%=index%> 0.05 0 0 0</pose>
+        <link name="link">
+          <sensor name="gps" type="gps">
+            <gps/>
+            <always_on>1</always_on>
+          </sensor>
+
+          <sensor name="imu" type="imu">
+            <imu/>
+            <always_on>1</always_on>
+          </sensor>
+
+          <sensor name="camera" type="logical_camera">
+            <logical_camera>
+              <near><%=camera_near%></near>
+              <far><%=camera_far%></far>
+              <horizontal_fov><%=camera_fov%></horizontal_fov>
+              <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
+            </logical_camera>
+            <visualize>true</visualize>
+            <always_on>true</always_on>
+          </sensor>
+
+          <kinematic>true</kinematic>
+          <gravity>false</gravity>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>0.2 .1 .1</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>0.2 .1 .1</size>
+              </box>
+            </geometry>
+          </visual>
+          <visual name="visual_front">
+            <pose>0.07 0 0.04 0 0 0</pose>
+            <geometry>
+              <sphere>
+                <radius>.04</radius>
+              </sphere>
+            </geometry>
+            <material>
+              <script>
+                <name>Gazebo/Red</name>
+              </script>
+            </material>
+          </visual>
+        </link>
+
+        <!-- Load the plugin to control this robot -->
+        <plugin name="swarm_controller_<%=index%>"
+                filename="libcomms_plugin.so">
+          <type>ground</type>
+          <camera>link::camera</camera>
+          <gps>link::gps</gps>
+          <imu>link::imu</imu>
+          <address>192.168.2.<%=index+1%></address>
+          <num_messages>1000</num_messages>
+          <%=search_area%>
+          <%=ground_battery%>
+          <test_case>9</test_case>
+        </plugin>
+      </model>
+    <% end %>
+
+    <!-- Load the plugin to deliver all the messages inside the swarm -->
+    <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">
+      <%=comms_model%>
+    </plugin>
+
+  </world>
+</sdf>
