@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Open Source Robotics Foundation
+ * Copyright (C) 2015 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ class CommsTest : public gazebo::ServerFixture
       SWARM_PROJECT_TEST_INTEGRATION_PATH);
     gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
       SWARM_PROJECT_TEST_WORLD_PATH);
+    gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
+      SWARM_PROJECT_TEST_SOURCE_PATH);
   }
 };
 
