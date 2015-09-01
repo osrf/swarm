@@ -41,11 +41,11 @@ target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_ROBOT_NAME})
 
-# Create the libBooPlugin.so library.
+# Create the libSwarmBooPlugin.so library.
 ign_add_library(${PROJECT_LIB_BOO_NAME} ${boo_plugin_sources})
 target_link_libraries(${PROJECT_LIB_BOO_NAME}
                       ${PROJECT_LIB_ROBOT_NAME}
                       ${PROJECT_LIB_MSGS_NAME}
                       ${PROTOBUF_LIBRARY}
                       ${IGNITION-TRANSPORT_LIBRARIES})
-ign_install_library(${PROJECT_LIB_ROBOT_NAME})
+ign_install_library(${PROJECT_LIB_BOO_NAME})

@@ -486,6 +486,9 @@ namespace swarm
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
 
+    /// \brief Base of communications port.
+    protected: static const uint32_t kBooPort = 4200;
+
     /// \brief Addresses of all the local neighbors.
     private: std::vector<std::string> neighbors;
 
@@ -573,6 +576,9 @@ namespace swarm
 
     /// \brief Pointer to the world.
     private: gazebo::physics::WorldPtr world;
+
+    /// \brief BooPlugin needs access to some of the private member variables.
+    friend class BooPlugin;
   };
 }
 #endif

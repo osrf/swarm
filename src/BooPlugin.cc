@@ -39,6 +39,8 @@ BooPlugin::BooPlugin()
 //////////////////////////////////////////////////
 void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
+  RobotPlugin::Load(_model, _sdf);
+
   // Read the <lost_person_model> SDF parameter.
   if (!_sdf->HasElement("lost_person_model"))
   {
@@ -48,14 +50,14 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   auto modelName = _sdf->Get<std::string>("lost_person_model");
-  this->lostPerson = _model->GetWorld()->GetModel(modelName);
+  this->lostPerson = this->model->GetWorld()->GetModel(modelName);
   GZ_ASSERT(this->lostPerson, "Victim's model not found");
 
   // Initialize the position of the lost person.
   this->prevLostPersonPose = this->lostPerson->GetWorldPose().Ign().Pos();
 
   // Bind on my local address and default port.
-  this->Bind(&BooPlugin::OnDataReceived, this, this->Host());
+  this->Bind(&BooPlugin::OnDataReceived, this, this->Host(), this->kBooPort);
 
   // Listen to the OnWorldUpdateEnd event broadcasted every simulation iteration
   this->updateEndConnection = gazebo::event::Events::ConnectWorldUpdateEnd(
