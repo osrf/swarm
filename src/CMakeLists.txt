@@ -9,6 +9,10 @@ set (robot_plugin_sources
   RobotPlugin.cc
 )
 
+set (boo_plugin_sources
+  BooPlugin.cc
+)
+
 set (gtest_sources
   BrokerPlugin_TEST.cc
   RobotPlugin_TEST.cc
@@ -32,6 +36,15 @@ ign_install_library(${PROJECT_LIB_BROKER_NAME})
 # Create the libSwarmRobotPlugin.so library.
 ign_add_library(${PROJECT_LIB_ROBOT_NAME} ${robot_plugin_sources})
 target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
+                      ${PROJECT_LIB_MSGS_NAME}
+                      ${PROTOBUF_LIBRARY}
+                      ${IGNITION-TRANSPORT_LIBRARIES})
+ign_install_library(${PROJECT_LIB_ROBOT_NAME})
+
+# Create the libBooPlugin.so library.
+ign_add_library(${PROJECT_LIB_BOO_NAME} ${boo_plugin_sources})
+target_link_libraries(${PROJECT_LIB_BOO_NAME}
+                      ${PROJECT_LIB_ROBOT_NAME}
                       ${PROJECT_LIB_MSGS_NAME}
                       ${PROTOBUF_LIBRARY}
                       ${IGNITION-TRANSPORT_LIBRARIES})

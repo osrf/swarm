@@ -6,8 +6,9 @@ project (${IGN_PROJECT_NAME})
 string (TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 string (TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 
-set (PROJECT_LIB_MSGS_NAME SwarmMsgs)
+set (PROJECT_LIB_BOO_NAME SwarmBooPlugin)
 set (PROJECT_LIB_BROKER_NAME SwarmBrokerPlugin)
+set (PROJECT_LIB_MSGS_NAME SwarmMsgs)
 set (PROJECT_LIB_ROBOT_NAME SwarmRobotPlugin)
 
 set (PROJECT_MAJOR_VERSION 0)
@@ -283,7 +284,8 @@ else (build_errors)
   set(PKG_NAME ${PROJECT_NAME_UPPER})
   set(PKG_LIBRARIES ${PROJECT_LIB_MSGS_NAME}
                     ${PROJECT_LIB_BROKER_NAME}
-                    ${PROJECT_LIB_ROBOT_NAME})
+                    ${PROJECT_LIB_ROBOT_NAME}
+                    ${PROJECT_LIB_BOO_NAME})
 
   set(PKG_DEPENDS)
 
