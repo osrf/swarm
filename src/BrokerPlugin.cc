@@ -171,7 +171,7 @@ void BrokerPlugin::DispatchMessages()
 
     // Debug output.
     // gzdbg << "Processing message from " << msg.src_address()
-    //      << " addressed to " << msg.dst_address() << std::endl;
+    //       << " addressed to " << msg.dst_address() << std::endl;
 
     // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm->find(msg.src_address()) == this->swarm->end())

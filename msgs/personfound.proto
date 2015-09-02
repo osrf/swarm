@@ -1,0 +1,26 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface PersonFound
+/// \brief A message containing information about a person found.
+
+message Vector3D
+{
+  /// \brief First element of a 3-d vector.
+  required double x = 1;
+
+  /// \brief Second element of a 3-d vector.
+  required double y = 2;
+
+  /// \brief Third element of a 3-d vector.
+  required double z = 3;
+}
+
+message PersonFound
+{
+  /// \brief Address of the robot that found the lost person.
+  required string address = 1;
+
+  /// \brief Position of the lost person.
+  required Vector3D pos   = 2;
+}
