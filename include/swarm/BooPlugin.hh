@@ -33,7 +33,17 @@
 
 namespace swarm
 {
-  /// \brief Class that shows a potential agent controller using the Swarm API
+  /// \brief Class that drives the behavior of the base of operations (BOO).
+  /// The BOO binds on its own address (kBoo) and port (kBooPort).
+  /// It accepts messages of the format: <cmd> [args]
+  ///
+  /// List of supported commands:
+  /// FOUND <x> <y> <z> : The lost person has been found at [x,y,z].
+  ///
+  /// The BOO also verifies that the position reported by a user match the
+  /// position of the lost person. If the person is found, a message of type
+  /// PersonFound is published in the topic /swarm/found and the simulation is
+  /// paused.
   class BooPlugin : public swarm::RobotPlugin
   {
     /// \brief Class constructor.

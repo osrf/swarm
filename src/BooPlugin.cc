@@ -147,7 +147,6 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       if (poseReceived == this->lostPersonPose)
       {
         found = true;
-        gzdbg << this->model->GetWorld()->GetSimTime() << std::endl;
         gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
               << "the lost person" << std::endl;
 
@@ -157,6 +156,9 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
         msg.mutable_pos()->set_y(poseReceived.Y());
         msg.mutable_pos()->set_z(poseReceived.Z());
         this->node.Publish("/swarm/found", msg);
+
+        // Pause the simulation to make the lost person detection obvious.
+        gazebo::physics::get_world()->SetPaused(true);
       }
       else
         gzerr << "Sorry, the reported position seems incorrect" << std::endl;

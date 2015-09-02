@@ -18,11 +18,8 @@
 #ifndef __SWARM_BOO_FINDER_PLUGIN_HH__
 #define __SWARM_BOO_FINDER_PLUGIN_HH__
 
-#include <string>
-#include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <sdf/sdf.hh>
-#include <gazebo/physics/physics.hh>
 #include <swarm/RobotPlugin.hh>
 
 namespace swarm
@@ -42,7 +39,7 @@ namespace swarm
     // Number of server iterations executed.
     private: int iterations = -1;
 
-    // Every test in test/integration/test.cc has a unique number and
+    // Every test in test/integration/boo.cc has a unique number and
     // different expectations. We read this test number from the SDF to
     // be able to know which test is executing.
     private: int testCase = -1;
