@@ -14,6 +14,9 @@
  * limitations under the License.
  *
  */
+
+#include <gazebo/common/UpdateInfo.hh>
+#include <sdf/sdf.hh>
 #include <gtest/gtest.h>
 #include "boo_plugin.hh"
 

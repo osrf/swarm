@@ -31,8 +31,6 @@ class BooTest : public gazebo::ServerFixture
       SWARM_PROJECT_TEST_INTEGRATION_PATH);
     gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
       SWARM_PROJECT_TEST_WORLD_PATH);
-    gazebo::common::SystemPaths::Instance()->AddGazeboPaths(
-      SWARM_PROJECT_TEST_SOURCE_PATH);
   }
 };
 
@@ -69,7 +67,7 @@ void onFound(const std::string &_topic, const swarm::msgs::PersonFound &_msg)
 }
 
 /////////////////////////////////////////////////
-/// \brief Validate the result of this test case.
+/// \brief Validate the result of each test case.
 void validateResult()
 {
   switch(testCase)
@@ -80,6 +78,7 @@ void validateResult()
     case 1:
     {
       EXPECT_TRUE(found);
+      EXPECT_TRUE(gazebo::physics::get_world()->IsPaused());
       break;
     }
     // Unsupported command.
@@ -200,8 +199,6 @@ TEST_F(BooTest, TooFar)
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  // Set a specific seed to avoid occasional test failures due to
-  // statistically unlikely, but possible results.
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
