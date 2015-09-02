@@ -38,7 +38,12 @@ namespace swarm
   /// It accepts messages of the format: <cmd> [args]
   ///
   /// List of supported commands:
-  /// FOUND <x> <y> <z> : The lost person has been found at [x,y,z].
+  /// FOUND <x> <y> <z> <t> : Person found in [x,y,z] at time t, where:
+  ///
+  /// x: X coordinate (meters).
+  /// y: Y coordinate (meters).
+  /// z: Z coordinate (meters).
+  /// t: Time when the person was seen (double).
   ///
   /// The BOO also verifies that the position reported by a user match the
   /// position of the lost person. If the person is found, a message of type

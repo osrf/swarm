@@ -97,7 +97,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   // The format of this message should be: <cmd> [args].
   //
   // List of supported commands:
-  // <FOUND> <x> <y> <z> : The lost person has been found at [x,y,z].
+  // <FOUND> <x> <y> <z> <t> : Person found in [x,y,z] at time t.
 
   // Split the string into a vector of parameters.
   std::vector<std::string> v;
@@ -116,7 +116,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   if (cmd == "FOUND")
   {
     // Sanity check.
-    if (v.size() != 4)
+    if (v.size() != 5)
     {
       gzerr << "BooPlugin::OnDataReceived() Unable to parse a FOUND message ["
             << _data << "]" << std::endl << "Make sure that you're sending the"
@@ -130,13 +130,14 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       double x = std::stod(v.at(1));
       double y = std::stod(v.at(2));
       double z = std::stod(v.at(3));
+      double t = std::stod(v.at(4));
       poseReceived.Set(x, y, z);
     }
     catch(const std::invalid_argument &_e)
     {
       gzerr << "BooPlugin::OnDataReceived() Unable to parse the FOUND arguments"
-            << " [" << v.at(1) << "," << v.at(2) << "," << v.at(3) << "]"
-            << std::endl;
+            << " [" << v.at(1) << "," << v.at(2) << "," << v.at(3) << ","
+            << v.at(4) << "]" << std::endl;
       return;
     }
 
