@@ -51,11 +51,10 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   RobotPlugin::Load(_model, _sdf);
 
   // Sanity check.
-  if (this->Host() != kBoo)
+  if (this->Host() != this->kBoo)
   {
     gzerr << "BooPlugin::Load(): Please, use <address>boo</address>."
           << " Ignoring address, using 'boo'." << std::endl;
-    this->address = "boo";
   }
 
   // Read the <lost_person_model> SDF parameter.
