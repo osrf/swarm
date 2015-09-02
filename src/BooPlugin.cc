@@ -144,7 +144,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
     // Validate the result.
     {
       std::lock_guard<std::mutex> lock(this->mutex);
-      if (poseReceived == this->lostPersonPose)
+      if (poseReceived.Distance(this->lostPersonPose) <= this->kTolerance)
       {
         found = true;
         gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "

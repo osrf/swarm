@@ -65,6 +65,11 @@ namespace swarm
     private: void OnDataReceived(const std::string &_srcAddress,
                                  const std::string &_data);
 
+    /// \brief Error tolerance allowed between the reported position and the
+    /// real position of the lost person. This is interpreted as an Euclidean
+    /// distance (m).
+    protected: const double kTolerance = 0.25;
+
     /// \brief True when the lost person has been found.
     protected: bool found = false;
 
