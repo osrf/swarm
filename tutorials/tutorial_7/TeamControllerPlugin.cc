@@ -40,7 +40,8 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
   // We'll need a world pointer later to check the time.
   this->worldPtr = gazebo::physics::get_world();
   // Sign up to receive unicast and broadcast messages
-  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host());
+  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host(),
+    this->kBooPort);
 }
 
 //////////////////////////////////////////////////
@@ -60,15 +61,13 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
           {
             if (obj.first.find("lost_person") != std::string::npos)
             {
-              std::cout << "[" << this->Host() <<
-                "] I found the lost person at " << obj.second << "!" <<
-                std::endl;
               // Tell everybody about it.
               std::stringstream successMsg;
-              successMsg << obj.second;
+              successMsg << "FOUND " << obj.second.Pos();
               std::cout << "[" << this->Host() <<
-                "] Sending " << successMsg.str() << std::endl;
-              this->SendTo(successMsg.str(), this->kBroadcast);
+                "] I found the lost person.  Sending: " << successMsg.str() <<
+                std::endl;
+              this->SendTo(successMsg.str(), this->kBroadcast, this->kBooPort);
             }
           }
         }
@@ -130,9 +129,9 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  std::cout << "---" << std::endl;
-  std::cout << "[" << this->Host() << "] New message received" << std::endl;
-  std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  std::cout << "\tData: [" << _data << "]" << std::endl;
+  //std::cout << "---" << std::endl;
+  //std::cout << "[" << this->Host() << "] New message received" << std::endl;
+  //std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
+  //std::cout << "\tData: [" << _data << "]" << std::endl;
 }
 
