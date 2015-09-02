@@ -483,6 +483,9 @@ namespace swarm
     /// support multiple multicast groups, only one.
     protected: const std::string kMulticast = "multicast";
 
+    /// \brief Address used by the base of operations.
+    protected: const std::string kBoo       = "boo";
+
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
 

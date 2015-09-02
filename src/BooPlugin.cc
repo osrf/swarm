@@ -16,8 +16,10 @@
 */
 
 #include <boost/algorithm/string.hpp>
+#include <mutex>
 #include <string>
 #include <vector>
+#include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
@@ -25,6 +27,7 @@
 #include <gazebo/physics/World.hh>
 #include <sdf/sdf.hh>
 #include "swarm/BooPlugin.hh"
+#include "msgs/personfound.pb.h"
 
 using namespace swarm;
 
@@ -37,9 +40,23 @@ BooPlugin::BooPlugin()
 }
 
 //////////////////////////////////////////////////
+BooPlugin::~BooPlugin()
+{
+  gazebo::event::Events::DisconnectWorldUpdateEnd(this->updateEndConnection);
+}
+
+//////////////////////////////////////////////////
 void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   RobotPlugin::Load(_model, _sdf);
+
+  // Sanity check.
+  if (this->Host() != kBoo)
+  {
+    gzerr << "BooPlugin::Load(): Please, use <address>boo</address>."
+          << " Ignoring address, using 'boo'." << std::endl;
+    this->address = "boo";
+  }
 
   // Read the <lost_person_model> SDF parameter.
   if (!_sdf->HasElement("lost_person_model"))
@@ -49,15 +66,17 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     return;
   }
 
+  this->node.Advertise("/swarm/found");
+
   auto modelName = _sdf->Get<std::string>("lost_person_model");
   this->lostPerson = this->model->GetWorld()->GetModel(modelName);
   GZ_ASSERT(this->lostPerson, "Victim's model not found");
 
   // Initialize the position of the lost person.
-  this->prevLostPersonPose = this->lostPerson->GetWorldPose().Ign().Pos();
+  this->lostPersonPose = this->lostPerson->GetWorldPose().Ign().Pos();
 
-  // Bind on my local address and default port.
-  this->Bind(&BooPlugin::OnDataReceived, this, this->Host(), this->kBooPort);
+  // Bind on my BOO address and default BOO port.
+  this->Bind(&BooPlugin::OnDataReceived, this, this->kBoo, this->kBooPort);
 
   // Listen to the OnWorldUpdateEnd event broadcasted every simulation iteration
   this->updateEndConnection = gazebo::event::Events::ConnectWorldUpdateEnd(
@@ -67,7 +86,8 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BooPlugin::OnUpdateEnd()
 {
-  this->prevLostPersonPose = this->lostPerson->GetWorldPose().Ign().Pos();
+  std::lock_guard<std::mutex> lock(this->mutex);
+  this->lostPersonPose = this->lostPerson->GetWorldPose().Ign().Pos();
 }
 
 //////////////////////////////////////////////////
@@ -109,8 +129,8 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
     try
     {
       double x = std::stod(v.at(1));
-      double y = std::stod(v.at(1));
-      double z = std::stod(v.at(1));
+      double y = std::stod(v.at(2));
+      double z = std::stod(v.at(3));
       poseReceived.Set(x, y, z);
     }
     catch(const std::invalid_argument &_e)
@@ -122,16 +142,29 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
     }
 
     // Validate the result.
-    if (poseReceived == this->prevLostPersonPose)
-      gzdbg << "Congratulations! The person has been found!" << std::endl;
-    else
-      gzerr << "Sorry, the reported position seems incorrect" << std::endl;
+    {
+      std::lock_guard<std::mutex> lock(this->mutex);
+      if (poseReceived == this->lostPersonPose)
+      {
+        found = true;
+        gzdbg << this->model->GetWorld()->GetSimTime() << std::endl;
+        gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
+              << "the lost person" << std::endl;
+
+        swarm::msgs::PersonFound msg;
+        msg.set_address(_srcAddress);
+        msg.mutable_pos()->set_x(poseReceived.X());
+        msg.mutable_pos()->set_y(poseReceived.Y());
+        msg.mutable_pos()->set_z(poseReceived.Z());
+        this->node.Publish("/swarm/found", msg);
+      }
+      else
+        gzerr << "Sorry, the reported position seems incorrect" << std::endl;
+    }
   }
   else
   {
     gzerr << "BooPlugin::OnDataReceived() Unrecognized command [" << v.at(0)
           << "]" << std::endl;
   }
-
-  gzdbg << "Robot " << _srcAddress << " found the lost person!" << std::endl;
 }

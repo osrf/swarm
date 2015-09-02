@@ -21,6 +21,7 @@
 #ifndef __SWARM_BOO_PLUGIN_HH__
 #define __SWARM_BOO_PLUGIN_HH__
 
+#include <mutex>
 #include <string>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
@@ -39,20 +40,23 @@ namespace swarm
     public: BooPlugin();
 
     /// \brief Class destructor.
-    public: virtual ~BooPlugin() = default;
-
-    // Documentation inherited.
-    public: virtual void Load(gazebo::physics::ModelPtr _model,
-                              sdf::ElementPtr _sdf);
+    public: virtual ~BooPlugin();
 
     /// \brief Callback executed at the end of each world update.
-    private: virtual void OnUpdateEnd();
+    protected: virtual void OnUpdateEnd();
+
+    // Documentation inherited.
+    private: virtual void Load(gazebo::physics::ModelPtr _model,
+                               sdf::ElementPtr _sdf);
 
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
     /// \param[in] _data Message payload.
     private: void OnDataReceived(const std::string &_srcAddress,
                                  const std::string &_data);
+
+    /// \brief True when the lost person has been found.
+    protected: bool found = false;
 
     /// \brief Pointer to the lost person's model.
     private: gazebo::physics::ModelPtr lostPerson;
@@ -61,13 +65,13 @@ namespace swarm
     /// Messages take one cycle to arrive to the destination, so when the BOO
     /// receives a message we have to checked with the lost person's position
     /// in the pevious cycle.
-    private: ignition::math::Vector3d prevLostPersonPose;
-
-    /// \brief True when the lost person has been found.
-    private: bool found = false;
+    private: ignition::math::Vector3d lostPersonPose;
 
     /// \brief Pointer to the OnUpdateEnd event connection.
     private: gazebo::event::ConnectionPtr updateEndConnection;
+
+    // \brief Mutex to avoid race conditions.
+    private: std::mutex mutex;
   };
 }
 #endif

@@ -485,7 +485,6 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   this->address = _sdf->Get<std::string>("address");
-  std::cout << "Address: " << this->address << std::endl;
 
   // Get the camera sensor
   if (_sdf->HasElement("camera"))

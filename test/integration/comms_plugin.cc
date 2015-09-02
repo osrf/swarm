@@ -147,7 +147,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       }
       default:
       {
-        gzerr << "Test [" << this->testCase << "] not expected." << std::endl;
+        gzerr << "CommsPlugin::Update() Test [" << this->testCase << "] "
+              << "not expected." << std::endl;
         FAIL();
       }
     };
