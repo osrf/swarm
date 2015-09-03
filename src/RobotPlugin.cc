@@ -62,7 +62,7 @@ void RobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
 bool RobotPlugin::SendTo(const std::string &_data,
     const std::string &_dstAddress, const uint32_t _port)
 {
-  // We don't allow fragmentation and max UDP payload can be 1500 octets.
+  // Restrict the maximum size of a message.
   if (_data.size() > this->kMtu)
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::SendTo() error: Payload "
