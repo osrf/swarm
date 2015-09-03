@@ -52,6 +52,13 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     else
       dstAddress = "192.168.2.1";
 
+    if (this->iterations == 0)
+    {
+      // Try to send a message bigger than the MTU.
+      std::string data(this->kMtu + 1, 'x');
+      EXPECT_FALSE(this->SendTo(data, dstAddress));
+    }
+
     // Send a unicast message.
     EXPECT_TRUE(this->SendTo("Unicast data", dstAddress));
     this->numUnicastSent++;
