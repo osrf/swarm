@@ -44,10 +44,10 @@ namespace swarm
     /// be able to know which test is executing.
     private: int testCase = -1;
 
-    /// \brief Maximum time difference allowed (seconds) between the current time
-    /// and the reported lost person messages to the BOO.
+    /// \brief Maximum time difference allowed (seconds) between the current
+    /// time and the reported lost person messages to the BOO.
     /// This parameter is read from SDF.
-    private: double maxDt;
+    private: double maxDt = 5.0;
   };
 }
 #endif
