@@ -15,6 +15,7 @@
  *
 */
 
+#include <string>
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/physics/physics.hh>
 #include <ignition/math/Vector3.hh>

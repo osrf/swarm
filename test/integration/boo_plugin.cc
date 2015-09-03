@@ -23,7 +23,6 @@
 #include "swarm/SwarmTypes.hh"
 #include "boo_plugin.hh"
 
-
 using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(BooFinderPlugin)
