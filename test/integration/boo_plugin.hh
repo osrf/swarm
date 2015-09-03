@@ -36,13 +36,18 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
-    // Number of server iterations executed.
+    /// \brief Number of server iterations executed.
     private: int iterations = -1;
 
-    // Every test in test/integration/boo.cc has a unique number and
-    // different expectations. We read this test number from the SDF to
-    // be able to know which test is executing.
+    /// \brief Every test in test/integration/boo.cc has a unique number and
+    /// different expectations. We read this test number from the SDF to
+    /// be able to know which test is executing.
     private: int testCase = -1;
+
+    /// \brief Maximum time difference allowed (seconds) between the current time
+    /// and the reported lost person messages to the BOO.
+    /// This parameter is read from SDF.
+    private: double maxDt;
   };
 }
 #endif

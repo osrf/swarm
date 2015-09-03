@@ -4,6 +4,7 @@
 <%camera_fov = 1.04719755%>
 <%camera_aspect_ratio = 1.778%>
 <%test_case = '''<test_case>4</test_case>'''%>
+<%max_dt = '''<max_dt>5</max_dt>'''%>
 <% comms_model = '''<comms_model>
       <neighbor_distance_min>0.0</neighbor_distance_min>
       <neighbor_distance_max>250.0</neighbor_distance_max>
@@ -218,6 +219,7 @@
           <%=search_area%>
           <%=ground_battery%>
           <%=test_case%>
+          <%=max_dt%>
         </plugin>
       </model>
     <% end %>
@@ -259,7 +261,8 @@
          <type>ground</type>
          <%=search_area%>
          <%=test_case%>
-       </plugin>-->
+         <%=max_dt%>
+       </plugin>
     </model>
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->

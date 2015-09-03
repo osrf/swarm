@@ -37,6 +37,7 @@ BooFinderPlugin::BooFinderPlugin()
 void BooFinderPlugin::Load(sdf::ElementPtr _sdf)
 {
   this->testCase = _sdf->Get<int>("test_case");
+  this->maxDt = _sdf->Get<double>("max_dt");
 }
 
 //////////////////////////////////////////////////
@@ -53,7 +54,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   {
     auto w = gazebo::physics::get_world();
     auto itersPerSecond = ceil(1.0 / w->GetPhysicsEngine()->GetMaxStepSize());
-    int targetIters = itersPerSecond * swarm::kMaxDt.Double() + 1;
+    int targetIters = itersPerSecond * this->maxDt + 1;
 
     if (this->iterations != targetIters)
       return;

@@ -69,6 +69,17 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
     gazebo::shutdown();
   }
 
+  // Read the <max_dt> SDF parameter.
+  if (_sdf->HasElement("max_dt"))
+  {
+    auto dt = _sdf->Get<double>("max_dt");
+    this->maxDt.Set(dt);
+  }
+
+  // Read the <cell_size> SDF parameter.
+  if (_sdf->HasElement("cell_size"))
+    this->cellSize = _sdf->Get<double>("cell_size");
+
   this->node.Advertise("/swarm/found");
 
   auto modelName = _sdf->Get<std::string>("lost_person_model");
@@ -106,7 +117,7 @@ void BooPlugin::OnUpdateEnd()
       gazebo::common::Time::Zero);
     auto oldestTime(oldestEntry->first);
 
-    auto boundaryTime = now - swarm::kMaxDt;
+    auto boundaryTime = now - this->maxDt;
     if (boundaryTime <= oldestTime)
       break;
 
@@ -136,19 +147,19 @@ ignition::math::Vector3i BooPlugin::PosToGrid(ignition::math::Vector3d _pos)
   int cellX, cellY, cellZ;
 
   if (_pos.X() >= 0)
-    cellX = trunc((_pos.X() + swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellX = trunc((_pos.X() + this->cellSize / 2.0) / this->cellSize);
   else
-    cellX = trunc((_pos.X() - swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellX = trunc((_pos.X() - this->cellSize / 2.0) / this->cellSize);
 
   if (_pos.Y() >= 0)
-    cellY = trunc((_pos.Y() + swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellY = trunc((_pos.Y() + this->cellSize / 2.0) / this->cellSize);
   else
-    cellY = trunc((_pos.Y() - swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellY = trunc((_pos.Y() - this->cellSize / 2.0) / this->cellSize);
 
   if (_pos.Z() >= 0)
-    cellZ = trunc((_pos.Z() + swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellZ = trunc((_pos.Z() + this->cellSize / 2.0) / this->cellSize);
   else
-    cellZ = trunc((_pos.Z() - swarm::kCellSize / 2.0) / swarm::kCellSize);
+    cellZ = trunc((_pos.Z() - this->cellSize / 2.0) / this->cellSize);
 
   return ignition::math::Vector3i(cellX, cellY, cellZ);
 }
@@ -224,12 +235,12 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       return;
     }
 
-    // Sanity check: Time t cannot be older than current time - kMaxDt.
-    if (t < (now - swarm::kMaxDt))
+    // Sanity check: Time t cannot be older than current time - maxDt.
+    if (t < (now - this->maxDt))
     {
       gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
             << " too old. It should be no older than "
-            << swarm::kMaxDt.Double() << " secs. We're at [" << now
+            << this->maxDt.Double() << " secs. We're at [" << now
             << "]. Your request will be ignored" << std::endl;
       return;
     }

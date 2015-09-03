@@ -287,9 +287,12 @@ TEST_F(BooTest, OutOfWindow)
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
+  // This is the value that the world file contains.
+  double maxDt = 5.0;
+
   // Step the world so that the test library experiences update events.
   auto stepsPerSecond = ceil(1.0 / world->GetPhysicsEngine()->GetMaxStepSize());
-  auto steps = stepsPerSecond * swarm::kMaxDt.Double() + 5;
+  auto steps = stepsPerSecond * maxDt + 5;
   world->Step(steps);
 
   validateResult();
@@ -319,8 +322,11 @@ TEST_F(BooTest, ValidGuess)
   auto model = world->GetModel("lost_person");
   model->SetWorldPose(gazebo::math::Pose(-50, -100, 0.5, 0, 0, 0));
 
+  // This is the value that the world file contains.
+  double maxDt = 5.0;
+
   // Wait some time to stay beyond the kMaxStorageTime window.
-  auto steps = stepsPerSecond * (swarm::kMaxDt.Double() - 1) + 5;
+  auto steps = stepsPerSecond * (maxDt - 1) + 5;
   if (steps < 0)
     steps = 0;
   world->Step(steps);

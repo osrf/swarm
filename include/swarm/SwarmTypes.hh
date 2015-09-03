@@ -59,15 +59,5 @@ namespace swarm
   /// \brief A shared pointer to the membership data structure.
   /// \sa SwarmMembership_M
   using SwarmMembershipPtr = std::shared_ptr<SwarmMembership_M>;
-
-  /// \brief We discretize the world in a 3D grid of square cells.
-  /// This constant expresses the size of each cell (m). We update the cell
-  /// in which the lost person is located every cycle. Each reported position
-  /// is discretized to a cell too. We consider success when both cells match.
-  static const double kCellSize = 1;
-
-  /// \brief Maximum time difference allowed (seconds) between the current time
-  /// and the reported lost person messages to the BOO.
-  static const gazebo::common::Time kMaxDt = 5.0;
 }
 #endif
