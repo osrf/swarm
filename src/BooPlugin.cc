@@ -81,11 +81,6 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   this->lostPersonBuffer[gazebo::common::Time::Zero] = personPosInGrid;
   this->lastPersonPosInGrid = personPosInGrid;
 
-  // Debug output.
-  // std::cout << "Person initialization!" << std::endl;
-  // std::cout << "Pos XYZ: " << personPos << std::endl;
-  // std::cout << "Pos grid: " << personPosInGrid << std::endl;
-
   // Bind on my BOO address and default BOO port.
   this->Bind(&BooPlugin::OnDataReceived, this, this->kBoo, this->kBooPort);
 
@@ -139,6 +134,7 @@ void BooPlugin::OnUpdateEnd()
 ignition::math::Vector3i BooPlugin::PosToGrid(ignition::math::Vector3d _pos)
 {
   int cellX, cellY, cellZ;
+
   if (_pos.X() >= 0)
     cellX = trunc((_pos.X() + swarm::kCellSize / 2.0) / swarm::kCellSize);
   else
