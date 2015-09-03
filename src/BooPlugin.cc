@@ -24,6 +24,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/gazebo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <sdf/sdf.hh>
@@ -55,16 +56,17 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // Sanity check.
   if (this->Host() != this->kBoo)
   {
-    gzerr << "BooPlugin::Load(): Please, use <address>boo</address>."
-          << " Ignoring address, using 'boo'." << std::endl;
+    gzerr << "BooPlugin::Load() error: Please, use <address>boo</address>."
+          << std::endl;
+    gazebo::shutdown();
   }
 
   // Read the <lost_person_model> SDF parameter.
   if (!_sdf->HasElement("lost_person_model"))
   {
-    gzerr << "BooPlugin::Load(): Unable to find the <lost_person_model> "
+    gzerr << "BooPlugin::Load() error: Unable to find the <lost_person_model> "
           << "parameter" << std::endl;
-    return;
+    gazebo::shutdown();
   }
 
   this->node.Advertise("/swarm/found");

@@ -22,6 +22,7 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/gazebo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
@@ -79,7 +80,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
   if (!worldSDF)
   {
     gzerr << "BrokerPlugin::ReadSwarmFromSDF() Unable to read world SDF\n";
-    return;
+    gazebo::shutdown();
   }
 
   // Iterate over all the models looking for <address> inside <plugin>.
