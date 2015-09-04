@@ -15,9 +15,12 @@
  *
  */
 
-#include <gazebo/common/UpdateInfo.hh>
-#include <sdf/sdf.hh>
 #include <gtest/gtest.h>
+#include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
+#include <sdf/sdf.hh>
+#include "swarm/BooPlugin.hh"
+#include "swarm/SwarmTypes.hh"
 #include "boo_plugin.hh"
 
 using namespace swarm;
@@ -34,6 +37,7 @@ BooFinderPlugin::BooFinderPlugin()
 void BooFinderPlugin::Load(sdf::ElementPtr _sdf)
 {
   this->testCase = _sdf->Get<int>("test_case");
+  this->maxDt = _sdf->Get<double>("max_dt");
 }
 
 //////////////////////////////////////////////////
@@ -42,43 +46,81 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   this->iterations++;
 
   // Only one robot will try to contact with the BOO (192.168.2.1).
-  if ((this->Host() != "192.168.2.1") || (this->iterations != 0))
+  if (this->Host() != "192.168.2.1")
+    return;
+
+  // Tests #8, #9 send the message to the BOO later than the other tests.
+  if ((this->testCase == 8) || (this->testCase == 9))
+  {
+    auto w = gazebo::physics::get_world();
+    auto itersPerSecond = ceil(1.0 / w->GetPhysicsEngine()->GetMaxStepSize());
+    int targetIters = itersPerSecond * this->maxDt + 1;
+
+    if (this->iterations != targetIters)
+      return;
+  }
+  // The rest of the tests send the message to the BOO at iterations=0.
+  else if (this->iterations != 0)
     return;
 
   switch (this->testCase)
   {
     case 0:
     case 4:
+    case 8:
     {
-      // Send a unicast message to the BOO with a valid lost person position.
-      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5", this->kBoo,
+      // Send a unicast message to the BOO with a valid lost person pos/time.
+      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5 0.0", this->kBoo,
         this->kBooPort));
       break;
     }
     case 1:
     {
-      // Send a broadcast message to the BOO with a valid lost person position.
-      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5", this->kBroadcast,
+      // Send a broadcast message to the BOO with a valid lost person pos/time.
+      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5 0.0", this->kBroadcast,
         this->kBooPort));
       break;
     }
     case 2:
     {
       // Send a message to the BOO containing an unsupported command.
-      EXPECT_TRUE(this->SendTo("HELP 1.0 2.0 3.0", this->kBoo, this->kBooPort));
+      EXPECT_TRUE(this->SendTo("HELP 1.0 2.0 3.0 0.0", this->kBoo,
+        this->kBooPort));
       break;
     }
     case 3:
     {
       // Send a message to the BOO containing a malformed FOUND command.
-      EXPECT_TRUE(this->SendTo("FOUND 1.0 xxx 3.0", this->kBoo,
+      EXPECT_TRUE(this->SendTo("FOUND 1.0 xxx 3.0 0.0", this->kBoo,
         this->kBooPort));
       break;
     }
     case 5:
     {
       // Send a message to the BOO containing a wrong position.
-      EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0", this->kBoo,
+      EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 0.0", this->kBoo,
+        this->kBooPort));
+      break;
+    }
+    case 6:
+    {
+      // Send a message to the BOO containing a negative time.
+      EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 -1.0", this->kBoo,
+        this->kBooPort));
+      break;
+    }
+    case 7:
+    {
+      // Send a message to the BOO containing a future time.
+      EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 10.0", this->kBoo,
+        this->kBooPort));
+      break;
+    }
+    case 9:
+    {
+      // Send a message with a valid pos/time that is not the only one stored
+      // by the BOO.
+      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5 0.8", this->kBoo,
         this->kBooPort));
       break;
     }

@@ -342,7 +342,8 @@
 
        <plugin name="boo" filename="libSwarmBooPlugin.so">
          <lost_person_model>lost_person</lost_person_model>
-         <address>192.168.1.2</address>
+         <!-- Do not change this address -->
+         <address>boo</address>
          <type>ground</type>
          <%=search_area%>
        </plugin>
@@ -365,7 +366,7 @@
       </comms_model>
     </plugin>
 
-    <!--<model name="terrain">
+    <model name="terrain">
       <static>true</static>
       <link name="link">
         <collision name="collision">
@@ -413,7 +414,7 @@
           </geometry>
         </visual>
       </link>
-    </model>-->
+    </model>
 
   </world>
 </sdf>

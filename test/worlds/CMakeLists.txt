@@ -9,6 +9,11 @@ set (world_erb_files
   boo_02.world.erb
   boo_03.world.erb
   boo_04.world.erb
+  boo_05.world.erb
+  boo_06.world.erb
+  boo_07.world.erb
+  boo_08.world.erb
+  boo_09.world.erb
   comms_00.world.erb
   comms_01.world.erb
   comms_02.world.erb

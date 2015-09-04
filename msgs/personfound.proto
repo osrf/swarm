@@ -6,13 +6,13 @@ package swarm.msgs;
 
 message Vector3D
 {
-  /// \brief First element of a 3-d vector.
+  /// \brief X component of the position in world coordinates.
   required double x = 1;
 
-  /// \brief Second element of a 3-d vector.
+  /// \brief Y component of the position in world coordinates.
   required double y = 2;
 
-  /// \brief Third element of a 3-d vector.
+  /// \brief Z component of the position in world coordinates.
   required double z = 3;
 }
 
@@ -23,4 +23,7 @@ message PersonFound
 
   /// \brief Position of the lost person.
   required Vector3D pos   = 2;
+
+  /// \brief Time at which the lost person was spotted.
+  required double time    = 3;
 }
