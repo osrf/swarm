@@ -89,7 +89,7 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
   if (this->capacity <= 0)
     return false;
 
-  ignition::math::Pose3d myPose = this->model->GetWorldPose().Ign();
+  auto myPose = this->model->GetWorldPose().Ign();
 
   switch (this->type)
   {
@@ -911,4 +911,12 @@ double RobotPlugin::ExpectedBatteryLife() const
 {
   return ((this->capacity / this->consumption) * this->consumptionFactor) *
     3600;
+}
+
+/////////////////////////////////////////////////
+ignition::math::Pose3d RobotPlugin::CameraToWorld(
+  const ignition::math::Pose3d &_poseinCamera) const
+{
+  auto poseInWorld = _poseinCamera + this->model->GetWorldPose().Ign();
+  return poseInWorld;
 }

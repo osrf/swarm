@@ -37,8 +37,6 @@ TeamControllerPlugin::TeamControllerPlugin()
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
-  // We'll need a world pointer later to check the time.
-  this->worldPtr = gazebo::physics::get_world();
   // Sign up to receive unicast and broadcast messages
   this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host(),
     this->kBooPort);
@@ -61,9 +59,13 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
           {
             if (obj.first.find("lost_person") != std::string::npos)
             {
+              // Convert to the world frame.
+              ignition::math::Pose3d personInWorld =
+                this->CameraToWorld(obj.second);
               // Tell everybody about it.
               std::stringstream successMsg;
-              successMsg << "FOUND " << obj.second.Pos();
+              successMsg << "FOUND " << personInWorld.Pos() << " " <<
+                _info.simTime.Double();
               std::cout << "[" << this->Host() <<
                 "] I found the lost person.  Sending: " << successMsg.str() <<
                 std::endl;
@@ -74,10 +76,9 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
         // Do a random walk, changing direction every once in a while.
         gazebo::common::Time changePeriod(10, 0);
-        gazebo::common::Time currTime = this->worldPtr->GetSimTime();
       
         if ((this->lastCmdTime == gazebo::common::Time::Zero) ||
-            ((currTime - this->lastCmdTime) > changePeriod))
+            ((_info.simTime - this->lastCmdTime) > changePeriod))
         {
           // Time has elapsed; time to pick new velocities.
 
@@ -86,15 +87,15 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
           // Bounded angular velocity (yaw about Z)
           ignition::math::Vector3d angVel(0, 0,
             ignition::math::Rand::DblUniform(-0.5, 0.5));
-          std::cout << "[" << this->Host() << "] Changing velocity to (" <<
-            linVel.X() << ", " << angVel.Z() << ")" << std::endl;
+          //std::cout << "[" << this->Host() << "] Changing velocity to (" <<
+            //linVel.X() << ", " << angVel.Z() << ")" << std::endl;
           this->SetLinearVelocity(linVel);
           this->SetAngularVelocity(angVel);
           this->lastLinVel = linVel;
           this->lastAngVel = angVel;
-          this->lastCmdTime = currTime;
+          this->lastCmdTime = _info.simTime;
         }
-        else if ((currTime - this->lastCmdTime) > changePeriod/4.0)
+        else if ((_info.simTime - this->lastCmdTime) > changePeriod/4.0)
         {
           // Part of the time has elapsed; start going forward (to avoid just
           // doing circles).

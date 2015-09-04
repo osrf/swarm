@@ -419,6 +419,12 @@ namespace swarm
     /// consumption.
     protected: double ExpectedBatteryLife() const;
 
+    /// \brief Convert a pose in a robot's camera frame into the world frame.
+    /// \param[in] _poseinCamera The pose in the camera frame
+    /// \return The pose in the world frame.
+    protected: ignition::math::Pose3d CameraToWorld(
+      const ignition::math::Pose3d &_poseinCamera) const;
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.

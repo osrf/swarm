@@ -47,9 +47,6 @@ namespace swarm
     private: virtual void OnDataReceived(const std::string &_srcAddress,
       const std::string &_data);
 
-    /// \brief Pointer to the world
-    private: gazebo::physics::WorldPtr worldPtr;
-
     /// \brief The last commands I sent to myself
     private: ignition::math::Vector3d lastLinVel, lastAngVel;
 
