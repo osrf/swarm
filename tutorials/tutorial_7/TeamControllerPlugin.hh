@@ -52,6 +52,9 @@ namespace swarm
 
     /// \brief The last time at which I sent a command to myself
     private: gazebo::common::Time lastCmdTime;
+
+    /// \brief List of messages that I've sent or relayed
+    private: std::list<std::string> messagesSent;
   };
 }
 

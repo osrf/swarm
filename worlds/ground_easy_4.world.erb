@@ -35,7 +35,7 @@
 
      <!-- The lost person -->
      <model name="lost_person">
-       <pose>10 10 0.5 0 0 0</pose>
+       <pose>20 20 0.5 0 0 0</pose>
        <link name="link">
          <kinematic>true</kinematic>
          <collision name="collision">
@@ -350,7 +350,6 @@
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">
       <comms_model>
-        <!--
         <neighbor_distance_min>0.0</neighbor_distance_min>
         <neighbor_distance_max>250.0</neighbor_distance_max>
         <neighbor_distance_penalty_tree>200.0</neighbor_distance_penalty_tree>
@@ -362,7 +361,6 @@
         <comms_outage_probability>0.1</comms_outage_probability>
         <comms_outage_duration_min>1.0</comms_outage_duration_min>
         <comms_outage_duration_max>2.0</comms_outage_duration_max>
-        -->
       </comms_model>
     </plugin>
 

@@ -70,6 +70,8 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
                 "] I found the lost person.  Sending: " << successMsg.str() <<
                 std::endl;
               this->SendTo(successMsg.str(), this->kBroadcast, this->kBooPort);
+              // Remember this message for later.
+              this->messagesSent.push_back(successMsg.str());
             }
           }
         }
@@ -130,9 +132,32 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_data)
 {
-  //std::cout << "---" << std::endl;
-  //std::cout << "[" << this->Host() << "] New message received" << std::endl;
-  //std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  //std::cout << "\tData: [" << _data << "]" << std::endl;
+  // Totally dumb mesh network strategy: relay everything you hear that you
+  // haven't previously relayed.
+  auto alreadySent = false;
+  for (auto const msg : this->messagesSent)
+  {
+    if (msg == _data)
+    {
+      alreadySent = true;
+      break;
+    }
+  }
+
+  if (!alreadySent)
+  {
+    std::cout << "[" << this->Host() << "] Relaying message from " <<
+      _srcAddress << " with payload " << _data << std::endl;
+    // At this point, I'd like to have the original dest address.  I'll just
+    // assume that it should go to (kBroadcast, kBooPort).
+    this->SendTo(_data, this->kBroadcast, this->kBooPort);
+    // Remember this message for later.
+    this->messagesSent.push_back(_data);
+  }
+  else
+  {
+    std::cout << "[" << this->Host() << "] NOT relaying message from " <<
+      _srcAddress << " with payload " << _data << std::endl;
+  }
 }
 
