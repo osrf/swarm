@@ -62,6 +62,15 @@ void RobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
 bool RobotPlugin::SendTo(const std::string &_data,
     const std::string &_dstAddress, const uint32_t _port)
 {
+  // Restrict the maximum size of a message.
+  if (_data.size() > this->kMtu)
+  {
+    gzerr << "[" << this->Host() << "] RobotPlugin::SendTo() error: Payload "
+          << "size (" << _data.size() << ") is greater than the maximum "
+          << "allowed (" << this->kMtu << ")" << std::endl;
+    return false;
+  }
+
   msgs::Datagram msg;
   msg.set_src_address(this->Host());
   msg.set_dst_address(_dstAddress);

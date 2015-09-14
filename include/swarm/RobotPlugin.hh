@@ -492,6 +492,9 @@ namespace swarm
     /// \brief Base of communications port.
     protected: static const uint32_t kBooPort     = 4200;
 
+    /// \brief Maximum transmission payload size (octets) for each message.
+    protected: static const uint32_t kMtu = 1500;
+
     /// \brief Addresses of all the local neighbors.
     private: std::vector<std::string> neighbors;
 

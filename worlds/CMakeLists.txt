@@ -6,6 +6,7 @@ set (world_files
 
 # World files that need to be processed with erb
 set (world_erb_files
+  complete.world.erb
   fixed_simple_36.world.erb
   ground_simple_2.world.erb
   ground_simple_36.world.erb
