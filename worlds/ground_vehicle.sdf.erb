@@ -1,0 +1,239 @@
+<%x_size = 4%>
+<%y_size = 2%>
+<%z_size = 1.8%>
+
+<model name="<%=name%>">
+  <pose><%=x_pos%> <%=y_pos%> <%=z_size*0.5%> 0 0 0</pose>
+  <link name="link">
+    <sensor name="gps" type="gps">
+      <gps>
+        <position_sensing>
+          <horizontal>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>4</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.001</precision>
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>8</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.01</precision>
+            </noise>
+          </vertical>
+        </position_sensing>
+        <velocity_sensing>
+          <horizontal>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>4</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.001</precision>
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>8</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.01</precision>
+            </noise>
+          </vertical>
+        </velocity_sensing>
+      </gps>
+      <always_on>1</always_on>
+    </sensor>
+
+    <sensor name="imu" type="imu">
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+      <always_on>1</always_on>
+    </sensor>
+
+    <sensor name="camera" type="logical_camera">
+      <logical_camera>
+        <near><%=camera_near%></near>
+        <far><%=camera_far%></far>
+        <horizontal_fov><%=camera_fov%></horizontal_fov>
+        <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
+      </logical_camera>
+      <visualize>true</visualize>
+      <always_on>true</always_on>
+    </sensor>
+
+    <kinematic>true</kinematic>
+    <gravity>false</gravity>
+    <collision name="collision">
+      <pose>0 0 0.25 0 0 0</pose>
+      <geometry>
+        <box>
+        <size><%=x_size%> <%=y_size%> <%=z_size%></size>
+        </box>
+      </geometry>
+    </collision>
+    <visual name="visual">
+      <pose>0 0 0.25 0 0 0</pose>
+      <geometry>
+        <box>
+          <size><%=x_size%> <%=y_size%> <%=z_size%></size>
+        </box>
+      </geometry>
+    </visual>
+    <visual name="front_visual">
+    <pose><%=x_size*0.5 - x_size*0.12%> 0 <%=z_size*0.5 - z_size*0.12 + 0.25%> 0 0 0</pose>
+      <geometry>
+        <box>
+          <size><%=x_size*0.25%> <%=y_size*0.75%> <%=z_size*0.25%></size>
+        </box>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Green</name>
+        </script>
+      </material>
+    </visual>
+
+    <% tire_radius = 0.4%>
+    <% tire_length = 0.2%>
+
+    <visual name="wheel_1">
+    <pose><%=x_size*0.5 - tire_radius*2%>
+          <%=y_size*0.5 + tire_length*0.5%>
+          <%=-z_size*0.5 + tire_radius%> 1.5707 0 0</pose>
+      <geometry>
+        <cylinder>
+        <radius><%=tire_radius%></radius>
+        <length><%=tire_length%></length>
+        </cylinder>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Red</name>
+        </script>
+      </material>
+    </visual>
+
+    <visual name="wheel_2">
+    <pose><%=x_size*0.5 - tire_radius*2%>
+          <%=-y_size*0.5 - tire_length*0.5%>
+          <%=-z_size*0.5 + tire_radius%> 1.5707 0 0</pose>
+      <geometry>
+        <cylinder>
+        <radius><%=tire_radius%></radius>
+        <length><%=tire_length%></length>
+        </cylinder>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Red</name>
+        </script>
+      </material>
+    </visual>
+
+    <visual name="wheel_3">
+    <pose><%=-x_size*0.5 + tire_radius*2%>
+          <%=y_size*0.5 + tire_length*0.5%>
+          <%=-z_size*0.5 + tire_radius%> 1.5707 0 0</pose>
+      <geometry>
+        <cylinder>
+        <radius><%=tire_radius%></radius>
+        <length><%=tire_length%></length>
+        </cylinder>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Red</name>
+        </script>
+      </material>
+    </visual>
+
+    <visual name="wheel_4">
+    <pose><%=-x_size*0.5 + tire_radius*2%>
+          <%=-y_size*0.5 - tire_length*0.5%>
+          <%=-z_size*0.5 + tire_radius%> 1.5707 0 0</pose>
+      <geometry>
+        <cylinder>
+        <radius><%=tire_radius%></radius>
+        <length><%=tire_length%></length>
+        </cylinder>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Red</name>
+        </script>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Load the plugin to control this robot -->
+  <plugin name="swarm_controller_<%=name%>"
+          filename="libTeamControllerPlugin.so">
+    <type>ground</type>
+    <camera>link::camera</camera>
+    <gps>link::gps</gps>
+    <imu>link::imu</imu>
+    <address><%=ip%></address>
+    <num_messages>1000</num_messages>
+    <%=search_area%>
+    <%=ground_battery%>
+  </plugin>
+</model>
