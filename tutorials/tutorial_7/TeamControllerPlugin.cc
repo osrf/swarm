@@ -70,7 +70,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
                 "] I found the lost person.  Sending: " << successMsg.str() <<
                 std::endl;
               this->SendTo(successMsg.str(), this->kBroadcast, this->kBooPort);
-              // Remember this message for later.
+              // Remember this message for later, to avoid relaying it.
               this->messagesSent.push_back(successMsg.str());
             }
           }
@@ -146,6 +146,7 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
 
   if (!alreadySent)
   {
+    // I haven't sent this before; relay it.
     std::cout << "[" << this->Host() << "] Relaying message from " <<
       _srcAddress << " with payload " << _data << std::endl;
     // At this point, I'd like to have the original dest address.  I'll just
@@ -156,6 +157,8 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
   }
   else
   {
+    // I've sent this already; don't relay it.
+
     //std::cout << "[" << this->Host() << "] NOT relaying message from " <<
       //_srcAddress << " with payload " << _data << std::endl;
   }
