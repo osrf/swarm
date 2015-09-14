@@ -156,8 +156,8 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
   }
   else
   {
-    std::cout << "[" << this->Host() << "] NOT relaying message from " <<
-      _srcAddress << " with payload " << _data << std::endl;
+    //std::cout << "[" << this->Host() << "] NOT relaying message from " <<
+      //_srcAddress << " with payload " << _data << std::endl;
   }
 }
 
