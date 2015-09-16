@@ -63,7 +63,7 @@ namespace swarm
     public: virtual ~BooPlugin();
 
     /// \brief Callback executed at the end of each world update.
-    protected: virtual void OnUpdateEnd();
+    private: virtual void OnUpdateEnd();
 
     // Documentation inherited.
     private: virtual void Load(gazebo::physics::ModelPtr _model,
@@ -81,7 +81,7 @@ namespace swarm
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
 
     /// \brief True when the lost person has been found.
-    protected: bool found = false;
+    private: bool found = false;
 
     /// \brief Pointer to the lost person's model.
     private: gazebo::physics::ModelPtr lostPerson;
