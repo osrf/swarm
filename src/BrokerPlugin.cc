@@ -173,11 +173,7 @@ void BrokerPlugin::DispatchMessages()
   std::queue<msgs::Datagram> incomingMsgsBuffer;
   {
     std::lock_guard<std::mutex> lock(this->mutex);
-    while (!this->incomingMsgs.empty())
-    {
-      incomingMsgsBuffer.push(this->incomingMsgs.front());
-      this->incomingMsgs.pop();
-    }
+    std::swap(incomingMsgsBuffer, this->incomingMsgs);
   }
   while (!incomingMsgsBuffer.empty())
   {

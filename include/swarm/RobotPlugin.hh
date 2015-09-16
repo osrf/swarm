@@ -86,6 +86,8 @@ namespace swarm
   ///     - SearchArea() Get the search area, in GPS coordinates.
   ///     - Image() Get the list of detected objects, and other related
   ///       information, from the camera sensor.
+  ///     - CameraToWorld() Convert a pose in a robot's camera frame
+  ///       into the world frame.
   ///     - Imu() Get the robot's linear and angular velocities and position
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
