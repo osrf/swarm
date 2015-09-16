@@ -134,11 +134,11 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 
     // Update the state of the communication model.
     this->commsModel->Update();
-  
+
     // Send a message to each swarm member with its updated neighbors list.
     this->NotifyNeighbors();
   }
-  
+
   // Dispatch all the incoming messages, deciding whether the destination gets
   // the message according to the communication model.
   // Mutex handling is done inside DispatchMessages().

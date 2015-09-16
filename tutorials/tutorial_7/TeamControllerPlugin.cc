@@ -15,12 +15,14 @@
  *
 */
 
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <ignition/math/Angle.hh>
-#include <ignition/math/Quaternion.hh>
+#include <ignition/math/Rand.hh>
 #include <sdf/sdf.hh>
 #include "TeamControllerPlugin.hh"
 
@@ -55,13 +57,12 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
         ImageData img;
         if (this->Image(img))
         {
-          for (auto const obj : img.objects)
+          for (auto const &obj : img.objects)
           {
             if (obj.first.find("lost_person") != std::string::npos)
             {
               // Convert to the world frame.
-              ignition::math::Pose3d personInWorld =
-                this->CameraToWorld(obj.second);
+              auto personInWorld = this->CameraToWorld(obj.second);
               // Tell everybody about it.
               std::stringstream successMsg;
               successMsg << "FOUND " << personInWorld.Pos() << " " <<
@@ -78,7 +79,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
         // Do a random walk, changing direction every once in a while.
         gazebo::common::Time changePeriod(10, 0);
-      
+
         if ((this->lastCmdTime == gazebo::common::Time::Zero) ||
             ((_info.simTime - this->lastCmdTime) > changePeriod))
         {
@@ -135,7 +136,7 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
   // Totally dumb mesh network strategy: relay everything you hear that you
   // haven't previously relayed.
   auto alreadySent = false;
-  for (auto const msg : this->messagesSent)
+  for (auto const &msg : this->messagesSent)
   {
     if (msg == _data)
     {

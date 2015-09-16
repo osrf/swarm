@@ -21,9 +21,13 @@
 #ifndef __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 #define __SWARM_TEAM_CONTROLLER_PLUGIN_HH__
 
+#include <list>
 #include <string>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <ignition/math/Vector3.hh>
+#include <sdf/sdf.hh>
 #include <swarm/RobotPlugin.hh>
 
 namespace swarm
