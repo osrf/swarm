@@ -57,16 +57,6 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // Try to send a message bigger than the MTU.
       std::string data(this->kMtu + 1, 'x');
       EXPECT_FALSE(this->SendTo(data, dstAddress));
-
-      // Try to send a message less than the MTU.
-      std::string data2(this->kMtu - 1, 'x');
-      EXPECT_TRUE(this->SendTo(data2, dstAddress));
-      this->numUnicastSent++;
-
-      // Try to send a message equal to the MTU.
-      std::string data3(this->kMtu, 'x');
-      EXPECT_TRUE(this->SendTo(data3, dstAddress));
-      this->numUnicastSent++;
     }
 
     // Send a unicast message.
