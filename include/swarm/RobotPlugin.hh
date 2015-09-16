@@ -383,8 +383,10 @@ namespace swarm
     /// \brief Get the set of objects detected by the camera.
     ///
     /// \param[out] _img Image object that will hold the output from the
-    /// camera.
+    /// camera. Note that each object's pose is in the robot's camera frame.
+    /// Use CameraToWorld() for making a conversion to world coordinates.
     /// \return True if the call was successful.
+    /// \sa CameraToWorld
     protected: bool Image(ImageData &_img) const;
 
     /// \brief Get the search area, in GPS coordinates.
