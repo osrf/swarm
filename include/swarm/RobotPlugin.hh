@@ -499,9 +499,6 @@ namespace swarm
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
 
-    /// \brief Maximum transmission payload size (octets) for each message.
-    protected: static const uint32_t kMtu = 1500;
-
     /// \brief Base of communications port.
     protected: static const uint32_t kBooPort     = 4200;
 
