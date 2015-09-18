@@ -32,6 +32,7 @@
         <%name = "ground_#{y * 6 + x}" %>
         <%x_pos = x * 8 %>
         <%y_pos = y * 6 %>
+        <%yaw = 0%>
         <%ip = "192.168.3.#{x+1}"%>
         <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
                     nil, nil, "_sub01").result(binding)%>
@@ -153,6 +154,45 @@
         <max_z>0</max_z>
       </plugin>
    </model>
+
+    <!-- The base of operations -->
+    <model name="boo">
+      <pose>-5 -5 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+         <kinematic>true</kinematic>
+         <collision name="collision">
+           <geometry>
+             <box>
+               <size>1 1 1</size>
+             </box>
+           </geometry>
+           <surface>
+             <friction>
+               <ode>
+                 <mu>0.0</mu>
+                 <mu2>0.0</mu2>
+               </ode>
+             </friction>
+           </surface>
+         </collision>
+         <visual name="visual">
+           <geometry>
+             <box>
+               <size>1 1 1</size>
+             </box>
+           </geometry>
+         </visual>
+       </link>
+
+       <plugin name="boo" filename="libSwarmBooPlugin.so">
+         <lost_person_model>lost_person</lost_person_model>
+         <!-- Do not change this address -->
+         <address>boo</address>
+         <type>ground</type>
+         <%=search_area%>
+       </plugin>
+    </model>
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">

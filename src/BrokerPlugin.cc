@@ -22,6 +22,7 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/gazebo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
@@ -79,7 +80,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
   if (!worldSDF)
   {
     gzerr << "BrokerPlugin::ReadSwarmFromSDF() Unable to read world SDF\n";
-    return;
+    gazebo::shutdown();
   }
 
   // Iterate over all the models looking for <address> inside <plugin>.
@@ -128,16 +129,19 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
 
-  // Update the state of the communication model.
-  this->commsModel->Update();
+    // Update the state of the communication model.
+    this->commsModel->Update();
 
-  // Send a message to each swarm member with its updated neighbors list.
-  this->NotifyNeighbors();
+    // Send a message to each swarm member with its updated neighbors list.
+    this->NotifyNeighbors();
+  }
 
   // Dispatch all the incoming messages, deciding whether the destination gets
   // the message according to the communication model.
+  // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
 }
 
@@ -163,15 +167,23 @@ void BrokerPlugin::NotifyNeighbors()
 //////////////////////////////////////////////////
 void BrokerPlugin::DispatchMessages()
 {
-  while (!this->incomingMsgs.empty())
+  // Create a copy of the incoming message queue, then release the mutex, to
+  // avoid the potential for a deadlock later if a robot calls SendTo() inside
+  // its message callback.
+  std::queue<msgs::Datagram> incomingMsgsBuffer;
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    std::swap(incomingMsgsBuffer, this->incomingMsgs);
+  }
+  while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
-    auto msg = this->incomingMsgs.front();
-    this->incomingMsgs.pop();
+    auto msg = incomingMsgsBuffer.front();
+    incomingMsgsBuffer.pop();
 
     // Debug output.
     // gzdbg << "Processing message from " << msg.src_address()
-    //      << " addressed to " << msg.dst_address() << std::endl;
+    //       << " addressed to " << msg.dst_address() << std::endl;
 
     // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm->find(msg.src_address()) == this->swarm->end())

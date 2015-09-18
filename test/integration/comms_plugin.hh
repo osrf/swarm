@@ -27,7 +27,7 @@
 
 namespace swarm
 {
-  /// \brief Class to test battery functionality
+  /// \brief Class to test the communication model.
   class CommsPlugin : public swarm::RobotPlugin
   {
     /// \brief Class constructor.
@@ -63,7 +63,7 @@ namespace swarm
     // Number of messages received.
     private: int numMsgsRecv = 0;
 
-    // Every test in test/integration/test.cc has a unique number and
+    // Every test in test/integration/comms.cc has a unique number and
     // different expectations. We read this test number from the SDF to
     // be able to know which test is executing.
     private: int testCase = -1;

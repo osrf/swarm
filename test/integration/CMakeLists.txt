@@ -2,6 +2,7 @@ set(TEST_TYPE "INTEGRATION")
 
 set(tests
   battery.cc
+  boo.cc
   comms.cc
 )
 
@@ -17,3 +18,7 @@ target_link_libraries(comms_plugin
   ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${PROJECT_LIB_ROBOT_NAME}
   ${PROJECT_LIB_MSGS_NAME} gtest gtest_main)
 
+add_library(boo_finder_plugin SHARED boo_plugin.cc)
+target_link_libraries(boo_finder_plugin
+  ${GAZEBO_LIBRARIES} ${PROJECT_LIB_ROBOT_NAME}
+  ${PROJECT_LIB_MSGS_NAME} gtest gtest_main)

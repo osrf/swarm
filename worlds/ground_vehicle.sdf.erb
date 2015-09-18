@@ -3,7 +3,7 @@
 <%z_size = 1.8%>
 
 <model name="<%=name%>">
-  <pose><%=x_pos%> <%=y_pos%> <%=z_size*0.5%> 0 0 0</pose>
+  <pose><%=x_pos%> <%=y_pos%> <%=z_size*0.5%> 0 0 <%=yaw%></pose>
   <link name="link">
     <sensor name="gps" type="gps">
       <gps>

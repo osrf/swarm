@@ -86,6 +86,8 @@ namespace swarm
   ///     - SearchArea() Get the search area, in GPS coordinates.
   ///     - Image() Get the list of detected objects, and other related
   ///       information, from the camera sensor.
+  ///     - CameraToWorld() Convert a pose in a robot's camera frame
+  ///       into the world frame.
   ///     - Imu() Get the robot's linear and angular velocities and position
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
@@ -381,8 +383,10 @@ namespace swarm
     /// \brief Get the set of objects detected by the camera.
     ///
     /// \param[out] _img Image object that will hold the output from the
-    /// camera.
+    /// camera. Note that each object's pose is in the robot's camera frame.
+    /// Use CameraToWorld() for making a conversion to world coordinates.
     /// \return True if the call was successful.
+    /// \sa CameraToWorld
     protected: bool Image(ImageData &_img) const;
 
     /// \brief Get the search area, in GPS coordinates.
@@ -418,6 +422,12 @@ namespace swarm
     /// \return Battery life in seconds, based on the current capacity and
     /// consumption.
     protected: double ExpectedBatteryLife() const;
+
+    /// \brief Convert a pose in a robot's camera frame into the world frame.
+    /// \param[in] _poseinCamera The pose in the camera frame
+    /// \return The pose in the world frame.
+    protected: ignition::math::Pose3d CameraToWorld(
+      const ignition::math::Pose3d &_poseinCamera) const;
 
     /// \brief Update the plugin.
     ///
@@ -483,8 +493,17 @@ namespace swarm
     /// support multiple multicast groups, only one.
     protected: const std::string kMulticast = "multicast";
 
+    /// \brief Address used by the base of operations.
+    protected: const std::string kBoo       = "boo";
+
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100;
+
+    /// \brief Maximum transmission payload size (octets) for each message.
+    protected: static const uint32_t kMtu = 1500;
+
+    /// \brief Base of communications port.
+    protected: static const uint32_t kBooPort     = 4200;
 
     /// \brief Maximum transmission payload size (octets) for each message.
     protected: static const uint32_t kMtu = 1500;
@@ -576,6 +595,9 @@ namespace swarm
 
     /// \brief Pointer to the world.
     private: gazebo::physics::WorldPtr world;
+
+    /// \brief BooPlugin needs access to some of the private member variables.
+    friend class BooPlugin;
   };
 }
 #endif

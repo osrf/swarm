@@ -8,6 +8,7 @@ set (world_files
 set (world_erb_files
   complete.world.erb
   fixed_simple_36.world.erb
+  ground_easy_4.world.erb
   ground_simple_2.world.erb
   ground_simple_36.world.erb
   rotor_simple_36.world.erb

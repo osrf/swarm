@@ -15,6 +15,7 @@ macro (ign_build_tests)
     add_executable(${BINARY_NAME} ${GTEST_SOURCE_file})
 
     add_dependencies(${BINARY_NAME}
+      ${PROJECT_LIB_BOO_NAME}
       ${PROJECT_LIB_BROKER_NAME}
       ${PROJECT_LIB_ROBOT_NAME}
       ${PROJECT_LIB_MSGS_NAME}

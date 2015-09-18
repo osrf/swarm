@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <gazebo/common/Time.hh>
 
 namespace swarm
 {
