@@ -129,16 +129,19 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
 
-  // Update the state of the communication model.
-  this->commsModel->Update();
+    // Update the state of the communication model.
+    this->commsModel->Update();
 
-  // Send a message to each swarm member with its updated neighbors list.
-  this->NotifyNeighbors();
+    // Send a message to each swarm member with its updated neighbors list.
+    this->NotifyNeighbors();
+  }
 
   // Dispatch all the incoming messages, deciding whether the destination gets
   // the message according to the communication model.
+  // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
 }
 
@@ -164,11 +167,19 @@ void BrokerPlugin::NotifyNeighbors()
 //////////////////////////////////////////////////
 void BrokerPlugin::DispatchMessages()
 {
-  while (!this->incomingMsgs.empty())
+  // Create a copy of the incoming message queue, then release the mutex, to
+  // avoid the potential for a deadlock later if a robot calls SendTo() inside
+  // its message callback.
+  std::queue<msgs::Datagram> incomingMsgsBuffer;
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    std::swap(incomingMsgsBuffer, this->incomingMsgs);
+  }
+  while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
-    auto msg = this->incomingMsgs.front();
-    this->incomingMsgs.pop();
+    auto msg = incomingMsgsBuffer.front();
+    incomingMsgsBuffer.pop();
 
     // Debug output.
     // gzdbg << "Processing message from " << msg.src_address()

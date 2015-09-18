@@ -27,12 +27,12 @@
   <world name="default">
 
     <!-- Create the ground vehicles -->
-    <% for index in 0..1 %>
+    <% for index in 0..3 %>
       <%name = "ground_#{index}" %>
       <%x_pos = 0%>
       <%y_pos = index * 6%>
-      <%yaw = 0%>
-      <%ip = "192.168.3.#{index+1}"%>
+      <%yaw = index*1.57%>
+      <%ip = "192.168.2.#{index+1}"%>
       <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
                   nil, nil, "_sub01").result(binding)%>
     <% end %>
@@ -66,7 +66,7 @@
 
      <!-- The lost person -->
      <model name="lost_person">
-       <pose>100 100 0.5 0 0 0</pose>
+       <pose>20 20 0.5 0 0 0</pose>
        <link name="link">
          <kinematic>true</kinematic>
          <collision name="collision">
@@ -188,7 +188,6 @@
 
        <plugin name="boo" filename="libSwarmBooPlugin.so">
          <lost_person_model>lost_person</lost_person_model>
-         <!-- Do not change this address -->
          <address>boo</address>
          <type>ground</type>
          <%=search_area%>
@@ -211,56 +210,6 @@
         <comms_outage_duration_max>2.0</comms_outage_duration_max>
       </comms_model>
     </plugin>
-
-    <model name="terrain">
-      <static>true</static>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <heightmap>
-              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
-              <size>10000 10000 1000</size>
-              <pos>0 0 0</pos>
-            </heightmap>
-          </geometry>
-        </collision>
-        <visual name="visual_abcedf">
-          <geometry>
-            <heightmap>
-              <use_terrain_paging>false</use_terrain_paging>
-              <texture>
-                <diffuse>file://media/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-              <texture>
-                <diffuse>file://media/materials/textures/grass_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-              <texture>
-                <diffuse>file://media/materials/textures/fungus_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-
-              <blend>
-                <min_height>600</min_height>
-                <fade_dist>20</fade_dist>
-              </blend>
-
-              <blend>
-                <min_height>720</min_height>
-                <fade_dist>20</fade_dist>
-              </blend>
-              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
-              <size>10000 10000 1000</size>
-              <pos>0 0 0</pos>
-            </heightmap>
-          </geometry>
-        </visual>
-      </link>
-    </model>
 
   </world>
 </sdf>

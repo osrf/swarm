@@ -3,8 +3,42 @@
 <%camera_far = 20%>
 <%camera_fov = 1.04719755%>
 <%camera_aspect_ratio = 1.778%>
+
+<!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
+     So +/- 0.01 deg defines a ~2km X ~2km region. -->
+<% search_area = '''<swarm_search_area>
+           <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
+           <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
+           <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
+           <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
+         </swarm_search_area>''' %>
+
+ <% ground_battery = '''<battery>
+   <!-- Capacity in mAh -->
+   <capacity>110000</capacity>
+   <!-- Consumption in mA -->
+   <consumption>55000</consumption>
+   <!-- A factor that should be between 0 and 1. A value of < 1 can be used
+        to account for capacity loss in addition to the <consumption>. -->
+   <consumption_factor>0.7</consumption_factor>
+   </battery>'''%>
+
 <sdf version="1.5">
   <world name="default">
+
+    <!-- Create the ground vehicles -->
+    <% for y in 0..5 %>
+      <% for x in 0..5 %>
+        <%name = "ground_#{y * 6 + x}" %>
+        <%x_pos = x * 8 %>
+        <%y_pos = y * 6 %>
+        <%yaw = 0%>
+        <%ip = "192.168.3.#{x+1}"%>
+        <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
+                    nil, nil, "_sub01").result(binding)%>
+      <% end %>
+    <% end %>
+
     <!-- Anchor our GPS sensors to a real place: Camp Roberts
          http://www.lat-long.com/Latitude-Longitude-2512404-California-Camp_Roberts.html -->
     <spherical_coordinates>
@@ -120,194 +154,6 @@
         <max_z>0</max_z>
       </plugin>
    </model>
-
-   <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
-        So +/- 0.01 deg defines a ~2km X ~2km region. -->
-   <% search_area = '''<swarm_search_area>
-              <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
-              <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
-              <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
-              <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
-            </swarm_search_area>''' %>
-
-    <% ground_battery = '''<battery>
-      <!-- Capacity in mAh -->
-      <capacity>110000</capacity>
-      <!-- Consumption in mA -->
-      <consumption>55000</consumption>
-      <!-- A factor that should be between 0 and 1. A value of < 1 can be used
-           to account for capacity loss in addition to the <consumption>. -->
-      <consumption_factor>0.7</consumption_factor>
-      </battery>'''%>
-
-    <!-- Create the ground vehicles -->
-    <% for y in 0..5 %>
-      <% for x in 0..5 %>
-        <% index = y * 6 + x %>
-        <model name="ground_<%=index%>">
-          <pose><%=x*0.4%> <%=y*0.4%> 0.05 0 0 0</pose>
-          <link name="link">
-            <sensor name="gps" type="gps">
-              <gps>
-                <position_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </position_sensing>
-                <velocity_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </velocity_sensing>
-              </gps>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="imu" type="imu">
-              <imu>
-                <angular_velocity>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </angular_velocity>
-                <linear_acceleration>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </linear_acceleration>
-              </imu>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="camera" type="logical_camera">
-              <logical_camera>
-                <near><%=camera_near%></near>
-                <far><%=camera_far%></far>
-                <horizontal_fov><%=camera_fov%></horizontal_fov>
-                <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
-              </logical_camera>
-              <visualize>false</visualize>
-              <always_on>true</always_on>
-            </sensor>
-
-            <kinematic>true</kinematic>
-            <gravity>false</gravity>
-            <collision name="collision">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </collision>
-            <visual name="visual">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </visual>
-            <visual name="visual_front">
-              <pose>0.07 0 0.04 0 0 0</pose>
-              <geometry>
-                <sphere>
-                  <radius>.04</radius>
-                </sphere>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Red</name>
-                </script>
-              </material>
-            </visual>
-          </link>
-
-          <!-- Load the plugin to control this robot -->
-          <plugin name="swarm_controller_<%=index%>"
-                  filename="libTeamControllerPlugin.so">
-            <type>ground</type>
-            <camera>link::camera</camera>
-            <gps>link::gps</gps>
-            <imu>link::imu</imu>
-            <address>192.168.2.<%=index+1%></address>
-            <num_messages>1</num_messages>
-            <%=search_area%>
-            <%=ground_battery%>
-          </plugin>
-        </model>
-      <% end %>
-    <% end %>
 
     <!-- The base of operations -->
     <model name="boo">
