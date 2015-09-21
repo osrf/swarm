@@ -166,6 +166,7 @@ ignition::math::Vector3i BooPlugin::PosToGrid(ignition::math::Vector3d _pos)
 
 //////////////////////////////////////////////////
 void BooPlugin::OnDataReceived(const std::string &_srcAddress,
+    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
     const std::string &_data)
 {
   // Check if a robot found the lost person.

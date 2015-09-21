@@ -45,8 +45,12 @@ namespace swarm
 
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
+    /// \param[in] _dstAddress Destination address of the message.
+    /// \param[in] _dstPort Destination port.
     /// \param[in] _data Message payload.
     private: void OnDataReceived(const std::string &_srcAddress,
+                                 const std::string &_dstAddress,
+                                 const uint32_t _dstPort,
                                  const std::string &_data);
 
     /// \brief Total number of messages to be sent by this agent.

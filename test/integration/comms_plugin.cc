@@ -177,6 +177,7 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 
 //////////////////////////////////////////////////
 void CommsPlugin::OnDataReceived(const std::string &/*_srcAddress*/,
+    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
     const std::string &/*_data*/)
 {
   this->numMsgsRecv++;
