@@ -39,7 +39,7 @@ TeamControllerPlugin::TeamControllerPlugin()
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
-  // Sign up to receive unicast and broadcast messages
+  // Subscribe to receive unicast and broadcast messages
   this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host(),
     this->kBooPort);
 }
