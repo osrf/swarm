@@ -131,7 +131,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
 //////////////////////////////////////////////////
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
+    const std::string &_dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // Totally dumb mesh network strategy: relay everything you hear that you
@@ -151,9 +151,7 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     // I haven't sent this before; relay it.
     std::cout << "[" << this->Host() << "] Relaying message from " <<
       _srcAddress << " with payload " << _data << std::endl;
-    // At this point, I'd like to have the original dest address.  I'll just
-    // assume that it should go to (kBroadcast, kBooPort).
-    this->SendTo(_data, this->kBroadcast, this->kBooPort);
+    this->SendTo(_data, _dstAddress, _dstPort);
     // Remember this message for later.
     this->messagesSent.push_back(_data);
   }
