@@ -175,8 +175,8 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
       }
     case RobotPlugin::ROTOR:
       {
-        // Clamp the linear velocity
-        double limitFactor = _velocity.Length() / this->fixedMaxAngularVel;
+        // Clamp the angular velocity
+        double limitFactor = _velocity.Length() / this->rotorMaxAngularVel;
         ignition::math::Vector3d vel = _velocity /
           ignition::math::clamp(limitFactor, 1.0, limitFactor);
 
