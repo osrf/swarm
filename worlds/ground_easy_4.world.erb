@@ -26,6 +26,12 @@
 <sdf version="1.5">
   <world name="default">
 
+    <gui>
+     <camera name="user_camera">
+       <pose>0 0 100 0 1.57 0</pose>
+     </camera>
+    </gui>
+
     <!-- Create the ground vehicles -->
     <% for index in 0..3 %>
       <%name = "ground_#{index}" %>
