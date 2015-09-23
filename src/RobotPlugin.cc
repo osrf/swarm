@@ -505,7 +505,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
         boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("camera")));
-  
+
       if (!this->camera)
       {
         gzerr << "Trying to get a logical_camera for robot with address["
@@ -513,13 +513,13 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
           _sdf->Get<std::string>("camera") << "] has an incorrect type.\n";
       }
     }
-  
+
     if (!this->camera)
     {
       gzwarn << "No camera sensor found on robot with address "
         << this->address << std::endl;
     }
-  
+
     // Get the gps sensor
     if (_sdf->HasElement("gps"))
     {
@@ -528,13 +528,13 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("gps")));
     }
-  
+
     if (!this->gps)
     {
       gzwarn << "No gps sensor found on robot with address "
         << this->address << std::endl;
     }
-  
+
     // Get the IMU sensor
     if (_sdf->HasElement("imu"))
     {
@@ -543,7 +543,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("imu")));
     }
-  
+
     if (!this->imu)
     {
       gzwarn << "No IMU sensor found on robot with address "
