@@ -182,6 +182,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
 //////////////////////////////////////////////////
 void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
+    const std::string &_dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // New data received from a teammate.

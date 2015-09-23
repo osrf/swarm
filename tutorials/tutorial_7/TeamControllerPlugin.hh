@@ -49,6 +49,7 @@ namespace swarm
 
     // Documentation inherited.
     private: virtual void OnDataReceived(const std::string &_srcAddress,
+      const std::string &_dstAddress, const uint32_t _dstPort,
       const std::string &_data);
 
     /// \brief The last commands I sent to myself
