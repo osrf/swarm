@@ -110,8 +110,9 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
             _velocity * ignition::math::Vector3d::UnitX);
 
         // Clamp the linear velocity
-        linearVel.X() = ignition::math::clamp(
-            linearVel.X(), -this->groundMaxLinearVel, this->groundMaxLinearVel);
+        double limitFactor = linearVel.Length() / this->groundMaxLinearVel;
+        linearVel = linearVel /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
 
         this->model->SetLinearVel(linearVel);
         break;
@@ -123,11 +124,9 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
             _velocity);
 
         // Clamp the linear velocity
-        if (linearVel.Sum() > this->rotorMaxLinearVel)
-        {
-          double limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
-          linearVel /= limitFactor;
-        }
+        double limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
+        linearVel = linearVel /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
 
         this->model->SetLinearVel(linearVel);
         break;
@@ -139,11 +138,9 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
             _velocity * ignition::math::Vector3d::UnitX);
 
         // Clamp the linear velocity
-        if (linearVel.Sum() > this->fixedMaxLinearVel)
-        {
-          double limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
-          linearVel /= limitFactor;
-        }
+        double limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
+        linearVel = linearVel /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
 
         this->model->SetLinearVel(linearVel);
         break;
