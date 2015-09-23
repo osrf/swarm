@@ -495,56 +495,60 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   this->address = _sdf->Get<std::string>("address");
 
-  // Get the camera sensor
-  if (_sdf->HasElement("camera"))
+  // We treat the BOO specially; it's a robot, but doesn't have any sensors.
+  if (this->address != "boo")
   {
-    this->camera =
-      boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
-        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
-          _sdf->Get<std::string>("camera")));
-
+    // Get the camera sensor
+    if (_sdf->HasElement("camera"))
+    {
+      this->camera =
+        boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("camera")));
+  
+      if (!this->camera)
+      {
+        gzerr << "Trying to get a logical_camera for robot with address["
+          << this->address << "], but the specified camera[" <<
+          _sdf->Get<std::string>("camera") << "] has an incorrect type.\n";
+      }
+    }
+  
     if (!this->camera)
     {
-      gzerr << "Trying to get a logical_camera for robot with address["
-        << this->address << "], but the specified camera[" <<
-        _sdf->Get<std::string>("camera") << "] has an incorrect type.\n";
+      gzwarn << "No camera sensor found on robot with address "
+        << this->address << std::endl;
     }
-  }
-
-  if (!this->camera)
-  {
-    gzwarn << "No camera sensor found on robot with address "
-      << this->address << std::endl;
-  }
-
-  // Get the gps sensor
-  if (_sdf->HasElement("gps"))
-  {
-    this->gps =
-      boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
-        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
-          _sdf->Get<std::string>("gps")));
-  }
-
-  if (!this->gps)
-  {
-    gzwarn << "No gps sensor found on robot with address "
-      << this->address << std::endl;
-  }
-
-  // Get the IMU sensor
-  if (_sdf->HasElement("imu"))
-  {
-    this->imu =
-      boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
-        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
-          _sdf->Get<std::string>("imu")));
-  }
-
-  if (!this->imu)
-  {
-    gzwarn << "No IMU sensor found on robot with address "
-      << this->address << std::endl;
+  
+    // Get the gps sensor
+    if (_sdf->HasElement("gps"))
+    {
+      this->gps =
+        boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("gps")));
+    }
+  
+    if (!this->gps)
+    {
+      gzwarn << "No gps sensor found on robot with address "
+        << this->address << std::endl;
+    }
+  
+    // Get the IMU sensor
+    if (_sdf->HasElement("imu"))
+    {
+      this->imu =
+        boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("imu")));
+    }
+  
+    if (!this->imu)
+    {
+      gzwarn << "No IMU sensor found on robot with address "
+        << this->address << std::endl;
+    }
   }
 
   // Get the search area size, which is a child of the plugin
