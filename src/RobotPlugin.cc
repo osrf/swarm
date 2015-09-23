@@ -674,7 +674,8 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   {
     // Run the user callback.
     auto const &userCallback = this->callbacks[topic];
-    userCallback(_msg.src_address(), _msg.data());
+    userCallback(_msg.src_address(), _msg.dst_address(),
+                 _msg.dst_port(), _msg.data());
   }
 }
 

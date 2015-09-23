@@ -150,7 +150,8 @@ namespace swarm
     /// \param[in] _cb Callback function to be executed when a new message is
     /// received associated to the specified <_address, port>.
     /// In the callback, "_srcAddress" contains the address of the sender of
-    /// the message. "_data" will contain the payload.
+    /// the message. "_dstAddress" contains the destination address. "_dstPort"
+    /// contains the destination port. "_data" contains the payload.
     /// \param[in] _obj Instance containing the member function callback.
     /// \param[in] _port Port used to receive messages.
     /// \return True when success or false otherwise.
@@ -161,6 +162,8 @@ namespace swarm
     ///    this->Bind(&MyClass::OnDataReceived, this, this->kMulticast, 5123);
     protected: template<typename C>
     bool Bind(void(C::*_cb)(const std::string &_srcAddress,
+                            const std::string &_dstAddress,
+                            const uint32_t _dstPort,
                             const std::string &_data),
               C *_obj,
               const std::string &_address,
@@ -189,7 +192,8 @@ namespace swarm
 
       // Register the user callback using the topic name as the key.
       this->callbacks[unicastTopic] = std::bind(_cb, _obj,
-          std::placeholders::_1, std::placeholders::_2);
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+          std::placeholders::_4);
 
       // Only enable broadcast if the address is a regular unicast address.
       if (_address != this->kMulticast)
@@ -208,7 +212,8 @@ namespace swarm
 
         // Register the user callback using the broadcast topic as the key.
         this->callbacks[bcastTopic] = std::bind(_cb, _obj,
-            std::placeholders::_1, std::placeholders::_2);
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+            std::placeholders::_4);
       }
 
       return true;
@@ -483,6 +488,8 @@ namespace swarm
     /// sending the message and the payload of the message.
     using Callback_t =
     std::function<void(const std::string &_srcAddress,
+                       const std::string &_dstAddress,
+                       const uint32_t _dstPort,
                        const std::string &_data)>;
 
     /// \brief Address used to send a message to all the members of the swarm
