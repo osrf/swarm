@@ -38,6 +38,11 @@ void BatteryPlugin::Load(sdf::ElementPtr _sdf)
   EXPECT_NEAR(this->BatteryConsumptionFactor(), 0.7, 1e-6);
 
   this->world = gazebo::physics::get_world("default");
+
+  double booLat, booLon;
+  EXPECT_TRUE(this->BooPose(booLat, booLon));
+  EXPECT_NEAR(booLat, 35.7753, 1e-4);
+  EXPECT_NEAR(booLon, -120.774, 1e-4);
 }
 
 //////////////////////////////////////////////////
