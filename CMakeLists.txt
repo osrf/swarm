@@ -25,6 +25,8 @@ set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
 
 include (${project_cmake_dir}/Utils.cmake)
 
+include (${project_cmake_dir}/FindFlatBuffers.cmake)
+
 ########################################
 # Package Creation:
 
@@ -264,6 +266,7 @@ else (build_errors)
 
   if (BUILD_IGNITION)
     set(TEST_TYPE "UNIT")
+    # add_subdirectory(fbs)
     add_subdirectory(msgs)
     add_subdirectory(src)
     add_subdirectory(include)

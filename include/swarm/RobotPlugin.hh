@@ -41,7 +41,15 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#include "msgs/gps_generated.h"
+#pragma GCC diagnostic pop
+
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/Logger.hh"
 
 namespace swarm
 {
@@ -103,7 +111,8 @@ namespace swarm
   ///                                  to account for additional loss.
   ///     - ExpectedBatteryLife() Battery life in seconds, based on the
   ///                             current capacity and consumption.
-  class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
+  class IGNITION_VISIBLE RobotPlugin
+    : public gazebo::ModelPlugin, public swarm::Loggable
   {
     /// \brief The type of vehicle.
     public: enum VehicleType
@@ -482,6 +491,9 @@ namespace swarm
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
 
+    /// \brief ToDo
+    private: virtual bool OnLog(msgs::LogEntryBuilder &_logEntry) const;
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -599,6 +611,9 @@ namespace swarm
 
     /// \brief Pointer to the world.
     private: gazebo::physics::WorldPtr world;
+
+    /// \brief Pointer to the shared logger.
+    private: Logger *logger = Logger::GetInstance();
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

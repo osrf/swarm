@@ -1,0 +1,15 @@
+include "sensors.fbs";
+
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface LogEntry
+/// \brief A message containing a log entry.
+
+table LogEntry
+{
+  /// \brief Sensor information.
+  sensors: Sensors;
+}
+
+root_type LogEntry;

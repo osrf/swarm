@@ -29,6 +29,13 @@ include_directories(${IGNITION-TRANSPORT_INCLUDE_DIRS})
 link_directories(${IGNITION-TRANSPORT_LIBRARY_DIRS})
 
 #################################################
+# Flatbuffers
+if (NOT FLATBUFFERS_FOUND)
+  message(FATAL_ERROR "Could not find flatbuffers")
+endif()
+include_directories(${FLATBUFFERS_INCLUDE_DIRS})
+
+#################################################
 # Macro to check for visibility capability in compiler
 # Original idea from: https://gitorious.org/ferric-cmake-stuff/
 macro (check_gcc_visibility)

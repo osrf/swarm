@@ -1,0 +1,19 @@
+include "gps.fbs";
+include "imu.fbs";
+
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Sensors
+/// \brief A message containing sensor information.
+
+table Sensors
+{
+  /// \brief GPS.
+  gps: Gps;
+
+  /// \brief IMU.
+  imu: Imu;
+}
+
+root_type Sensors;

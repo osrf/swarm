@@ -51,7 +51,6 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
   GZ_ASSERT(_sdf, "BrokerPlugin::Load() error: _sdf pointer is NULL");
 
   this->world = _world;
-
   this->swarm = std::make_shared<SwarmMembership_M>();
 
   // This is the subscription that will allow us to receive incoming messages.

@@ -26,6 +26,18 @@
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#include "msgs/gps_generated.h"
+#include "msgs/imu_generated.h"
+#include "msgs/quaternion_generated.h"
+#include "msgs/log_entry_generated.h"
+#include "msgs/sensors_generated.h"
+#include "msgs/vector3_generated.h"
+#pragma GCC diagnostic pop
+
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -629,6 +641,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   this->AdjustPose();
 
+  // Register this plugin in the logger.
+  this->logger->Register(this->Host(), this);
+
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
 
@@ -933,4 +948,35 @@ ignition::math::Pose3d RobotPlugin::CameraToWorld(
 {
   auto poseInWorld = _poseinCamera + this->model->GetWorldPose().Ign();
   return poseInWorld;
+}
+
+/////////////////////////////////////////////////
+bool RobotPlugin::OnLog(msgs::LogEntryBuilder &_logEntry) const
+{
+  std::cout << "RobotPlugin::OnLog()" << std::endl;
+
+  // Read the GPS value.
+  double latitude, longitude, altitude;
+  this->Pose(latitude, longitude, altitude);
+
+  // GPS flatbuffer.
+  //auto gpsFb = msgs::CreateGps(_fbb, latitude, longitude, altitude);
+//
+  //// IMU flatbuffer.
+  //auto linvel = msgs::CreateVector3(_fbb, this->linearVelocity.X(),
+  //  this->linearVelocity.Y(), this->linearVelocity.Z());
+  //auto angvel = msgs::CreateVector3(_fbb, this->angularVelocity.X(),
+  //  this->angularVelocity.Y(), this->angularVelocity.Z());
+  //auto orient = msgs::CreateQuaternion(_fbb, this->orientation.X(),
+  //  this->orientation.Y(), this->orientation.Z(), this->orientation.W());
+  //auto imuFb = msgs::CreateImu(_fbb, linvel, angvel, orient);
+//
+  //// Sensors flatbuffer.
+  //auto sensorsFb = msgs::CreateSensors(_fbb, gpsFb, imuFb);
+//
+  //// Create a log entry flatbuffer.
+  //auto logEntryFb = msgs::CreateLogEntry(_fbb, sensorsFb);
+  //msgs::FinishLogEntryBuffer(_fbb, logEntryFb);
+
+  return true;
 }

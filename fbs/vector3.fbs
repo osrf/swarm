@@ -1,0 +1,19 @@
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Vector3
+/// \brief A message containing a 3D vector.
+
+table Vector3
+{
+  /// \brief X coordinate.
+  x: float;
+
+  /// \brief Y coordinate.
+  y: float;
+
+  /// \brief Z coordinate.
+  z: float;
+}
+
+root_type Vector3;

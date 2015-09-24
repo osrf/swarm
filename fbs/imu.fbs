@@ -1,0 +1,22 @@
+include "quaternion.fbs";
+include "vector3.fbs";
+
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Imu
+/// \brief A message containing IMU information.
+
+table Imu
+{
+  /// \brief Latitude.
+  linvel: Vector3;
+
+  /// \brief Longitude.
+  angvel: Vector3;
+
+  /// \brief Altitude.
+  orientation: Quaternion;
+}
+
+root_type Imu;

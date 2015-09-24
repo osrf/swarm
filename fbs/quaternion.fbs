@@ -1,0 +1,22 @@
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Quaternion
+/// \brief A message for a quaternion
+
+table Quaternion
+{
+  /// \brief X.
+  x: float;
+
+  /// \brief Y.
+  y: float;
+
+  /// \brief Z.
+  z: float;
+
+  /// \brief W.
+  w: float;
+}
+
+root_type Quaternion;

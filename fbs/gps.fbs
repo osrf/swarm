@@ -1,0 +1,19 @@
+namespace swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Gps
+/// \brief A message containing GPS information.
+
+table Gps
+{
+  /// \brief Latitude.
+  latitude: float;
+
+  /// \brief Longitude.
+  longitude: float;
+
+  /// \brief Altitude.
+  altitude: float;
+}
+
+root_type Gps;
