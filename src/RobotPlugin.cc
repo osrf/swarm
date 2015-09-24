@@ -242,6 +242,23 @@ bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 }
 
 //////////////////////////////////////////////////
+bool RobotPlugin::BooPose(double &_latitude, double &_longitude) const
+{
+  if (!this->boo)
+    return false;
+
+  // Convert gazebo pose to lat/lon
+  ignition::math::Vector3d spherical =
+    this->world->GetSphericalCoordinates()->SphericalFromLocal(
+        this->boo->GetWorldPose().Ign().Pos());
+
+  _latitude = spherical.X();
+  _longitude = spherical.Y();
+
+  return true;
+}
+
+//////////////////////////////////////////////////
 bool RobotPlugin::Pose(double &_latitude,
                        double &_longitude,
                        double &_altitude) const
@@ -427,6 +444,14 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // We assume that the physics step size will not change during simulation.
   this->world = this->model->GetWorld();
+
+  // We assume the BOO is named "boo".
+  this->boo = this->world->GetModel("boo");
+
+  if (!this->boo)
+  {
+    gzwarn << "No base of operations (BOO) found.\n";
+  }
 
   // Get the terrain, if it's present
   gazebo::physics::ModelPtr terrainModel =
@@ -889,11 +914,39 @@ void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
 /////////////////////////////////////////////////
 void RobotPlugin::UpdateBattery()
 {
-  // The amount of the capacity consumed.
-  double mAhConsumed = (this->consumption * this->consumptionFactor *
-      (this->world->GetPhysicsEngine()->GetMaxStepSize() / 3600.0));
+  if (this->model->GetName() == "boo")
+    return;
 
-  this->capacity = std::max(0.0, this->capacity - mAhConsumed);
+  double distToBOO = IGN_DBL_MAX;
+
+  if (this->boo)
+  {
+    distToBOO = this->model->GetWorldPose().pos.Distance(
+        this->boo->GetWorldPose().pos);
+  }
+
+  // Check to see if the robot is in a recharge state:
+  //    - Near the BOO
+  //    - Not moving
+  if (distToBOO < this->booRechargeDistance &&
+      this->linearVelocity == ignition::math::Vector3d::Zero &&
+      this->angularVelocity == ignition::math::Vector3d::Zero)
+  {
+    // The amount of the capacity recharged.
+    double mAhRecharged = (this->consumption * (this->consumptionFactor*4) *
+        (this->world->GetPhysicsEngine()->GetMaxStepSize() / 3600.0));
+
+    this->capacity = std::min(this->capacity + mAhRecharged,
+                              this->startCapacity);
+  }
+  else
+  {
+    // The amount of the capacity consumed.
+    double mAhConsumed = (this->consumption * this->consumptionFactor *
+        (this->world->GetPhysicsEngine()->GetMaxStepSize() / 3600.0));
+
+    this->capacity = std::max(0.0, this->capacity - mAhConsumed);
+  }
 }
 
 /////////////////////////////////////////////////

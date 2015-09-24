@@ -92,10 +92,13 @@ namespace swarm
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
   ///
-  ///  * Introspection.
-  ///     - Type() Get the vehicle type.
-  ///     - Name() Get the name of the vehicle.
-  ///     - SearchArea() Get the GPS coordinates of the search area.
+  ///  * Battery
+  ///     Each vehicle begins with a starting battery capacity. This
+  ///     capacity lowers as time progresses. A vehicle may recharge its
+  ///     battery by stopping (zero velocity) within 100 meters of the
+  ///     base of operations (BOO). A battery recharges four times faster
+  ///     than it discharges.
+  ///
   ///     - BatteryStartCapacity() Starting battery capacity (mAh).
   ///     - BatteryCapacity() Current battery capacity (mAh).
   ///     - BatteryConsumption() Battery consumption (mA).
@@ -103,6 +106,12 @@ namespace swarm
   ///                                  to account for additional loss.
   ///     - ExpectedBatteryLife() Battery life in seconds, based on the
   ///                             current capacity and consumption.
+  ///
+  ///  * Introspection.
+  ///     - BooPose() Get the latitude and longitude of the BOO.
+  ///     - Type() Get the vehicle type.
+  ///     - Name() Get the name of the vehicle.
+  ///     - SearchArea() Get the GPS coordinates of the search area.
   class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
   {
     /// \brief The type of vehicle.
@@ -385,6 +394,15 @@ namespace swarm
                          double &_longitude,
                          double &_altitude) const;
 
+    /// \brief Get the base of operation's (BOO) position information. The
+    /// BOO is always located on the ground.
+    ///
+    /// \param[out] _latitude BOO latitude
+    /// \param[out] _longitude BOO longitude
+    /// \return True if the function was successful. False may be returned
+    /// if there is no BOO present.
+    protected: bool BooPose(double &_latitude, double &_longitude) const;
+
     /// \brief Get the set of objects detected by the camera.
     ///
     /// \param[out] _img Image object that will hold the output from the
@@ -593,12 +611,19 @@ namespace swarm
     /// \brief Milli-Amp vehicle consumption
     private: double consumption;
 
+    /// \brief A vehicle must be less than this distance to recharge its
+    ///        battery from the BOO.
+    private: double booRechargeDistance = 100.0;
+
     /// \brief Unitless factor applied to the battery consumption. This can
     /// be use to account to extra current draw.
     private: double consumptionFactor;
 
     /// \brief Pointer to the world.
     private: gazebo::physics::WorldPtr world;
+
+    /// \brief Pointer to the BOO.
+    private: gazebo::physics::ModelPtr boo;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

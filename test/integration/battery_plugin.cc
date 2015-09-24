@@ -29,10 +29,12 @@ BatteryPlugin::BatteryPlugin()
 }
 
 //////////////////////////////////////////////////
-void BatteryPlugin::Load(sdf::ElementPtr /*_sdf*/)
+void BatteryPlugin::Load(sdf::ElementPtr _sdf)
 {
-  EXPECT_NEAR(this->BatteryCapacity(), 3500, 1e-6);
-  EXPECT_NEAR(this->BatteryConsumption(), 1500, 1e-6);
+  this->testCase = _sdf->Get<int>("test_case");
+
+  EXPECT_NEAR(this->BatteryCapacity(), 110000, 1e-6);
+  EXPECT_NEAR(this->BatteryConsumption(), 55000, 1e-6);
   EXPECT_NEAR(this->BatteryConsumptionFactor(), 0.7, 1e-6);
 
   this->world = gazebo::physics::get_world("default");
@@ -40,6 +42,24 @@ void BatteryPlugin::Load(sdf::ElementPtr /*_sdf*/)
 
 //////////////////////////////////////////////////
 void BatteryPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
+{
+  switch(this->testCase)
+  {
+    default:
+    case 0:
+      this->Update0();
+      break;
+    case 1:
+      this->Update1();
+      break;
+    case 2:
+      this->Update2();
+      break;
+  }
+}
+
+/////////////////////////////////////////////////
+void BatteryPlugin::Update0()
 {
   static int counter = 1;
 
@@ -49,6 +69,54 @@ void BatteryPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     ((this->world->GetPhysicsEngine()->GetMaxStepSize() * counter)/3600.0));
 
   EXPECT_NEAR(this->BatteryCapacity(), expectedBattery, 1e-4);
+
+  ++counter;
+}
+
+/////////////////////////////////////////////////
+void BatteryPlugin::Update1()
+{
+  EXPECT_NEAR(this->BatteryCapacity(), this->BatteryStartCapacity(), 1e-4);
+}
+
+/////////////////////////////////////////////////
+void BatteryPlugin::Update2()
+{
+  static int counter = 1;
+
+  if (counter < 500)
+  {
+    double expectedBattery = this->BatteryStartCapacity() -
+      (this->BatteryConsumption() *
+       this->BatteryConsumptionFactor() *
+       ((this->world->GetPhysicsEngine()->GetMaxStepSize() * counter)/3600.0));
+
+    EXPECT_NEAR(this->BatteryCapacity(), expectedBattery, 1e-4);
+  }
+  else if (counter >= 500)
+  {
+    double capacityLost = this->BatteryConsumption() *
+      this->BatteryConsumptionFactor() *
+      ((this->world->GetPhysicsEngine()->GetMaxStepSize() * 500)/3600.0);
+
+    double capacityGained = this->BatteryConsumption() *
+       (this->BatteryConsumptionFactor()*4) *
+       ((this->world->GetPhysicsEngine()->GetMaxStepSize() *
+         (counter-500))/3600.0);
+
+    double expectedBattery;
+    if (capacityLost > capacityGained)
+    {
+      expectedBattery = this->BatteryStartCapacity() - capacityLost +
+        capacityGained;
+    }
+    else
+    {
+      expectedBattery = this->BatteryStartCapacity();
+    }
+
+    EXPECT_NEAR(this->BatteryCapacity(), expectedBattery, 1e-4);
+  }
 
   ++counter;
 }
