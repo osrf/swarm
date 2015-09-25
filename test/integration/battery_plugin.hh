@@ -41,8 +41,20 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
+    /// \brief Update for test case 0
+    private: void Update0();
+
+    /// \brief Update for test case 1
+    private: void Update1();
+
+    /// \brief Update for test case 2
+    private: void Update2();
+
     /// \brief Pointer to the world
     private: gazebo::physics::WorldPtr world;
+
+    /// \brief The current test case
+    private: int testCase = 0;
   };
 }
 #endif
