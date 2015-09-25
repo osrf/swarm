@@ -1,0 +1,17 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Sensors
+/// \brief A message containing sensor information observed by a robot.
+
+import "gps.proto";
+import "imu.proto";
+
+message Sensors
+{
+  /// \brief Last GPS observation.
+  required GpsSensor gps = 1;
+
+  /// \brief Last IMU observation.
+  required ImuSensor imu = 2;
+}

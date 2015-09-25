@@ -15,15 +15,11 @@
  *
 */
 
+#include <fstream>
 #include <iostream>
 #include <string>
+#include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#include "msgs/gps_generated.h"
-#pragma GCC diagnostic pop
 
 using namespace swarm;
 
@@ -42,6 +38,7 @@ Logger::Logger()
 //////////////////////////////////////////////////
 Logger::~Logger()
 {
+  std::cout << "Logger destructor" << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -59,13 +56,32 @@ bool Logger::Register(const std::string _id, const Loggable *_client)
 }
 
 //////////////////////////////////////////////////
-void Logger::Update()
+void Logger::Update(const double _simTime)
 {
+  // Fill the simulation time of the log entry.
   for (const auto &client : this->clients)
   {
-    flatbuffers::FlatBufferBuilder fbb;
-    msgs::LogEntryBuilder logEntry(fbb);
-    client.second->OnLog(logEntry);
+    //std::cout << client.first << std::endl;
+    msgs::LogEntry logEntryMsg;
+
+    // Set the simulation time of the log entry.
+    logEntryMsg.set_time(_simTime);
+
+    client.second->OnLog(logEntryMsg);
+    std::cout << logEntryMsg.DebugString() << std::endl;
+
+    this->log[client.first] = logEntryMsg;
+  }
+
+  std::fstream output("/tmp/test.log", std::ios::out | std::ios::trunc | std::ios::binary);
+  // Flush the log into disk.
+  for (const auto &robotLog : this->log)
+  {
+    if (!robotLog.second.SerializeToOstream(&output))
+    {
+      std::cerr << "Failed to write log into disk." << std::endl;
+      return;
+    }
   }
 
 }

@@ -22,12 +22,7 @@
 #include <map>
 #include <string>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#include "msgs/log_entry_generated.h"
-#pragma GCC diagnostic pop
-
+#include "msgs/log_entry.pb.h"
 #include "swarm/Helpers.hh"
 
 #ifndef __SWARM_LOGGER_HH__
@@ -39,7 +34,7 @@ namespace swarm
   class IGNITION_VISIBLE Loggable
   {
     // Gazebo plugins complain if we declare this method pure virtual.
-    public: virtual bool OnLog(msgs::LogEntryBuilder &/*_fbb*/) const
+    public: virtual bool OnLog(msgs::LogEntry &/*_logEntry*/) const
     {
       return false;
     };
@@ -54,7 +49,7 @@ namespace swarm
     public: static Logger *GetInstance();
 
     /// \brief ToDo.
-    public: void Update();
+    public: void Update(const double _simTime);
 
     /// \brief ToDo.
     public: bool Register(const std::string _id, const Loggable *_client);
@@ -65,8 +60,15 @@ namespace swarm
     /// \brief Destructor.
     protected: virtual ~Logger();
 
-    /// \brief ToDo.
+    /// \brief Full path to the log file on disk.
+    private: std::string filename;
+
+    /// \brief ToDo. The key is the ID of the client.
     private: std::map<std::string, const Loggable*> clients;
+
+    /// \brief ToDo. The key is the ID of the client. The value is the last
+    /// log entry.
+    private: std::map<std::string, msgs::LogEntry> log;
   };
 }  // namespace
 #endif

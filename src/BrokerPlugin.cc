@@ -126,7 +126,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 }
 
 //////////////////////////////////////////////////
-void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
+void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   {
     std::lock_guard<std::mutex> lock(this->mutex);
@@ -142,6 +142,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
   // the message according to the communication model.
   // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
+
+  this->logger->Update(_info.simTime.Double());
 }
 
 //////////////////////////////////////////////////

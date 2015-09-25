@@ -41,13 +41,6 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#include "msgs/gps_generated.h"
-#pragma GCC diagnostic pop
-
 #include "msgs/neighbor_v.pb.h"
 #include "swarm/Logger.hh"
 
@@ -492,7 +485,7 @@ namespace swarm
     private: void UpdateBattery();
 
     /// \brief ToDo
-    private: virtual bool OnLog(msgs::LogEntryBuilder &_logEntry) const;
+    private: virtual bool OnLog(msgs::LogEntry &_logEntry) const;
 
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.

@@ -1,0 +1,20 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Imu
+/// \brief A message containing IMU information.
+
+import "quaternion.proto";
+import "vector3d.proto";
+
+message ImuSensor
+{
+  /// \brief Linear velocity.
+  required Vector3d linvel        = 1;
+
+  /// \brief Angular velocity.
+  required Vector3d angvel        = 2;
+
+  /// \brief Robot orientation.
+  required Quaternion orientation = 3;
+}

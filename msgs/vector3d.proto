@@ -1,0 +1,17 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface Vector3d
+/// \brief Message for a vector3 double.
+
+message Vector3d
+{
+  /// \brief X component of the position in world coordinates.
+  required double x = 1;
+
+  /// \brief Y component of the position in world coordinates.
+  required double y = 2;
+
+  /// \brief Z component of the position in world coordinates.
+  required double z = 3;
+}

@@ -27,17 +27,7 @@
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#include "msgs/gps_generated.h"
-#include "msgs/imu_generated.h"
-#include "msgs/quaternion_generated.h"
-#include "msgs/log_entry_generated.h"
-#include "msgs/sensors_generated.h"
-#include "msgs/vector3_generated.h"
-#pragma GCC diagnostic pop
-
+#include "msgs/log_entry.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -951,32 +941,47 @@ ignition::math::Pose3d RobotPlugin::CameraToWorld(
 }
 
 /////////////////////////////////////////////////
-bool RobotPlugin::OnLog(msgs::LogEntryBuilder &_logEntry) const
+bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
 {
-  std::cout << "RobotPlugin::OnLog()" << std::endl;
+  // ToDo: Only IMU and bearing are cached during Update().
+  // We should cache all of them.
 
-  // Read the GPS value.
+  // Fill the last GPS observation.
+  msgs::Gps *lastGps = new msgs::Gps();
   double latitude, longitude, altitude;
   this->Pose(latitude, longitude, altitude);
+  lastGps->set_latitude(latitude);
+  lastGps->set_longitude(longitude);
+  lastGps->set_altitude(altitude);
 
-  // GPS flatbuffer.
-  //auto gpsFb = msgs::CreateGps(_fbb, latitude, longitude, altitude);
-//
-  //// IMU flatbuffer.
-  //auto linvel = msgs::CreateVector3(_fbb, this->linearVelocity.X(),
-  //  this->linearVelocity.Y(), this->linearVelocity.Z());
-  //auto angvel = msgs::CreateVector3(_fbb, this->angularVelocity.X(),
-  //  this->angularVelocity.Y(), this->angularVelocity.Z());
-  //auto orient = msgs::CreateQuaternion(_fbb, this->orientation.X(),
-  //  this->orientation.Y(), this->orientation.Z(), this->orientation.W());
-  //auto imuFb = msgs::CreateImu(_fbb, linvel, angvel, orient);
-//
-  //// Sensors flatbuffer.
-  //auto sensorsFb = msgs::CreateSensors(_fbb, gpsFb, imuFb);
-//
-  //// Create a log entry flatbuffer.
-  //auto logEntryFb = msgs::CreateLogEntry(_fbb, sensorsFb);
-  //msgs::FinishLogEntryBuffer(_fbb, logEntryFb);
+  // Fill the last IMU observation.
+  msgs::Vector3 *vlin = new msgs::Vector3();
+  msgs::Vector3 *vang = new msgs::Vector3();
+  msgs::Quaternion *orient = new msgs::Quaternion();
+  msgs::Imu *lastImu = new msgs::Imu();
+  vlin->set_x(this->linearVelocity.X());
+  vlin->set_y(this->linearVelocity.Y());
+  vlin->set_z(this->linearVelocity.Z());
+  vang->set_x(this->angularVelocity.X());
+  vang->set_y(this->angularVelocity.Y());
+  vang->set_z(this->angularVelocity.Z());
+  orient->set_x(this->orientation.X());
+  orient->set_y(this->orientation.Y());
+  orient->set_z(this->orientation.Z());
+  orient->set_w(this->orientation.W());
+  lastImu->set_allocated_linvel(vlin);
+  lastImu->set_allocated_angvel(vang);
+  lastImu->set_allocated_orientation(orient);
+
+  msgs::Sensors *sensors = new msgs::Sensors();
+  sensors->set_allocated_gps(lastGps);
+  sensors->set_allocated_imu(lastImu);
+
+  // Fill the sensor information of the log entry.
+  _logEntry.set_allocated_sensors(sensors);
+
+  //_logEntry->mutable->sensors
+  std::cout << "RobotPlugin::OnLog()" << std::endl;
 
   return true;
 }
