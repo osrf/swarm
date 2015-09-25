@@ -16,9 +16,10 @@
 */
 
 #include <cstdint>
-#include <fstream>
 #include <iostream>
 #include <string>
+#include <gazebo/common/CommonIface.hh>
+#include <gazebo/common/Time.hh>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
 #include "swarm/LogParser.hh"
@@ -35,7 +36,23 @@ Logger *Logger::GetInstance()
 //////////////////////////////////////////////////
 Logger::Logger()
 {
-  this->SetLogName("/tmp/test.log");
+  // The base pathname for all the logs.
+  const char *homePath = gazebo::common::getEnv("HOME");
+  boost::filesystem::path logBasePath = boost::filesystem::path(homePath);
+  logBasePath /= "/.swarm/log/";
+
+  std::string logTimeDir = gazebo::common::Time::GetWallTimeAsISOString();
+  this->logCompletePath = logBasePath / logTimeDir;
+
+  // Create the log directory if necessary
+  if (!boost::filesystem::exists(this->logCompletePath))
+    boost::filesystem::create_directories(this->logCompletePath);
+
+  this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
+
+  // Create the log file.
+  this->output.open(this->logCompletePath.string(),
+    std::ios::out | std::ios::binary);
 }
 
 //////////////////////////////////////////////////
@@ -55,13 +72,6 @@ bool Logger::Register(const std::string &_id, const Loggable *_client)
 
   this->clients[_id] = _client;
   return true;
-}
-
-//////////////////////////////////////////////////
-void Logger::SetLogName(const std::string &_fullPathName)
-{
-  this->fullPathName = _fullPathName;
-  this->output.open(this->fullPathName, std::ios::out | std::ios::binary);
 }
 
 //////////////////////////////////////////////////

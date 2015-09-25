@@ -19,9 +19,11 @@
 /// \brief Query log information from the RobotPlugins and the BrokerPlugin and
 /// write it into disk.
 
+#include <boost/filesystem.hpp>
+#include <fstream>
 #include <map>
 #include <string>
-
+#include <boost/filesystem.hpp>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Helpers.hh"
 
@@ -49,9 +51,6 @@ namespace swarm
     public: static Logger *GetInstance();
 
     /// \brief ToDo.
-    public: void SetLogName(const std::string &_fullPathName);
-
-    /// \brief ToDo.
     public: void Update(const double _simTime);
 
     /// \brief ToDo.
@@ -63,9 +62,6 @@ namespace swarm
     /// \brief Destructor.
     protected: virtual ~Logger();
 
-    /// \brief Full path to the log file on disk.
-    private: std::string fullPathName;
-
     /// \brief ToDo. The key is the ID of the client.
     private: std::map<std::string, const Loggable*> clients;
 
@@ -75,6 +71,9 @@ namespace swarm
 
     /// \brief ToDo.
     private: std::fstream output;
+
+    /// \brief The complete pathname for all the logs.
+    private: boost::filesystem::path logCompletePath;
   };
 }  // namespace
 #endif
