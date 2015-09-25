@@ -35,6 +35,7 @@ Logger *Logger::GetInstance()
 //////////////////////////////////////////////////
 Logger::Logger()
 {
+  this->SetLogName("/tmp/test.log");
 }
 
 //////////////////////////////////////////////////
@@ -57,8 +58,18 @@ bool Logger::Register(const std::string &_id, const Loggable *_client)
 }
 
 //////////////////////////////////////////////////
+void Logger::SetLogName(const std::string &_fullPathName)
+{
+  this->fullPathName = _fullPathName;
+  this->output.open(this->fullPathName, std::ios::out | std::ios::binary);
+}
+
+//////////////////////////////////////////////////
 void Logger::Update(const double _simTime)
 {
+  if (!this->output.is_open())
+    return;
+
   // Fill the simulation time of the log entry.
   for (const auto &client : this->clients)
   {
@@ -73,7 +84,7 @@ void Logger::Update(const double _simTime)
   }
 
 
-  static std::fstream output("/tmp/test.log", std::ios::out | std::ios::binary);
+
   // Flush the log into disk.
   for (const auto &robotLog : this->log)
   {

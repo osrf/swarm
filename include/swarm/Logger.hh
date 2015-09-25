@@ -49,6 +49,9 @@ namespace swarm
     public: static Logger *GetInstance();
 
     /// \brief ToDo.
+    public: void SetLogName(const std::string &_fullPathName);
+
+    /// \brief ToDo.
     public: void Update(const double _simTime);
 
     /// \brief ToDo.
@@ -61,7 +64,7 @@ namespace swarm
     protected: virtual ~Logger();
 
     /// \brief Full path to the log file on disk.
-    private: std::string filename;
+    private: std::string fullPathName;
 
     /// \brief ToDo. The key is the ID of the client.
     private: std::map<std::string, const Loggable*> clients;
@@ -69,6 +72,9 @@ namespace swarm
     /// \brief ToDo. The key is the ID of the client. The value is the last
     /// log entry.
     private: std::map<std::string, msgs::LogEntry> log;
+
+    /// \brief ToDo.
+    private: std::fstream output;
   };
 }  // namespace
 #endif
