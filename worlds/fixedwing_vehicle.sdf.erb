@@ -1,0 +1,196 @@
+<model name="<%=name%>">
+  <pose><%=x_pos%> <%=y_pos%> 0.09 0 0 <%=yaw%></pose>
+  <link name="link">
+    <sensor name="gps" type="gps">
+      <gps>
+        <position_sensing>
+          <horizontal>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>4</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.001</precision>
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>8</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.01</precision>
+            </noise>
+          </vertical>
+        </position_sensing>
+        <velocity_sensing>
+          <horizontal>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>4</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.001</precision>
+            </noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian_quantized">
+              <mean>0</mean>
+              <stddev>8</stddev>
+              <bias_mean>0</bias_mean>
+              <bias_stddev>0</bias_stddev>
+              <precision>0.01</precision>
+            </noise>
+          </vertical>
+        </velocity_sensing>
+      </gps>
+      <always_on>1</always_on>
+    </sensor>
+
+    <sensor name="imu" type="imu">
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+      <always_on>1</always_on>
+    </sensor>
+
+    <sensor name="camera" type="logical_camera">
+      <logical_camera>
+        <near><%=camera_near%></near>
+        <far><%=camera_far%></far>
+        <horizontal_fov><%=camera_fov%></horizontal_fov>
+        <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
+      </logical_camera>
+      <visualize>false</visualize>
+      <always_on>true</always_on>
+    </sensor>
+
+    <kinematic>true</kinematic>
+    <gravity>false</gravity>
+
+    <visual name="visual_left_wing">
+      <pose>0 -0.255 0.09 0 0 -0.5</pose>
+      <geometry>
+        <box>
+          <size>0.4 .8 .18</size>
+        </box>
+      </geometry>
+      <material>
+        <ambient>0.9 0.9 0.9 1</ambient>
+      </material>
+    </visual>
+    <visual name="visual_right_wing">
+      <pose>0 0.255 0.09 0 0 0.5</pose>
+      <geometry>
+        <box>
+          <size>0.4 .8 .17</size>
+        </box>
+      </geometry>
+      <material>
+        <ambient>0.9 0.9 0.9 1</ambient>
+      </material>
+    </visual>
+    <visual name="visual_body">
+      <pose>0 0 0.09 0 1.5707 0</pose>
+      <geometry>
+        <cylinder>
+          <radius>0.1</radius>
+          <length>0.8</length>
+        </cylinder>
+      </geometry>
+      <material>
+        <ambient>0.2 0.9 0.2 1</ambient>
+      </material>
+    </visual>
+
+    <collision name="collision_left_wing">
+      <pose>0 -0.255 0.09 0 0 -0.5</pose>
+      <geometry>
+        <box>
+          <size>0.4 .8 .18</size>
+        </box>
+      </geometry>
+    </collision>
+    <collision name="collision_right_wing">
+      <pose>0 0.255 0.09 0 0 0.5</pose>
+      <geometry>
+        <box>
+          <size>0.4 .8 .17</size>
+        </box>
+      </geometry>
+    </collision>
+    <collision name="collision_body">
+      <pose>0 0 0.09 0 1.5707 0</pose>
+      <geometry>
+        <cylinder>
+          <radius>0.1</radius>
+          <length>0.8</length>
+        </cylinder>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Load the plugin to control this robot -->
+  <plugin name="swarm_controller_<%=name%>"
+          filename="libTeamControllerPlugin.so">
+    <type>ground</type>
+    <camera>link::camera</camera>
+    <gps>link::gps</gps>
+    <imu>link::imu</imu>
+    <address><%=ip%></address>
+    <num_messages>1000</num_messages>
+    <%=search_area%>
+    <%=fixed_battery%>
+  </plugin>
+</model>
