@@ -633,6 +633,32 @@ namespace swarm
     /// \brief Pointer to the BOO.
     private: gazebo::physics::ModelPtr boo;
 
+    /// \brief Max linear velocity for ground vehicles (m/s).
+    /// Equivalent to 25 mph
+    private: const double groundMaxLinearVel = 11.176;
+
+    /// \brief Max linear velocity for rotor vehicles (m/s).
+    /// Equivalent to 45 mph.
+    private: const double rotorMaxLinearVel = 20.117;
+
+    /// \brief Max linear velocity for fixed wing vehicles (m/s).
+    /// Equivalent to 90 mph.
+    private: double fixedMaxLinearVel = 40.234;
+
+    /// \brief Max angular velocity for ground vehicles (radian/s).
+    /// Equivalent to 60 degrees/second.
+    private: const double groundMaxAngularVel = 1.05;
+
+    /// \brief Max linear velocity for rotor vehicles (radian/s).
+    /// Equivalent to 120 degrees/second.
+    private: const double rotorMaxAngularVel = 2.1;
+
+    /// \brief Max angular velocity for fixed wing vehicles (radian/s).
+    /// Equivalent to (180 degrees/second).
+    /// This is applied to the vehicle's pitch rate.
+    /// Yaw and roll are computed based on the clamped linear velocity.
+    private: double fixedMaxAngularVel = 3.14;
+
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
   };
