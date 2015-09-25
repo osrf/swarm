@@ -140,7 +140,7 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
 
   this->model->SetLinearVel(linearVel);
 
- return true;
+  return true;
 }
 
 //////////////////////////////////////////////////
