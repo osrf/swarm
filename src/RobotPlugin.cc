@@ -198,7 +198,10 @@ void RobotPlugin::UpdateSensors()
 {
   if (this->imu)
   {
-    this->linearVelocity = this->model->GetRelativeLinearVel().Ign() +
+    this->linearVelocityNoNoise = this->model->GetRelativeLinearVel().Ign();
+    this->angularVelocityNoNoise = this->model->GetRelativeAngularVel().Ign();
+
+    this->linearVelocity = this->linearVelocityNoNoise +
       ignition::math::Vector3d(
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002),
@@ -929,8 +932,8 @@ void RobotPlugin::UpdateBattery()
   //    - Near the BOO
   //    - Not moving
   if (distToBOO < this->booRechargeDistance &&
-      this->linearVelocity == ignition::math::Vector3d::Zero &&
-      this->angularVelocity == ignition::math::Vector3d::Zero)
+      this->linearVelocityNoNoise == ignition::math::Vector3d::Zero &&
+      this->angularVelocityNoNoise == ignition::math::Vector3d::Zero)
   {
     // The amount of the capacity recharged.
     double mAhRecharged = (this->consumption * (this->consumptionFactor*4) *

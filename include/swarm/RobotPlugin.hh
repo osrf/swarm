@@ -593,8 +593,16 @@ namespace swarm
     /// \brief Linear velocity in the robot's local coordinate frame (m/s).
     private: ignition::math::Vector3d linearVelocity;
 
+    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
+    /// This version has no noise.
+    private: ignition::math::Vector3d linearVelocityNoNoise;
+
     /// \brief Angular velocity in the robot's local coordinate frame (m/s).
     private: ignition::math::Vector3d angularVelocity;
+
+    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
+    /// This version has no noise.
+    private: ignition::math::Vector3d angularVelocityNoNoise;
 
     /// \brief Offset with respect the reference pos.
     private: ignition::math::Quaterniond orientation;
