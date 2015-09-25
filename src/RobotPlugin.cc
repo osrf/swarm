@@ -100,54 +100,47 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
 
   auto myPose = this->model->GetWorldPose().Ign();
 
+  ignition::math::Vector3d linearVel;
+  double limitFactor = 1.0;
+
   switch (this->type)
   {
     default:
     case RobotPlugin::GROUND:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             _velocity * ignition::math::Vector3d::UnitX);
 
-        // Clamp the linear velocity
-        double limitFactor = linearVel.Length() / this->groundMaxLinearVel;
-        linearVel = linearVel /
-          ignition::math::clamp(limitFactor, 1.0, limitFactor);
-
-        this->model->SetLinearVel(linearVel);
+        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
         break;
       }
     case RobotPlugin::ROTOR:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            _velocity);
+        linearVel = myPose.Rot().RotateVector(_velocity);
 
-        // Clamp the linear velocity
-        double limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
-        linearVel = linearVel /
-          ignition::math::clamp(limitFactor, 1.0, limitFactor);
-
-        this->model->SetLinearVel(linearVel);
+        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
         break;
       }
     case RobotPlugin::FIXED_WING:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             _velocity * ignition::math::Vector3d::UnitX);
 
-        // Clamp the linear velocity
-        double limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
-        linearVel = linearVel /
-          ignition::math::clamp(limitFactor, 1.0, limitFactor);
-
-        this->model->SetLinearVel(linearVel);
+        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
         break;
       }
   };
 
-  return true;
+  // Clamp the linear velocity
+  linearVel = linearVel /
+    ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+  this->model->SetLinearVel(linearVel);
+
+ return true;
 }
 
 //////////////////////////////////////////////////
