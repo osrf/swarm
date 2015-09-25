@@ -100,36 +100,47 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
 
   auto myPose = this->model->GetWorldPose().Ign();
 
+  ignition::math::Vector3d linearVel;
+  double limitFactor = 1.0;
+
   switch (this->type)
   {
     default:
     case RobotPlugin::GROUND:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             _velocity * ignition::math::Vector3d::UnitX);
-        this->model->SetLinearVel(linearVel);
+
+        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
         break;
       }
     case RobotPlugin::ROTOR:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            _velocity);
-        this->model->SetLinearVel(linearVel);
+        linearVel = myPose.Rot().RotateVector(_velocity);
+
+        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
         break;
       }
     case RobotPlugin::FIXED_WING:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             _velocity * ignition::math::Vector3d::UnitX);
-        this->model->SetLinearVel(linearVel);
+
+        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
         break;
       }
   };
 
-  return true;
+  // Clamp the linear velocity
+  linearVel = linearVel /
+    ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+  this->model->SetLinearVel(linearVel);
+
+ return true;
 }
 
 //////////////////////////////////////////////////
@@ -150,13 +161,19 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
     default:
     case RobotPlugin::GROUND:
       {
-        this->model->SetAngularVel(
-            _velocity * ignition::math::Vector3d::UnitZ);;
+        double vel = ignition::math::clamp(_velocity.Z(),
+            -this->groundMaxAngularVel, this->groundMaxAngularVel);
+        this->model->SetAngularVel(ignition::math::Vector3d(vel, 0, 0));
         break;
       }
     case RobotPlugin::ROTOR:
       {
-        this->model->SetAngularVel(_velocity);
+        // Clamp the angular velocity
+        double limitFactor = _velocity.Length() / this->rotorMaxAngularVel;
+        ignition::math::Vector3d vel = _velocity /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+        this->model->SetAngularVel(vel);
         break;
       }
     case RobotPlugin::FIXED_WING:
@@ -177,8 +194,9 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
               -IGN_DTOR(5), IGN_DTOR(5));
         }
 
-        this->model->SetAngularVel(
-            ignition::math::Vector3d(rollRate, _velocity[1], yawRate));
+        this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
+              ignition::math::clamp(_velocity[1], -this->fixedMaxAngularVel,
+                this->fixedMaxAngularVel), yawRate));
         break;
       }
   };
