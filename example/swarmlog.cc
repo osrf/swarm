@@ -17,7 +17,6 @@
 #include <termios.h>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <boost/program_options.hpp>
 #include <swarm/LogParser.hh>
 #include <swarm/msgs/log_entry.pb.h>
@@ -51,8 +50,7 @@ int getChar()
 }
 
 //////////////////////////////////////////////////
-bool parseArguments(int argc, char **argv, po::variables_map &_vm,
-  std::string &_logfile)
+bool parseArguments(int argc, char **argv, po::variables_map &_vm)
 {
   // Define and parse the program options.
   po::options_description desc("Options");
@@ -60,7 +58,7 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm,
     ("help,h" , "Show this help message.")
     ("echo,e" , "Output the content of a log file to screen.")
     ("step,s" , "Step through the content of a log file.")
-    ("file,f" , po::value<std::string>(&_logfile)->required(),
+    ("file,f" , po::value<std::string>()->required(),
          "Path to a Swarm log file.");
 
   try
@@ -85,9 +83,8 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm,
 int main(int argc, char **argv)
 {
   // Parse command line arguments;
-  std::string logfile;
   po::variables_map vm;
-  if (!parseArguments(argc, argv, vm, logfile))
+  if (!parseArguments(argc, argv, vm))
   {
     usage();
     return 1;
@@ -97,6 +94,7 @@ int main(int argc, char **argv)
   // compatible with the version of the headers we compiled against.
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  std::string logfile = vm["file"].as<std::string>();
   swarm::LogParser parser(logfile);
   swarm::msgs::LogEntry logEntry;
   char c = '\0';
