@@ -75,6 +75,9 @@ void Logger::Update(const double _simTime)
   {
     msgs::LogEntry logEntryMsg;
 
+    // Set the robot ID.
+    logEntryMsg.set_id(client.first);
+
     // Set the simulation time of the log entry.
     logEntryMsg.set_time(_simTime);
 
@@ -82,8 +85,6 @@ void Logger::Update(const double _simTime)
 
     this->log[client.first] = logEntryMsg;
   }
-
-
 
   // Flush the log into disk.
   for (const auto &robotLog : this->log)

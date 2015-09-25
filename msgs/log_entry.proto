@@ -46,29 +46,74 @@ message Gps
 message Imu
 {
   /// \brief Linear velocity.
-  required Vector3 linvel        = 1;
+  required Vector3 linvel         = 1;
 
   /// \brief Angular velocity.
-  required Vector3 angvel        = 2;
+  required Vector3 angvel         = 2;
 
   /// \brief Robot orientation.
   required Quaternion orientation = 3;
 }
 
+message Pose3D
+{
+  /// \brief Position.
+  required Vector3 position       = 1;
+
+  /// \brief Orientation.
+  required Quaternion orientation = 2;
+}
+
+message ObjPose
+{
+  /// \brief Name of the object.
+  required string name = 1;
+
+  /// \brief Pose of the object in the robot's camera frame.
+  required Pose3D pose = 2;
+}
+
+message ImageData
+{
+  /// \brief Collection of objects observed by the camera.
+  repeated ObjPose object = 1;
+}
+
 message Sensors
 {
   /// \brief Last GPS observation.
-  required Gps gps = 1;
+  required Gps gps         = 1;
 
   /// \brief Last IMU observation.
-  required Imu imu = 2;
+  required Imu imu         = 2;
+
+  /// \brief Last compass observation (radians).
+  required double bearing  = 3;
+
+  /// \brief Collection of objects perceived by the robot's camera.
+  optional ImageData image = 4;
+}
+
+message Actions
+{
+  /// \brief Last linear velocity sent to the robot.
+  required Vector3 linvel = 1;
+
+  /// \brief Last angular velocity sent to the robot.
+  required Vector3 angvel = 2;
 }
 
 message LogEntry
 {
+  /// \brief Robot ID.
+  optional string id       = 1;
+
   /// \brief Simulation time.
-  optional double time    = 1;
+  optional double time     = 2;
 
   /// \brief Sensor information for a robot.
-  optional Sensors sensors = 2;
+  optional Sensors sensors = 3;
+
+  /// \brief Actions sent to the robot.
+  optional Actions actions = 4;
 }

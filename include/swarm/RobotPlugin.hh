@@ -484,6 +484,9 @@ namespace swarm
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
 
+    /// \brief Update the model in Gazebo with the target velocities.
+    private: void UpdateTargetVelocities();
+
     /// \brief ToDo
     private: virtual bool OnLog(msgs::LogEntry &_logEntry) const;
 
@@ -577,17 +580,39 @@ namespace swarm
     /// \brief Half the height of the model.
     private: double modelHeight2;
 
-    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d linearVelocity;
+    /// \brief Latitude observed by the robot's GPS.
+    private: double observedLatitude;
 
-    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d angularVelocity;
+    /// \brief Longitude observed by the robot's GPS.
+    private: double observedLongitude;
 
-    /// \brief Offset with respect the reference pos.
-    private: ignition::math::Quaterniond orientation;
+    /// \brief Altitude observed by the robot's GPS.
+    private: double observedAltitude;
+
+    /// \brief Linear velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedlinVel;
+
+    /// \brief Angular velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedAngVel;
+
+    /// \brief Orientation observed with respect the reference pos.
+    private: ignition::math::Quaterniond observedOrient;
+
+    /// \brief Logical image observed by the robot's camera.
+    private: ImageData img;
+
+    /// \brief Target linear velocity in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetLinVel;
+
+    /// \brief Target angular velocity in the robot's local reference frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetAngVel;
 
     /// \brief Bearing between the true North and the robot.
-    private: ignition::math::Angle bearing;
+    private: ignition::math::Angle observedBearing;
 
     /// \brief The capacity at start. This is used to handle reset.
     private: double startCapacity;

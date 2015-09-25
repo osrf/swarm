@@ -100,37 +100,7 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
   if (this->capacity <= 0)
     return false;
 
-  auto myPose = this->model->GetWorldPose().Ign();
-
-  switch (this->type)
-  {
-    default:
-    case RobotPlugin::GROUND:
-      {
-        // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            _velocity * ignition::math::Vector3d::UnitX);
-        this->model->SetLinearVel(linearVel);
-        break;
-      }
-    case RobotPlugin::ROTOR:
-      {
-        // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            _velocity);
-        this->model->SetLinearVel(linearVel);
-        break;
-      }
-    case RobotPlugin::FIXED_WING:
-      {
-        // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            _velocity * ignition::math::Vector3d::UnitX);
-        this->model->SetLinearVel(linearVel);
-        break;
-      }
-  };
-
+  this->targetLinVel = _velocity;
   return true;
 }
 
@@ -147,44 +117,7 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
   if (this->capacity <= 0)
     return false;
 
-  switch (this->type)
-  {
-    default:
-    case RobotPlugin::GROUND:
-      {
-        this->model->SetAngularVel(
-            _velocity * ignition::math::Vector3d::UnitZ);;
-        break;
-      }
-    case RobotPlugin::ROTOR:
-      {
-        this->model->SetAngularVel(_velocity);
-        break;
-      }
-    case RobotPlugin::FIXED_WING:
-      {
-        double yawRate = 0.0;
-        double rollRate = 0.0;
-
-        // Current orientation as Euler angles
-        ignition::math::Vector3d rpy = this->orientation.Euler();
-
-        // Make sure we don't divide by zero. The vehicle should also
-        // be moving before it can bank.
-        if (!ignition::math::equal(this->linearVelocity.X(), 0.0))
-        {
-          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocity.X();
-          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
-          rollRate = ignition::math::clamp(_velocity[0],
-              -IGN_DTOR(5), IGN_DTOR(5));
-        }
-
-        this->model->SetAngularVel(
-            ignition::math::Vector3d(rollRate, _velocity[1], yawRate));
-        break;
-      }
-  };
-
+  this->targetAngVel = _velocity;
   return true;
 }
 
@@ -198,48 +131,133 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateSensors()
 {
+  if (this->gps)
+  {
+    this->observedLatitude = this->gps->Latitude().Degree();
+    this->observedLongitude = this->gps->Longitude().Degree();
+    this->observedAltitude = this->gps->GetAltitude();
+  }
+
   if (this->imu)
   {
-    this->linearVelocity = this->model->GetRelativeLinearVel().Ign() +
+    this->observedlinVel = this->model->GetRelativeLinearVel().Ign() +
       ignition::math::Vector3d(
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002));
 
-    this->angularVelocity = this->imu->AngularVelocity();
-    this->orientation = this->imu->Orientation();
+    this->observedAngVel = this->imu->AngularVelocity();
+    this->observedOrient = this->imu->Orientation();
   }
 
   // Get the Yaw angle of the model in Gazebo world coordinates.
-  this->bearing = ignition::math::Angle(
+  this->observedBearing = ignition::math::Angle(
       this->model->GetWorldPose().rot.GetAsEuler().z +
       ignition::math::Rand::DblNormal(0, 0.035));
 
   // A "0" bearing value means that the model is facing North.
   // North is aligned with the Gazebo Y axis, so we should add an offset of
   // PI/2 to the bearing in the Gazebo world coordinates.
-  this->bearing = ignition::math::Angle::HalfPi - this->bearing;
+  this->observedBearing = ignition::math::Angle::HalfPi - this->observedBearing;
 
   // Normalize: Gazebo orientation uses PI,-PI but compasses seem
   // to use 0,2*PI.
-  if (this->bearing.Radian() < 0)
-    this->bearing = ignition::math::Angle::TwoPi + this->bearing;
+  if (this->observedBearing.Radian() < 0)
+    this->observedBearing = ignition::math::Angle::TwoPi +this->observedBearing;
+
+  // Update camera.
+  this->img.objects.clear();
+  if (this->camera)
+  {
+    gazebo::msgs::LogicalCameraImage logicalImg = this->camera->Image();
+    for (auto const imgModel : logicalImg.model())
+    {
+      // Skip ground plane model
+      if (imgModel.name() != "ground_plane")
+      {
+        this->img.objects[imgModel.name()] =
+            gazebo::msgs::ConvertIgn(imgModel.pose());
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdateTargetVelocities()
+{
+  if (this->capacity <= 0)
+    return;
+
+  auto myPose = this->model->GetWorldPose().Ign();
+
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            this->targetLinVel * ignition::math::Vector3d::UnitX);
+
+        this->model->SetLinearVel(linearVel);
+        this->model->SetAngularVel(
+            this->targetAngVel * ignition::math::Vector3d::UnitZ);;
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            this->targetLinVel);
+
+        this->model->SetLinearVel(linearVel);
+        this->model->SetAngularVel(this->targetAngVel);
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
+        // Get linear velocity in world frame
+        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+            this->targetLinVel * ignition::math::Vector3d::UnitX);
+        this->model->SetLinearVel(linearVel);
+
+        double yawRate = 0.0;
+        double rollRate = 0.0;
+
+        // Current orientation as Euler angles
+        ignition::math::Vector3d rpy = this->observedOrient.Euler();
+
+        // Make sure we don't divide by zero. The vehicle should also
+        // be moving before it can bank.
+        if (!ignition::math::equal(this->observedlinVel.X(), 0.0))
+        {
+          yawRate = (-9.81 * tan(rpy.X())) / this->observedlinVel.X();
+          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
+          rollRate = ignition::math::clamp(this->targetAngVel[0],
+              -IGN_DTOR(5), IGN_DTOR(5));
+        }
+
+        this->model->SetAngularVel(
+            ignition::math::Vector3d(rollRate, this->targetAngVel[1], yawRate));
+        break;
+      }
+  };
 }
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
   ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
 {
-  _linVel = this->linearVelocity;
-  _angVel = this->angularVelocity;
-  _orient = this->orientation;
+  _linVel = this->observedlinVel;
+  _angVel = this->observedAngVel;
+  _orient = this->observedOrient;
   return true;
 }
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 {
-  _bearing = this->bearing;
+  _bearing = this->observedBearing;
   return true;
 }
 
@@ -255,9 +273,9 @@ bool RobotPlugin::Pose(double &_latitude,
     return false;
   }
 
-  _latitude = this->gps->Latitude().Degree();
-  _longitude = this->gps->Longitude().Degree();
-  _altitude = this->gps->GetAltitude();
+  _latitude = this->observedLatitude;
+  _longitude = this->observedLongitude;
+  _altitude = this->observedAltitude;
 
   return true;
 }
@@ -271,16 +289,7 @@ bool RobotPlugin::Image(ImageData &_img) const
     return false;
   }
 
-  _img.objects.clear();
-
-  gazebo::msgs::LogicalCameraImage img = this->camera->Image();
-  for (auto const imgModel : img.model())
-  {
-    // Skip ground plane model
-    if (imgModel.name() != "ground_plane")
-      _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
-  }
-
+  _img = this->img;
   return true;
 }
 
@@ -330,6 +339,9 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   // Always give the team controller an update.
   this->Update(_info);
+
+  // Apply the controller's actions to the simulation.
+  this->UpdateTargetVelocities();
 
   // Adjust pose as necessary.
   this->AdjustPose();
@@ -943,42 +955,70 @@ ignition::math::Pose3d RobotPlugin::CameraToWorld(
 /////////////////////////////////////////////////
 bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
 {
-  // ToDo: Only IMU and bearing are cached during Update().
-  // We should cache all of them.
-
   // Fill the last GPS observation.
-  msgs::Gps *lastGps = new msgs::Gps();
-  double latitude, longitude, altitude;
-  this->Pose(latitude, longitude, altitude);
-  lastGps->set_latitude(latitude);
-  lastGps->set_longitude(longitude);
-  lastGps->set_altitude(altitude);
+  msgs::Gps *obsGps = new msgs::Gps();
+  obsGps->set_latitude(this->observedLatitude);
+  obsGps->set_longitude(this->observedLongitude);
+  obsGps->set_altitude(this->observedAltitude);
 
   // Fill the last IMU observation.
-  msgs::Vector3 *vlin = new msgs::Vector3();
-  msgs::Vector3 *vang = new msgs::Vector3();
-  msgs::Quaternion *orient = new msgs::Quaternion();
-  msgs::Imu *lastImu = new msgs::Imu();
-  vlin->set_x(this->linearVelocity.X());
-  vlin->set_y(this->linearVelocity.Y());
-  vlin->set_z(this->linearVelocity.Z());
-  vang->set_x(this->angularVelocity.X());
-  vang->set_y(this->angularVelocity.Y());
-  vang->set_z(this->angularVelocity.Z());
-  orient->set_x(this->orientation.X());
-  orient->set_y(this->orientation.Y());
-  orient->set_z(this->orientation.Z());
-  orient->set_w(this->orientation.W());
-  lastImu->set_allocated_linvel(vlin);
-  lastImu->set_allocated_angvel(vang);
-  lastImu->set_allocated_orientation(orient);
+  msgs::Vector3 *obsVlin = new msgs::Vector3();
+  msgs::Vector3 *obsVang = new msgs::Vector3();
+  msgs::Quaternion *obsOrient = new msgs::Quaternion();
+  msgs::Imu *obsImu = new msgs::Imu();
+  obsVlin->set_x(this->observedlinVel.X());
+  obsVlin->set_y(this->observedlinVel.Y());
+  obsVlin->set_z(this->observedlinVel.Z());
+  obsVang->set_x(this->observedAngVel.X());
+  obsVang->set_y(this->observedAngVel.Y());
+  obsVang->set_z(this->observedAngVel.Z());
+  obsOrient->set_x(this->observedOrient.X());
+  obsOrient->set_y(this->observedOrient.Y());
+  obsOrient->set_z(this->observedOrient.Z());
+  obsOrient->set_w(this->observedOrient.W());
+  obsImu->set_allocated_linvel(obsVlin);
+  obsImu->set_allocated_angvel(obsVang);
+  obsImu->set_allocated_orientation(obsOrient);
+
+  // Fill the camera observation.
+  msgs::ImageData *obsImage = new msgs::ImageData();
+  for (const auto imgObj : this->img.objects)
+  {
+    msgs::ObjPose *obj = obsImage->add_object();
+    obj->set_name(imgObj.first);
+    obj->mutable_pose()->mutable_position()->set_x(imgObj.second.Pos().X());
+    obj->mutable_pose()->mutable_position()->set_y(imgObj.second.Pos().Y());
+    obj->mutable_pose()->mutable_position()->set_z(imgObj.second.Pos().Z());
+    obj->mutable_pose()->mutable_orientation()->set_x(imgObj.second.Rot().X());
+    obj->mutable_pose()->mutable_orientation()->set_y(imgObj.second.Rot().Y());
+    obj->mutable_pose()->mutable_orientation()->set_z(imgObj.second.Rot().Z());
+    obj->mutable_pose()->mutable_orientation()->set_w(imgObj.second.Rot().W());
+  }
 
   msgs::Sensors *sensors = new msgs::Sensors();
-  sensors->set_allocated_gps(lastGps);
-  sensors->set_allocated_imu(lastImu);
+  sensors->set_allocated_gps(obsGps);
+  sensors->set_allocated_imu(obsImu);
+  sensors->set_bearing(this->observedBearing.Radian());
+  sensors->set_allocated_image(obsImage);
 
   // Fill the sensor information of the log entry.
   _logEntry.set_allocated_sensors(sensors);
+
+  // Fill the actions.
+  msgs::Vector3 *targetVlin = new msgs::Vector3();
+  msgs::Vector3 *targetVang = new msgs::Vector3();
+  targetVlin->set_x(this->targetLinVel.X());
+  targetVlin->set_y(this->targetLinVel.Y());
+  targetVlin->set_z(this->targetLinVel.Z());
+  targetVang->set_x(this->targetAngVel.X());
+  targetVang->set_y(this->targetAngVel.Y());
+  targetVang->set_z(this->targetAngVel.Z());
+
+  msgs::Actions *actions = new msgs::Actions();
+  actions->set_allocated_linvel(targetVlin);
+  actions->set_allocated_angvel(targetVang);
+
+  _logEntry.set_allocated_actions(actions);
 
   return true;
 }
