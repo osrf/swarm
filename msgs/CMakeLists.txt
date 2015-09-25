@@ -1,13 +1,8 @@
 set(msgs
   datagram.proto
-  #gps.proto
-  #imu.proto
   log_entry.proto
   neighbor_v.proto
   personfound.proto
-  #quaternion.proto
-  #sensors.proto
-  #vector3d.proto
 )
 
 add_executable(ignmsgs_out generator/IgnGenerator.cc generator/ign_generator.cc)

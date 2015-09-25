@@ -19,8 +19,8 @@
 /// \brief Provide functions for parsing a log file.
 
 #include <cstdint>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "msgs/log_entry.pb.h"
