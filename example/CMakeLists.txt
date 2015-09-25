@@ -23,3 +23,8 @@ target_link_libraries(TeamControllerPlugin ${SWARM_LIBRARIES})
 # GNUInstallDirst defines CMAKE_INSTALL_LIBDIR, among other things.
 include(GNUInstallDirs)
 install(TARGETS TeamControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
+
+#################################################
+# Generate a sample for showing how to parse a log file.
+add_executable(sampleParser sampleParser.cc)
+target_link_libraries(sampleParser ${SWARM_LIBRARIES} ${PROTOBUF_LIBRARY})

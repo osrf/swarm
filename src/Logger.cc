@@ -15,11 +15,13 @@
  *
 */
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
+#include "swarm/LogParser.hh"
 
 using namespace swarm;
 
@@ -42,7 +44,7 @@ Logger::~Logger()
 }
 
 //////////////////////////////////////////////////
-bool Logger::Register(const std::string _id, const Loggable *_client)
+bool Logger::Register(const std::string &_id, const Loggable *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
   {
@@ -61,27 +63,29 @@ void Logger::Update(const double _simTime)
   // Fill the simulation time of the log entry.
   for (const auto &client : this->clients)
   {
-    //std::cout << client.first << std::endl;
     msgs::LogEntry logEntryMsg;
 
     // Set the simulation time of the log entry.
     logEntryMsg.set_time(_simTime);
 
     client.second->OnLog(logEntryMsg);
-    std::cout << logEntryMsg.DebugString() << std::endl;
 
     this->log[client.first] = logEntryMsg;
   }
 
-  std::fstream output("/tmp/test.log", std::ios::out | std::ios::trunc | std::ios::binary);
+
+  static std::fstream output("/tmp/test.log", std::ios::out | std::ios::binary);
   // Flush the log into disk.
   for (const auto &robotLog : this->log)
   {
+    // Write the length of the message to be serialized.
+    int32_t size = robotLog.second.ByteSize();
+    output.write(reinterpret_cast<char*>(&size), sizeof(size));
+
     if (!robotLog.second.SerializeToOstream(&output))
     {
       std::cerr << "Failed to write log into disk." << std::endl;
       return;
     }
   }
-
 }

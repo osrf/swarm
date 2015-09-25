@@ -980,8 +980,5 @@ bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   // Fill the sensor information of the log entry.
   _logEntry.set_allocated_sensors(sensors);
 
-  //_logEntry->mutable->sensors
-  std::cout << "RobotPlugin::OnLog()" << std::endl;
-
   return true;
 }

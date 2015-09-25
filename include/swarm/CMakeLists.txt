@@ -6,6 +6,7 @@ set (headers
   CommsModel.hh
   Helpers.hh
   Logger.hh
+  LogParser.hh
   RobotPlugin.hh
   SwarmTypes.hh
 )

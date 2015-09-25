@@ -52,7 +52,7 @@ namespace swarm
     public: void Update(const double _simTime);
 
     /// \brief ToDo.
-    public: bool Register(const std::string _id, const Loggable *_client);
+    public: bool Register(const std::string &_id, const Loggable *_client);
 
     /// \brief Constructor.
     protected: Logger();
