@@ -148,7 +148,7 @@
         <%x_pos = x * 1%>
         <%y_pos = y * 1%>
         <%yaw = 0%>
-        <%ip = "192.168.1.#{x+1}"%>
+        <%ip = "192.168.1.#{y * 6 + x + 1}"%>
         <%= ERB.new(File.read('rotor_vehicle.sdf.erb'),
                     nil, nil, "_sub01").result(binding)%>
       <% end %>
