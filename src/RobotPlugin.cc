@@ -186,9 +186,9 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
 
         // Make sure we don't divide by zero. The vehicle should also
         // be moving before it can bank.
-        if (!ignition::math::equal(this->linearVelocity.X(), 0.0))
+        if (!ignition::math::equal(this->linearVelocityNoNoise.X(), 0.0))
         {
-          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocity.X();
+          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocityNoNoise.X();
           yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
           rollRate = ignition::math::clamp(_velocity[0],
               -IGN_DTOR(5), IGN_DTOR(5));
