@@ -54,7 +54,7 @@ namespace swarm
     private: gazebo::physics::WorldPtr world;
 
     /// \brief The current test case
-    private: int testCase;
+    private: int testCase = 0;
   };
 }
 #endif

@@ -48,7 +48,7 @@ void BatteryPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BatteryPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
-  switch(this->testCase)
+  switch (this->testCase)
   {
     default:
     case 0:
