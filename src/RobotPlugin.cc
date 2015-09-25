@@ -98,47 +98,7 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
   if (this->capacity <= 0)
     return false;
 
-  auto myPose = this->model->GetWorldPose().Ign();
-
-  ignition::math::Vector3d linearVel;
-  double limitFactor = 1.0;
-
-  switch (this->type)
-  {
-    default:
-    case RobotPlugin::GROUND:
-      {
-        // Get linear velocity in world frame
-        linearVel = myPose.Rot().RotateVector(
-            _velocity * ignition::math::Vector3d::UnitX);
-
-        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
-        break;
-      }
-    case RobotPlugin::ROTOR:
-      {
-        // Get linear velocity in world frame
-        linearVel = myPose.Rot().RotateVector(_velocity);
-
-        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
-        break;
-      }
-    case RobotPlugin::FIXED_WING:
-      {
-        // Get linear velocity in world frame
-        linearVel = myPose.Rot().RotateVector(
-            _velocity * ignition::math::Vector3d::UnitX);
-
-        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
-        break;
-      }
-  };
-
-  // Clamp the linear velocity
-  linearVel = linearVel /
-    ignition::math::clamp(limitFactor, 1.0, limitFactor);
-
-  this->model->SetLinearVel(linearVel);
+  this->targetLinVel = _velocity;
 
   return true;
 }
@@ -156,51 +116,7 @@ bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
   if (this->capacity <= 0)
     return false;
 
-  switch (this->type)
-  {
-    default:
-    case RobotPlugin::GROUND:
-      {
-        double vel = ignition::math::clamp(_velocity.Z(),
-            -this->groundMaxAngularVel, this->groundMaxAngularVel);
-        this->model->SetAngularVel(ignition::math::Vector3d(vel, 0, 0));
-        break;
-      }
-    case RobotPlugin::ROTOR:
-      {
-        // Clamp the angular velocity
-        double limitFactor = _velocity.Length() / this->rotorMaxAngularVel;
-        ignition::math::Vector3d vel = _velocity /
-          ignition::math::clamp(limitFactor, 1.0, limitFactor);
-
-        this->model->SetAngularVel(vel);
-        break;
-      }
-    case RobotPlugin::FIXED_WING:
-      {
-        double yawRate = 0.0;
-        double rollRate = 0.0;
-
-        // Current orientation as Euler angles
-        ignition::math::Vector3d rpy = this->orientation.Euler();
-
-        // Make sure we don't divide by zero. The vehicle should also
-        // be moving before it can bank.
-        if (!ignition::math::equal(this->linearVelocity.X(), 0.0))
-        {
-          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocity.X();
-          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
-          rollRate = ignition::math::clamp(_velocity[0],
-              -IGN_DTOR(5), IGN_DTOR(5));
-        }
-
-        this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
-              ignition::math::clamp(_velocity[1], -this->fixedMaxAngularVel,
-                this->fixedMaxAngularVel), yawRate));
-        break;
-      }
-  };
-
+  this->targetAngVel = _velocity;
   return true;
 }
 
@@ -214,51 +130,176 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateSensors()
 {
+  if (this->gps)
+  {
+    this->observedLatitude = this->gps->Latitude().Degree();
+    this->observedLongitude = this->gps->Longitude().Degree();
+    this->observedAltitude = this->gps->GetAltitude();
+  }
+
   if (this->imu)
   {
     this->linearVelocityNoNoise = this->model->GetRelativeLinearVel().Ign();
     this->angularVelocityNoNoise = this->model->GetRelativeAngularVel().Ign();
 
-    this->linearVelocity = this->linearVelocityNoNoise +
+    this->observedlinVel = this->linearVelocityNoNoise +
       ignition::math::Vector3d(
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002),
           ignition::math::Rand::DblNormal(0, 0.0002));
 
-    this->angularVelocity = this->imu->AngularVelocity();
-    this->orientation = this->imu->Orientation();
+    this->observedAngVel = this->imu->AngularVelocity();
+    this->observedOrient = this->imu->Orientation();
   }
 
   // Get the Yaw angle of the model in Gazebo world coordinates.
-  this->bearing = ignition::math::Angle(
+  this->observedBearing = ignition::math::Angle(
       this->model->GetWorldPose().rot.GetAsEuler().z +
       ignition::math::Rand::DblNormal(0, 0.035));
 
   // A "0" bearing value means that the model is facing North.
   // North is aligned with the Gazebo Y axis, so we should add an offset of
   // PI/2 to the bearing in the Gazebo world coordinates.
-  this->bearing = ignition::math::Angle::HalfPi - this->bearing;
+  this->observedBearing = ignition::math::Angle::HalfPi - this->observedBearing;
 
   // Normalize: Gazebo orientation uses PI,-PI but compasses seem
   // to use 0,2*PI.
-  if (this->bearing.Radian() < 0)
-    this->bearing = ignition::math::Angle::TwoPi + this->bearing;
+  if (this->observedBearing.Radian() < 0)
+    this->observedBearing = ignition::math::Angle::TwoPi +this->observedBearing;
+
+  // Update camera.
+  this->img.objects.clear();
+  if (this->camera)
+  {
+    gazebo::msgs::LogicalCameraImage logicalImg = this->camera->Image();
+    for (auto const imgModel : logicalImg.model())
+    {
+      // Skip ground plane model
+      if (imgModel.name() != "ground_plane")
+      {
+        this->img.objects[imgModel.name()] =
+            gazebo::msgs::ConvertIgn(imgModel.pose());
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdateLinearVelocity()
+{
+  if (this->capacity <= 0)
+    return;
+
+  auto myPose = this->model->GetWorldPose().Ign();
+
+  ignition::math::Vector3d linearVel;
+  double limitFactor = 1.0;
+
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        // Get linear velocity in world frame
+        linearVel = myPose.Rot().RotateVector(
+            this->targetLinVel * ignition::math::Vector3d::UnitX);
+
+        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        // Get linear velocity in world frame
+        linearVel = myPose.Rot().RotateVector(this->targetLinVel);
+
+        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
+        // Get linear velocity in world frame
+        linearVel = myPose.Rot().RotateVector(
+            this->targetLinVel * ignition::math::Vector3d::UnitX);
+
+        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
+        break;
+      }
+  };
+
+  // Clamp the linear velocity
+  linearVel = linearVel /
+    ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+  this->model->SetLinearVel(linearVel);
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdateAngularVelocity()
+{
+  if (this->capacity <= 0)
+    return;
+
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        double vel = ignition::math::clamp(this->targetAngVel.Z(),
+            -this->groundMaxAngularVel, this->groundMaxAngularVel);
+        this->model->SetAngularVel(ignition::math::Vector3d(vel, 0, 0));
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        // Clamp the angular velocity
+        double limitFactor = this->targetAngVel.Length() /
+          this->rotorMaxAngularVel;
+        ignition::math::Vector3d vel = this->targetAngVel /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+        this->model->SetAngularVel(vel);
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
+        double yawRate = 0.0;
+        double rollRate = 0.0;
+
+        // Current orientation as Euler angles
+        ignition::math::Vector3d rpy = this->observedOrient.Euler();
+
+        // Make sure we don't divide by zero. The vehicle should also
+        // be moving before it can bank.
+        if (!ignition::math::equal(this->linearVelocityNoNoise.X(), 0.0))
+        {
+          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocityNoNoise.X();
+          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
+          rollRate = ignition::math::clamp(this->targetAngVel[0],
+              -IGN_DTOR(5), IGN_DTOR(5));
+        }
+
+        this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
+              ignition::math::clamp(this->targetAngVel[1],
+                -this->fixedMaxAngularVel, this->fixedMaxAngularVel), yawRate));
+        break;
+      }
+  };
 }
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Imu(ignition::math::Vector3d &_linVel,
   ignition::math::Vector3d &_angVel, ignition::math::Quaterniond &_orient) const
 {
-  _linVel = this->linearVelocity;
-  _angVel = this->angularVelocity;
-  _orient = this->orientation;
+  _linVel = this->observedlinVel;
+  _angVel = this->observedAngVel;
+  _orient = this->observedOrient;
   return true;
 }
 
 //////////////////////////////////////////////////
 bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 {
-  _bearing = this->bearing;
+  _bearing = this->observedBearing;
   return true;
 }
 
@@ -291,9 +332,9 @@ bool RobotPlugin::Pose(double &_latitude,
     return false;
   }
 
-  _latitude = this->gps->Latitude().Degree();
-  _longitude = this->gps->Longitude().Degree();
-  _altitude = this->gps->GetAltitude();
+  _latitude = this->observedLatitude;
+  _longitude = this->observedLongitude;
+  _altitude = this->observedAltitude;
 
   return true;
 }
@@ -307,15 +348,7 @@ bool RobotPlugin::Image(ImageData &_img) const
     return false;
   }
 
-  _img.objects.clear();
-
-  gazebo::msgs::LogicalCameraImage img = this->camera->Image();
-  for (auto const imgModel : img.model())
-  {
-    // Skip ground plane model
-    if (imgModel.name() != "ground_plane")
-      _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
-  }
+  _img = this->img;
 
   return true;
 }
@@ -366,6 +399,10 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   // Always give the team controller an update.
   this->Update(_info);
+
+  // Apply the controller's actions to the simulation.
+  this->UpdateLinearVelocity();
+  this->UpdateAngularVelocity();
 
   // Adjust pose as necessary.
   this->AdjustPose();
