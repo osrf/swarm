@@ -98,7 +98,7 @@ namespace swarm
     private: std::map<std::string, const Loggable*> clients;
 
     /// \brief Current list of log entries stored in memory. The key is the
-    /// robot ID and the value is the last logEntry stored for this client.
+    /// client ID and the value is the last logEntry stored for this client.
     private: std::map<std::string, msgs::LogEntry> log;
 
     /// \brief Stream object to operate on a log file.

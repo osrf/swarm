@@ -143,6 +143,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
 
+  // Log the current iteration.
   this->logger->Update(_info.simTime.Double());
 }
 

@@ -110,7 +110,7 @@ namespace swarm
     /// \brief Comms model that we're using.
     private: std::unique_ptr<CommsModel> commsModel;
 
-    /// \brief Todo
+    /// \brief Logger instance.
     private: Logger *logger = Logger::GetInstance();
   };
 }

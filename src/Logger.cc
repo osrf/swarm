@@ -106,13 +106,13 @@ void Logger::Update(const double _simTime)
   }
 
   // Flush the log into disk.
-  for (const auto &robotLog : this->log)
+  for (const auto &logPair : this->log)
   {
     // Write the length of the message to be serialized.
-    int32_t size = robotLog.second.ByteSize();
+    int32_t size = logPair.second.ByteSize();
     output.write(reinterpret_cast<char*>(&size), sizeof(size));
 
-    if (!robotLog.second.SerializeToOstream(&output))
+    if (!logPair.second.SerializeToOstream(&output))
     {
       std::cerr << "Failed to write log into disk." << std::endl;
       return;

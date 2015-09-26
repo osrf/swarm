@@ -50,18 +50,20 @@ TEST(LoggerTest, Log)
 {
   Logger *logger = Logger::GetInstance();
 
-  // Create some log clients.
+  // Client #1.
+  Logger *logger1 = Logger::GetInstance();
   LogClient client1("#1");
-  LogClient client2("#2");
-
-  EXPECT_TRUE(logger->Register(client1.id, &client1));
+  EXPECT_TRUE(logger1->Register(client1.id, &client1));
 
   // Try to register an existing client.
-  EXPECT_FALSE(logger->Register(client1.id, &client1));
+  EXPECT_FALSE(logger1->Register(client1.id, &client1));
 
-  // Register another client.
-  EXPECT_TRUE(logger->Register(client2.id, &client2));
+  // Client #2.
+  Logger *logger2 = Logger::GetInstance();
+  LogClient client2("#2");
+  EXPECT_TRUE(logger2->Register(client2.id, &client2));
 
+  // Generate some log data.
   msgs::LogEntry logEntry;
   logger->Update(1.0);
 
