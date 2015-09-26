@@ -18,8 +18,8 @@
 #include <iostream>
 #include <string>
 #include <boost/program_options.hpp>
-#include <swarm/LogParser.hh>
-#include <swarm/msgs/log_entry.pb.h>
+#include "swarm/LogParser.hh"
+#include "msgs/log_entry.pb.h"
 
 namespace po = boost::program_options;
 

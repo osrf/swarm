@@ -2,7 +2,6 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (common_sources ${common_sources}
   Logger.cc
-
 )
 
 set (broker_plugin_sources
