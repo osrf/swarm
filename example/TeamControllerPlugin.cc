@@ -71,33 +71,33 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       dstAddress = "192.168.2.1";
 
     // Send a unicast message.
-    if (!this->SendTo("Unicast data", dstAddress))
-    {
-      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
-            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
-            << std::endl;
-      return;
-    }
+    //if (!this->SendTo("Unicast data", dstAddress))
+    //{
+    //  gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
+    //        << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+    //        << std::endl;
+    //  return;
+    //}
 
     // Send a broadcast message.
-    dstAddress = this->kBroadcast;
-    if (!this->SendTo("Broadcast data", dstAddress))
-    {
-      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
-            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
-            << std::endl;
-      return;
-    }
+    //dstAddress = this->kBroadcast;
+    //if (!this->SendTo("Broadcast data", dstAddress))
+    //{
+    //  gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
+    //        << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+    //        << std::endl;
+    //  return;
+    //}
 
     // Send a multicast message.
-    dstAddress = this->kMulticast;
-    if (!this->SendTo("Multicast data", dstAddress))
-    {
-      gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
-            << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
-            << std::endl;
-      return;
-    }
+    //dstAddress = this->kMulticast;
+    //if (!this->SendTo("Multicast data", dstAddress))
+    //{
+    //  gzerr << "[" << this->Host() << "] TeamControllerPlugin::Update(): "
+    //        << "Error sending a message to <" << dstAddress << ",DEFAULT_PORT>"
+    //        << std::endl;
+    //  return;
+    //}
 
     // Show the list of neighbors.
     if (this->Neighbors().empty())

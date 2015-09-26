@@ -73,6 +73,10 @@ namespace swarm
     /// \return Pointer to the current Logger instance.
     public: static Logger *GetInstance();
 
+    /// \brief Get the full path of the log file.
+    /// \return Full path to the log.
+    public: std::string FilePath() const;
+
     /// \brief Collect a new round of log information from the clients.
     /// \param[in] _simTime Current simulation time.
     public: void Update(const double _simTime);
@@ -80,7 +84,8 @@ namespace swarm
     /// \brief Register a new client for logging.
     /// \param[in] _id Unique ID of the client.
     /// \param[in] _client Pointer to the client.
-    public: bool Register(const std::string &_id, const Loggable *_client);
+    public: bool Register(const std::string &_id,
+                          const Loggable *_client);
 
     /// \brief Constructor.
     protected: Logger();

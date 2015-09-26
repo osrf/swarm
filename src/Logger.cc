@@ -55,6 +55,12 @@ Logger::Logger()
 }
 
 //////////////////////////////////////////////////
+std::string Logger::FilePath() const
+{
+  return this->logCompletePath.string();
+}
+
+//////////////////////////////////////////////////
 bool Logger::Register(const std::string &_id, const Loggable *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
@@ -112,4 +118,6 @@ void Logger::Update(const double _simTime)
       return;
     }
   }
+
+  output.flush();
 }
