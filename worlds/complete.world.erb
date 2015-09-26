@@ -46,17 +46,38 @@
   <consumption_factor>0.7</consumption_factor>
   </battery>'''%>
 
-
 <sdf version="1.5">
   <world name="default">
-    <!-- Create the ground vehicles -->
+  <!-- Create the ground vehicles  -->
     <% for x in 0..ground_count %>
       <%name = "ground_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = 0%>
       <%yaw = 0%>
-      <%ip = "192.168.3.#{x+1}"%>
+      <%ip = "192.168.1.#{x+1}"%>
       <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
+                  nil, nil, "_sub01").result(binding)%>
+    <% end %>
+
+    <!-- Create the rotor vehicles -->
+    <% for x in 0..rotor_count %>
+      <%name = "rotor_#{x}" %>
+      <%x_pos = x * 6%>
+      <%y_pos = -6%>
+      <%yaw = 0%>
+      <%ip = "192.168.3.#{x+1}"%>
+      <%= ERB.new(File.read('rotor_vehicle.sdf.erb'),
+                  nil, nil, "_sub01").result(binding)%>
+    <% end %>
+
+    <!-- Create the fixed wing vehicles -->
+    <% for x in 0..fixed_count %>
+      <%name = "fixed_#{x}" %>
+      <%x_pos = x * 6%>
+      <%y_pos = -4%>
+      <%yaw = 0%>
+      <%ip = "192.168.2.#{x+1}"%>
+      <%= ERB.new(File.read('fixedwing_vehicle.sdf.erb'),
                   nil, nil, "_sub01").result(binding)%>
     <% end %>
 
@@ -175,391 +196,6 @@
         <max_z>0</max_z>
       </plugin>
    </model>
-    <% for x in 0..fixed_count %>
-        <model name="fixed_wing_<%=x%>">
-          <pose>0 <%=x*0.4%> 20.05 0 0 0</pose>
-          <link name="link">
-            <sensor name="gps" type="gps">
-              <gps>
-                <position_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </position_sensing>
-                <velocity_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </velocity_sensing>
-              </gps>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="imu" type="imu">
-              <imu>
-                <angular_velocity>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </angular_velocity>
-                <linear_acceleration>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </linear_acceleration>
-              </imu>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="camera" type="logical_camera">
-              <logical_camera>
-                <near><%=camera_near%></near>
-                <far><%=camera_far%></far>
-                <horizontal_fov><%=camera_fov%></horizontal_fov>
-                <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
-              </logical_camera>
-              <visualize>false</visualize>
-              <always_on>true</always_on>
-            </sensor>
-
-            <kinematic>true</kinematic>
-            <gravity>false</gravity>
-            <collision name="collision">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </collision>
-            <visual name="visual">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </visual>
-            <visual name="visual_front">
-              <pose>0.07 0 0.04 0 0 0</pose>
-              <geometry>
-                <sphere>
-                  <radius>.04</radius>
-                </sphere>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Red</name>
-                </script>
-              </material>
-            </visual>
-
-            <visual name="visual_wing1">
-              <pose>0.03 0 0.02 0 0 0</pose>
-              <geometry>
-                <box>
-                  <size>.06 0.35 0.01</size>
-                </box>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Blue</name>
-                </script>
-              </material>
-            </visual>
-
-            <visual name="visual_wing2">
-              <pose>-0.07 0 0.055 0 0 0</pose>
-              <geometry>
-                <box>
-                  <size>.03 0.15 0.01</size>
-                </box>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Blue</name>
-                </script>
-              </material>
-            </visual>
-          </link>
-
-
-          <!-- Load the plugin to control this robot -->
-          <plugin name="swarm_controller_<%=x%>"
-                  filename="libTeamControllerPlugin.so">
-            <type>fixed_wing</type>
-            <camera>link::camera</camera>
-            <gps>link::gps</gps>
-            <imu>link::imu</imu>
-            <address>192.168.1.<%=x+1%></address>
-            <num_messages>1</num_messages>
-            <%=search_area%>
-            <%=fixed_battery%>
-          </plugin>
-        </model>
-    <% end %>
-
-    <% for x in 0..rotor_count %>
-      <model name="rotor_<%=x%>">
-        <pose>0 <%=x*0.4%> 10.05 0 0 0</pose>
-          <link name="link">
-            <sensor name="gps" type="gps">
-              <gps>
-                <position_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </position_sensing>
-                <velocity_sensing>
-                  <horizontal>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>4</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.001</precision>
-                    </noise>
-                  </horizontal>
-                  <vertical>
-                    <noise type="gaussian_quantized">
-                      <mean>0</mean>
-                      <stddev>8</stddev>
-                      <bias_mean>0</bias_mean>
-                      <bias_stddev>0</bias_stddev>
-                      <precision>0.01</precision>
-                    </noise>
-                  </vertical>
-                </velocity_sensing>
-              </gps>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="imu" type="imu">
-              <imu>
-                <angular_velocity>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </angular_velocity>
-                <linear_acceleration>
-                  <x>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </x>
-                  <y>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </y>
-                  <z>
-                    <noise type="gaussian">
-                      <mean>0</mean>
-                      <stddev>0.0002</stddev>
-                      <bias_mean>7.5e-06</bias_mean>
-                      <bias_stddev>8e-07</bias_stddev>
-                    </noise>
-                  </z>
-                </linear_acceleration>
-              </imu>
-              <always_on>1</always_on>
-            </sensor>
-
-            <sensor name="camera" type="logical_camera">
-              <logical_camera>
-                <near><%=camera_near%></near>
-                <far><%=camera_far%></far>
-                <horizontal_fov><%=camera_fov%></horizontal_fov>
-                <aspect_ratio><%=camera_aspect_ratio%></aspect_ratio>
-              </logical_camera>
-              <visualize>false</visualize>
-              <always_on>true</always_on>
-            </sensor>
-
-            <kinematic>true</kinematic>
-            <gravity>false</gravity>
-            <collision name="collision">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </collision>
-            <visual name="visual">
-              <geometry>
-                <box>
-                  <size>0.2 .1 .1</size>
-                </box>
-              </geometry>
-            </visual>
-            <visual name="visual_front">
-              <pose>0.07 0 0.04 0 0 0</pose>
-              <geometry>
-                <sphere>
-                  <radius>.04</radius>
-                </sphere>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Red</name>
-                </script>
-              </material>
-            </visual>
-
-            <visual name="visual_blade1">
-              <pose>0 0 0.055 0 0 0.78539</pose>
-              <geometry>
-                <box>
-                  <size>.4 0.02 0.01</size>
-                </box>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Green</name>
-                </script>
-              </material>
-            </visual>
-            <visual name="visual_blade2">
-              <pose>0 0 0.055 0 0 2.3562</pose>
-              <geometry>
-                <box>
-                  <size>.4 0.02 0.01</size>
-                </box>
-              </geometry>
-              <material>
-                <script>
-                  <name>Gazebo/Green</name>
-                </script>
-              </material>
-            </visual>
-          </link>
-          <!-- Load the plugin to control this robot -->
-          <plugin name="swarm_controller_<%=x%>"
-                  filename="libTeamControllerPlugin.so">
-            <type>rotor</type>
-            <camera>link::camera</camera>
-            <gps>link::gps</gps>
-            <imu>link::imu</imu>
-            <address>192.168.2.<%=x+1%></address>
-            <num_messages>1</num_messages>
-            <%=search_area%>
-            <%=rotor_battery%>
-          </plugin>
-        </model>
-    <% end %>
-
 
     <!-- Load the plugin to deliver all the messages inside the swarm -->
     <plugin name="swarm_broker" filename="libSwarmBrokerPlugin.so">
@@ -617,4 +253,3 @@
 
   </world>
 </sdf>
-

@@ -4,6 +4,9 @@ set (world_files
 
 # World files that need to be processed with erb
 set (world_erb_files
+  battery_00.world.erb
+  battery_01.world.erb
+  battery_02.world.erb
   boo_00.world.erb
   boo_01.world.erb
   boo_02.world.erb

@@ -23,7 +23,6 @@
 #include <fstream>
 #include <map>
 #include <string>
-#include <boost/filesystem.hpp>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Helpers.hh"
 
