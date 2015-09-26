@@ -25,8 +25,6 @@ set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
 
 include (${project_cmake_dir}/Utils.cmake)
 
-include (${project_cmake_dir}/FindFlatBuffers.cmake)
-
 ########################################
 # Package Creation:
 

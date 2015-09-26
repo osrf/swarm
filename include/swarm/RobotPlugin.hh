@@ -508,9 +508,6 @@ namespace swarm
     /// \brief Update the angular velocity of the robot model in Gazebo.
     private: void UpdateAngularVelocity();
 
-    /// \brief Update the model in Gazebo with the target velocities.
-    private: void UpdateTargetVelocities();
-
     /// \brief ToDo
     private: virtual bool OnLog(msgs::LogEntry &_logEntry) const;
 
