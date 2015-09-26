@@ -82,16 +82,19 @@ message ImageData
 message Sensors
 {
   /// \brief Last GPS observation.
-  required Gps gps         = 1;
+  required Gps gps                 = 1;
 
   /// \brief Last IMU observation.
-  required Imu imu         = 2;
+  required Imu imu                 = 2;
 
   /// \brief Last compass observation (radians).
-  required double bearing  = 3;
+  required double bearing          = 3;
 
   /// \brief Collection of objects perceived by the robot's camera.
-  optional ImageData image = 4;
+  required ImageData image         = 4;
+
+  /// \brief Current battery capacity.
+  required double battery_capacity = 5;
 }
 
 message Actions

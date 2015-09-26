@@ -1000,6 +1000,7 @@ bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   sensors->set_allocated_imu(obsImu);
   sensors->set_bearing(this->observedBearing.Radian());
   sensors->set_allocated_image(obsImage);
+  sensors->set_battery_capacity(this->BatteryCapacity());
 
   // Fill the sensor information of the log entry.
   _logEntry.set_allocated_sensors(sensors);
