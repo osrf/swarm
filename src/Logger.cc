@@ -22,7 +22,6 @@
 #include <gazebo/common/Time.hh>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
-#include "swarm/LogParser.hh"
 
 using namespace swarm;
 
@@ -56,11 +55,6 @@ Logger::Logger()
 }
 
 //////////////////////////////////////////////////
-Logger::~Logger()
-{
-}
-
-//////////////////////////////////////////////////
 bool Logger::Register(const std::string &_id, const Loggable *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
@@ -85,14 +79,15 @@ void Logger::Update(const double _simTime)
   {
     msgs::LogEntry logEntryMsg;
 
-    // Set the robot ID.
+    // The logger sets some fields.
     logEntryMsg.set_id(client.first);
-
-    // Set the simulation time of the log entry.
     logEntryMsg.set_time(_simTime);
 
+    // The client sets some fields.
     client.second->OnLog(logEntryMsg);
 
+    // We save the logEntry in memory.
+    // ToDo: Allow adding information to an existing entry without replacing it.
     this->log[client.first] = logEntryMsg;
   }
 

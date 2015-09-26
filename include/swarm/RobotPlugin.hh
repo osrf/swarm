@@ -508,8 +508,8 @@ namespace swarm
     /// \brief Update the angular velocity of the robot model in Gazebo.
     private: void UpdateAngularVelocity();
 
-    /// \brief ToDo
-    private: virtual bool OnLog(msgs::LogEntry &_logEntry) const;
+    // Documentation inherited.
+    private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.

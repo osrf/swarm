@@ -1052,7 +1052,7 @@ ignition::math::Pose3d RobotPlugin::CameraToWorld(
 }
 
 /////////////////////////////////////////////////
-bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
+void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
 {
   // Fill the last GPS observation.
   msgs::Gps *obsGps = new msgs::Gps();
@@ -1119,6 +1119,4 @@ bool RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   actions->set_allocated_angvel(targetVang);
 
   _logEntry.set_allocated_actions(actions);
-
-  return true;
 }

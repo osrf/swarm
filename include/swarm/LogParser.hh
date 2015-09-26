@@ -16,7 +16,7 @@
 */
 
 /// \file LogParser.hh
-/// \brief Provide functions for parsing a log file.
+/// \brief Provide functions for parsing a Swarm log file.
 
 #include <cstdint>
 #include <fstream>
@@ -30,10 +30,14 @@
 
 namespace swarm
 {
-  /// \brief ToDo
+  /// \brief Parse a Swarm log file. Once you specify the full path to the log
+  /// file in the constructor, you can call Next().
+  /// Each Next() call returns the next LogEntry stored in the log file.
+  /// When the log file reaches the end, Next() will return false.
   class IGNITION_VISIBLE LogParser
   {
-    /// \brief Todo.
+    /// \brief Class constructor.
+    /// \param[in] _filename Full path to the log file.
     public: LogParser(const std::string &_filename)
       : filename(_filename),
         isOpen(false),
@@ -48,7 +52,10 @@ namespace swarm
       this->isOpen = true;
     };
 
-    /// \brief ToDo.
+    /// \brief Get the next entry of the log.
+    /// \param[out] _entry Next entry parsed from the log.
+    /// \return True when the next entry has been succesfully parsed or false
+    /// otherwise (e.g.: when there are no more entries in the log).
     public: bool Next(msgs::LogEntry &_entry)
     {
       if (!this->isOpen)
@@ -74,16 +81,16 @@ namespace swarm
       return true;
     }
 
-    /// \brief ToDo.
+    /// \brief Destructor.
     public: virtual ~LogParser() = default;
 
-    /// \brief ToDo.
+    /// \brief Full path to the log.
     private: std::string filename;
 
-    /// \brief ToDo.
+    /// \brief True if the file is currently opened.
     private: bool isOpen;
 
-    /// \brief ToDo.
+    /// \brief Stream object to operate on a log file.
     private: std::fstream input;
   };
 }  // namespace
