@@ -259,7 +259,7 @@ namespace swarm
     /// \return The name given to this robot in the SDF file.
     protected: std::string Name() const;
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -278,7 +278,7 @@ namespace swarm
     protected: bool SetLinearVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -298,7 +298,7 @@ namespace swarm
     protected: bool SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -317,7 +317,7 @@ namespace swarm
     protected: bool SetAngularVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -484,6 +484,12 @@ namespace swarm
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
 
+    /// \brief Update the linear velocity of the robot model in Gazebo.
+    private: void UpdateLinearVelocity();
+
+    /// \brief Update the angular velocity of the robot model in Gazebo.
+    private: void UpdateAngularVelocity();
+
     /// \brief Update the model in Gazebo with the target velocities.
     private: void UpdateTargetVelocities();
 
@@ -600,6 +606,9 @@ namespace swarm
     /// \brief Orientation observed with respect the reference pos.
     private: ignition::math::Quaterniond observedOrient;
 
+    /// \brief Bearing between the true North and the robot.
+    private: ignition::math::Angle observedBearing;
+
     /// \brief Logical image observed by the robot's camera.
     private: ImageData img;
 
@@ -610,9 +619,6 @@ namespace swarm
     /// \brief Target angular velocity in the robot's local reference frame.
     /// Units: m/s.
     private: ignition::math::Vector3d targetAngVel;
-
-    /// \brief Bearing between the true North and the robot.
-    private: ignition::math::Angle observedBearing;
 
     /// \brief The capacity at start. This is used to handle reset.
     private: double startCapacity;

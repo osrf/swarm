@@ -42,6 +42,9 @@ RobotPlugin::RobotPlugin()
     searchMinLongitude(0),
     searchMaxLongitude(0),
     modelHeight2(0),
+    observedLatitude(0),
+    observedLongitude(0),
+    observedAltitude(0),
     startCapacity(1),
     capacity(1),
     consumption(0),
@@ -183,12 +186,15 @@ void RobotPlugin::UpdateSensors()
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::UpdateTargetVelocities()
+void RobotPlugin::UpdateLinearVelocity()
 {
   if (this->capacity <= 0)
     return;
 
   auto myPose = this->model->GetWorldPose().Ign();
+
+  ignition::math::Vector3d linearVel;
+  double limitFactor = 1.0;
 
   switch (this->type)
   {
@@ -196,31 +202,67 @@ void RobotPlugin::UpdateTargetVelocities()
     case RobotPlugin::GROUND:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             this->targetLinVel * ignition::math::Vector3d::UnitX);
 
-        this->model->SetLinearVel(linearVel);
-        this->model->SetAngularVel(
-            this->targetAngVel * ignition::math::Vector3d::UnitZ);;
+        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
         break;
       }
     case RobotPlugin::ROTOR:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
-            this->targetLinVel);
+        linearVel = myPose.Rot().RotateVector(this->targetLinVel);
 
-        this->model->SetLinearVel(linearVel);
-        this->model->SetAngularVel(this->targetAngVel);
+        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
         break;
       }
     case RobotPlugin::FIXED_WING:
       {
         // Get linear velocity in world frame
-        ignition::math::Vector3d linearVel = myPose.Rot().RotateVector(
+        linearVel = myPose.Rot().RotateVector(
             this->targetLinVel * ignition::math::Vector3d::UnitX);
-        this->model->SetLinearVel(linearVel);
 
+        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
+        break;
+      }
+  };
+
+  // Clamp the linear velocity
+  linearVel = linearVel /
+    ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+  this->model->SetLinearVel(linearVel);
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdateAngularVelocity()
+{
+  if (this->capacity <= 0)
+    return;
+
+  switch (this->type)
+  {
+    default:
+    case RobotPlugin::GROUND:
+      {
+        double vel = ignition::math::clamp(this->targetAngVel.Z(),
+            -this->groundMaxAngularVel, this->groundMaxAngularVel);
+        this->model->SetAngularVel(ignition::math::Vector3d(vel, 0, 0));
+        break;
+      }
+    case RobotPlugin::ROTOR:
+      {
+        // Clamp the angular velocity
+        double limitFactor = this->targetAngVel.Length() /
+          this->rotorMaxAngularVel;
+        ignition::math::Vector3d vel = this->targetAngVel /
+          ignition::math::clamp(limitFactor, 1.0, limitFactor);
+
+        this->model->SetAngularVel(vel);
+        break;
+      }
+    case RobotPlugin::FIXED_WING:
+      {
         double yawRate = 0.0;
         double rollRate = 0.0;
 
@@ -229,16 +271,17 @@ void RobotPlugin::UpdateTargetVelocities()
 
         // Make sure we don't divide by zero. The vehicle should also
         // be moving before it can bank.
-        if (!ignition::math::equal(this->observedlinVel.X(), 0.0))
+        if (!ignition::math::equal(this->linearVelocityNoNoise.X(), 0.0))
         {
-          yawRate = (-9.81 * tan(rpy.X())) / this->observedlinVel.X();
+          yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocityNoNoise.X();
           yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
           rollRate = ignition::math::clamp(this->targetAngVel[0],
               -IGN_DTOR(5), IGN_DTOR(5));
         }
 
-        this->model->SetAngularVel(
-            ignition::math::Vector3d(rollRate, this->targetAngVel[1], yawRate));
+        this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
+              ignition::math::clamp(this->targetAngVel[1],
+                -this->fixedMaxAngularVel, this->fixedMaxAngularVel), yawRate));
         break;
       }
   };
@@ -341,7 +384,8 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
   this->Update(_info);
 
   // Apply the controller's actions to the simulation.
-  this->UpdateTargetVelocities();
+  this->UpdateLinearVelocity();
+  this->UpdateAngularVelocity();
 
   // Adjust pose as necessary.
   this->AdjustPose();
