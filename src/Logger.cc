@@ -83,6 +83,14 @@ void Logger::Update(const double _simTime)
     logEntryMsg.set_id(client.first);
     logEntryMsg.set_time(_simTime);
 
+    if (!client.second)
+    {
+      std::cerr << "Logger::Update() error: Client [" << client.first
+                << "] has been destroyed. Removing client." << std::endl;
+      this->log.erase(client.first);
+      continue;
+    }
+
     // The client sets some fields.
     client.second->OnLog(logEntryMsg);
 
