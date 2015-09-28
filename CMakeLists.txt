@@ -10,6 +10,7 @@ set (PROJECT_LIB_BOO_NAME SwarmBooPlugin)
 set (PROJECT_LIB_BROKER_NAME SwarmBrokerPlugin)
 set (PROJECT_LIB_MSGS_NAME SwarmMsgs)
 set (PROJECT_LIB_ROBOT_NAME SwarmRobotPlugin)
+set (PROJECT_LIB_LOST_PERSON_NAME SwarmLostPersonPlugin)
 
 set (PROJECT_MAJOR_VERSION 0)
 set (PROJECT_MINOR_VERSION 1)
@@ -285,7 +286,8 @@ else (build_errors)
   set(PKG_LIBRARIES ${PROJECT_LIB_MSGS_NAME}
                     ${PROJECT_LIB_BROKER_NAME}
                     ${PROJECT_LIB_ROBOT_NAME}
-                    ${PROJECT_LIB_BOO_NAME})
+                    ${PROJECT_LIB_BOO_NAME}
+                    ${PROJECT_LIB_LOST_PERSON_NAME})
 
   set(PKG_DEPENDS)
 
