@@ -56,7 +56,6 @@ namespace swarm
     public: ObjPose_M objects;
   };
 
-
   /// \brief A Model plugin that is the base class for all agent plugins
   /// in a swarm.
   /// This plugin exposes the following functionality to the derived plugins:
@@ -658,6 +657,21 @@ namespace swarm
     /// This is applied to the vehicle's pitch rate.
     /// Yaw and roll are computed based on the clamped linear velocity.
     private: double fixedMaxAngularVel = 3.14;
+
+    /// \brief 5 percent of the time we get a false negative
+    private: double logicalCameraFalseNegativeProb = 0.05;
+
+    /// \brief A false positive is determined based on the distance from the
+    /// vehicle to a detected object. The equation is:
+    ///
+    /// bool falsePositive = rand(0, 1) < dist /
+    ///                          (camera_far * logicalCameraFalsePositiveFactor)
+    ///
+    /// * rand(0, 1) : Random number between 0 and 1 inclusive.
+    /// * dist : Distance from this vehicle to the detected object.
+    /// * camera_far : Camera's far clip plane.
+    /// * logicalCameraFalsePositiveFactor : This variable.
+    private: double logicalCameraFalsePositiveFactor = 40.0;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

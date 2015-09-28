@@ -309,12 +309,43 @@ bool RobotPlugin::Image(ImageData &_img) const
 
   _img.objects.clear();
 
+  ignition::math::Pose3d myPose = this->model->GetWorldPose().Ign();
+
   gazebo::msgs::LogicalCameraImage img = this->camera->Image();
+
   for (auto const imgModel : img.model())
   {
+    // A percentage of the time we get a false negative
+    if (ignition::math::Rand::DblUniform(0, 1) <
+        this->logicalCameraFalseNegativeProb)
+    {
+      continue;
+    }
+
     // Skip ground plane model
     if (imgModel.name() != "ground_plane")
-      _img.objects[imgModel.name()] = gazebo::msgs::ConvertIgn(imgModel.pose());
+    {
+      ignition::math::Pose3d p = gazebo::msgs::ConvertIgn(imgModel.pose());
+
+      double dist = p.Pos().Distance(myPose.Pos());
+
+      // Add noise to the position of the model.
+      double stdDev = dist / (this->camera->Far() * 2.0);
+      p.Pos().X() += ignition::math::Rand::DblNormal(0, stdDev);
+      p.Pos().Y() += ignition::math::Rand::DblNormal(0, stdDev);
+      p.Pos().Z() += ignition::math::Rand::DblNormal(0, stdDev);
+
+      // A percentage of the time we get a false positive for the lost person,
+      if (ignition::math::Rand::DblUniform(0, 1) <
+          dist / (this->camera->Far() * this->logicalCameraFalsePositiveFactor))
+      {
+        _img.objects["lost_person"] = p;
+      }
+      else
+      {
+        _img.objects[imgModel.name()] = p;
+      }
+    }
   }
 
   return true;
