@@ -43,8 +43,7 @@ void LostPersonPlugin::Load(sdf::ElementPtr /*_sdf*/)
 void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
                             sdf::ElementPtr _sdf)
 {
-  // This is a pointer to the lost person simulation model.
-  // API: http://gazebosim.org/api/code/dev/classgazebo_1_1physics_1_1Model.html
+  // Get the model
   this->model = _model;
   if (!this->model)
   {
