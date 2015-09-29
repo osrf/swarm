@@ -47,7 +47,6 @@ void LogicalCameraPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     case 1:
       this->Update1();
       break;
-
   }
 }
 
@@ -71,10 +70,12 @@ void LogicalCameraPlugin::Update0()
   {
     // Make sure the lost person is not seen 100% of the time. This number,
     // and the number in the following test is tied to
-    // RobotPlugin::logicalCameraFalseNegativeProb, which is currently 5%.
-    EXPECT_LT(count, 970);
-    EXPECT_GT(count, 930);
+    // RobotPlugin::cameraFalseNegativeProbMin and
+    // RobotPlugin::cameraFalseNegativeProbMax.
+    EXPECT_LT(count, 950);
+    EXPECT_GT(count, 890);
   }
+  ++iteration;
 }
 
 /////////////////////////////////////////////////
@@ -98,10 +99,11 @@ void LogicalCameraPlugin::Update1()
   // We assume the test runs for 1000 iterations.
   if (iteration == 999)
   {
-    // Make sure the lost person is not seen 100% of the time. This number,
-    // and the number in the following test is tied to
-    // RobotPlugin::logicalCameraFalseNegativeProb, which is currently 5%.
+    // Make sure the lost person is seen some of the time. This number,
+    // and the number in the following test are tied to
+    // RobotPlugin::cameraFalsePositiveProbMin and cameraFalsePositiveProbMax.
     EXPECT_LT(count, 30);
-    EXPECT_GT(count, 10);
+    EXPECT_GT(count, 2);
   }
+  ++iteration;
 }

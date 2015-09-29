@@ -315,36 +315,48 @@ bool RobotPlugin::Image(ImageData &_img) const
 
   for (auto const imgModel : img.model())
   {
+    // Skip ground plane model
+    if (imgModel.name() == "ground_plane")
+      continue;
+
+    // Pose of the detected model
+    ignition::math::Pose3d p = gazebo::msgs::ConvertIgn(imgModel.pose());
+
+    // Distance to the detected model
+    double dist = p.Pos().Distance(myPose.Pos());
+
+    // Normalized (to the camera's frustum) squared distance
+    double distSquaredNormalized = std::pow(dist, 2) /
+                                  std::pow(this->camera->Far(), 2);
+
     // A percentage of the time we get a false negative
-    if (ignition::math::Rand::DblUniform(0, 1) <
-        this->logicalCameraFalseNegativeProb)
+    if (ignition::math::Rand::DblUniform(
+          this->cameraFalseNegativeProbMin,
+          this->cameraFalseNegativeProbMax) < distSquaredNormalized)
     {
       continue;
     }
 
-    // Skip ground plane model
-    if (imgModel.name() != "ground_plane")
+    // Compute amount of possible position noise.
+    double posError = this->cameraMaxPositionError * distSquaredNormalized;
+
+    // Add noise to the position of the model.
+    p.Pos().X() += ignition::math::Rand::DblUniform(-posError, posError);
+    p.Pos().Y() += ignition::math::Rand::DblUniform(-posError, posError);
+    p.Pos().Z() += ignition::math::Rand::DblUniform(-posError, posError);
+
+    // A percentage of the time we get a false positive for the lost person,
+    if (ignition::math::Rand::DblUniform(
+          this->cameraFalsePositiveProbMin,
+          this->cameraFalsePositiveProbMax) < distSquaredNormalized)
     {
-      ignition::math::Pose3d p = gazebo::msgs::ConvertIgn(imgModel.pose());
-
-      double dist = p.Pos().Distance(myPose.Pos());
-
-      // Add noise to the position of the model.
-      double stdDev = dist / (this->camera->Far() * 2.0);
-      p.Pos().X() += ignition::math::Rand::DblNormal(0, stdDev);
-      p.Pos().Y() += ignition::math::Rand::DblNormal(0, stdDev);
-      p.Pos().Z() += ignition::math::Rand::DblNormal(0, stdDev);
-
-      // A percentage of the time we get a false positive for the lost person,
-      if (ignition::math::Rand::DblUniform(0, 1) <
-          dist / (this->camera->Far() * this->logicalCameraFalsePositiveFactor))
-      {
-        _img.objects["lost_person"] = p;
-      }
-      else
-      {
-        _img.objects[imgModel.name()] = p;
-      }
+      // Randomly choose a model name
+      _img.objects[this->modelNames[
+        ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)]] = p;
+    }
+    else
+    {
+      _img.objects[imgModel.name()] = p;
     }
   }
 
@@ -716,6 +728,18 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // this->markerPub =
   // this->gzNode->Advertise<gazebo::msgs::Marker>("~/marker");
   // END DEBUG CODE
+
+  // Get all the model names, and add every name expect this->model to
+  // a list. This list is used to compute false positives in the image
+  // data
+  for (auto const &worldModel : this->world->GetModels())
+  {
+    if (worldModel->GetName() != this->model->GetName() &&
+        worldModel->GetName() != "ground_plane")
+    {
+      this->modelNames.push_back(worldModel->GetName());
+    }
+  }
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
