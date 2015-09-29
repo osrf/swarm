@@ -266,7 +266,7 @@ namespace swarm
     /// \return The name given to this robot in the SDF file.
     protected: std::string Name() const;
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -285,7 +285,7 @@ namespace swarm
     protected: bool SetLinearVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -305,7 +305,7 @@ namespace swarm
     protected: bool SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -324,7 +324,7 @@ namespace swarm
     protected: bool SetAngularVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -500,6 +500,12 @@ namespace swarm
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
 
+    /// \brief Update the linear velocity of the robot model in Gazebo.
+    private: void UpdateLinearVelocity();
+
+    /// \brief Update the angular velocity of the robot model in Gazebo.
+    private: void UpdateAngularVelocity();
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -590,25 +596,47 @@ namespace swarm
     /// \brief Half the height of the model.
     private: double modelHeight2;
 
-    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d linearVelocity;
+    /// \brief Latitude observed by the robot's GPS.
+    private: double observedLatitude;
+
+    /// \brief Longitude observed by the robot's GPS.
+    private: double observedLongitude;
+
+    /// \brief Altitude observed by the robot's GPS.
+    private: double observedAltitude;
+
+    /// \brief Linear velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedlinVel;
+
+    /// \brief Angular velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedAngVel;
+
+    /// \brief Orientation observed with respect the reference pos.
+    private: ignition::math::Quaterniond observedOrient;
+
+    /// \brief Bearing between the true North and the robot.
+    private: ignition::math::Angle observedBearing;
+
+    /// \brief Logical image observed by the robot's camera.
+    private: ImageData img;
+
+    /// \brief Target linear velocity in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetLinVel;
+
+    /// \brief Target angular velocity in the robot's local reference frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetAngVel;
 
     /// \brief Linear velocity in the robot's local coordinate frame (m/s).
     /// This version has no noise.
     private: ignition::math::Vector3d linearVelocityNoNoise;
 
     /// \brief Angular velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d angularVelocity;
-
-    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
     /// This version has no noise.
     private: ignition::math::Vector3d angularVelocityNoNoise;
-
-    /// \brief Offset with respect the reference pos.
-    private: ignition::math::Quaterniond orientation;
-
-    /// \brief Bearing between the true North and the robot.
-    private: ignition::math::Angle bearing;
 
     /// \brief The capacity at start. This is used to handle reset.
     private: double startCapacity;
