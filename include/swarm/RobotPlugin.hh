@@ -601,14 +601,6 @@ namespace swarm
     /// \brief Half the height of the model.
     private: double modelHeight2;
 
-    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
-    /// This version has no noise.
-    private: ignition::math::Vector3d linearVelocityNoNoise;
-
-    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
-    /// This version has no noise.
-    private: ignition::math::Vector3d angularVelocityNoNoise;
-
     /// \brief Latitude observed by the robot's GPS.
     private: double observedLatitude;
 
@@ -642,6 +634,14 @@ namespace swarm
     /// \brief Target angular velocity in the robot's local reference frame.
     /// Units: m/s.
     private: ignition::math::Vector3d targetAngVel;
+
+    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
+    /// This version has no noise.
+    private: ignition::math::Vector3d linearVelocityNoNoise;
+
+    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
+    /// This version has no noise.
+    private: ignition::math::Vector3d angularVelocityNoNoise;
 
     /// \brief The capacity at start. This is used to handle reset.
     private: double startCapacity;

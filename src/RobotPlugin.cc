@@ -103,6 +103,7 @@ bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
     return false;
 
   this->targetLinVel = _velocity;
+
   return true;
 }
 
@@ -133,9 +134,6 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateSensors()
 {
-  this->linearVelocityNoNoise = this->model->GetRelativeLinearVel().Ign();
-  this->angularVelocityNoNoise = this->model->GetRelativeAngularVel().Ign();
-
   if (this->gps)
   {
     this->observedLatitude = this->gps->Latitude().Degree();
@@ -145,6 +143,9 @@ void RobotPlugin::UpdateSensors()
 
   if (this->imu)
   {
+    this->linearVelocityNoNoise = this->model->GetRelativeLinearVel().Ign();
+    this->angularVelocityNoNoise = this->model->GetRelativeAngularVel().Ign();
+
     this->observedlinVel = this->linearVelocityNoNoise +
       ignition::math::Vector3d(
           ignition::math::Rand::DblNormal(0, 0.0002),
@@ -352,6 +353,7 @@ bool RobotPlugin::Image(ImageData &_img) const
   }
 
   _img = this->img;
+
   return true;
 }
 
