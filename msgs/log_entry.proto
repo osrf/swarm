@@ -94,7 +94,7 @@ message Message
   required uint32 size        = 4;
 
   /// \brief Whether the message was delivered or not due to drops.
-  required bool delivered     = 5;
+  optional bool delivered     = 5;
 }
 
 enum VisibilityStatus

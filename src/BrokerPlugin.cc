@@ -134,8 +134,6 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    this->logEntryComms.Clear();
-
     // Update the state of the communication model.
     this->commsModel->Update();
 
@@ -183,11 +181,20 @@ void BrokerPlugin::DispatchMessages()
     std::swap(incomingMsgsBuffer, this->incomingMsgs);
   }
 
+  this->logIncomingMsgs.Clear();
+
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
     auto msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop();
+
+    // For logging purposes, we store the request for communication.
+    auto logMsg = this->logIncomingMsgs.add_message();
+    logMsg->set_src_address(msg.src_address());
+    logMsg->set_dst_address(msg.dst_address());
+    logMsg->set_dst_port(msg.dst_port());
+    logMsg->set_size(msg.data().size());
 
     // Debug output.
     // gzdbg << "Processing message from " << msg.src_address()
@@ -250,7 +257,9 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
 //////////////////////////////////////////////////
 void BrokerPlugin::OnLog(msgs::LogEntry &_logEntry) const
 {
-  // We contribute to logging with the visibility information of all the nodes
-  // during this simulation cycle.
+  // Our logging contribution:
+  //   * Visibility information of all the nodes.
+  //   * Incoming messages.
   _logEntry.mutable_visibility()->CopyFrom(this->commsModel->VisibilityMap());
+  _logEntry.mutable_incoming_msgs()->CopyFrom(this->logIncomingMsgs);
 }
