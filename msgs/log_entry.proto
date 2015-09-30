@@ -79,6 +79,54 @@ message ImageData
   repeated ObjPose object = 1;
 }
 
+message Message
+{
+  /// \brief Address of the sender.
+  required string src_address = 1;
+
+  /// \brief Address of the destination.
+  required string dst_address = 2;
+
+  /// \brief Destination port.
+  required uint32 dst_port    = 3;
+
+  /// \brief Payload size.
+  required uint32 size        = 4;
+
+  /// \brief Whether the message was delivered or not due to drops.
+  required bool delivered     = 5;
+}
+
+enum VisibilityStatus
+{
+  /// \brief Robots are visible.
+  VISIBLE  = 1;
+  /// \brief Communication failed due to a comms outage.
+  OUTAGE   = 2;
+  /// \brief Communication failed due to an obstacle between the robots.
+  OBSTACLE = 3;
+  /// \brief Communication failed due to the robots are out of range.
+  DISTANCE = 4;
+}
+
+message VisibilityEntry
+{
+  /// \brief Address of the destination.
+  required string dst          = 1;
+
+  /// \brief Visibility status.
+  required VisibilityStatus status = 2;
+}
+
+message VisibilityRow
+{
+  /// \brief Address of the sender.
+  required string src            = 1;
+
+  /// \brief Collection of visibility status between the sender and other robots
+  repeated VisibilityEntry entry = 2;
+}
+
 message Sensors
 {
   /// \brief Last GPS observation.
@@ -106,49 +154,36 @@ message Actions
   required Vector3 angvel = 2;
 }
 
-message Neighbor
+message IncomingMsgs
 {
-  enum CommsResult
-  {
-    SUCCESS       = 1;
-    FAIL_OUTAGE   = 2;
-    FAIL_DROP     = 3;
-    FAIL_FAR      = 4;
-    FAIL_OBSTACLE = 5;
-  }
-
-  required string id          = 1;
-  required CommsResult result = 2;
-}
-
-message Message
-{
-  required string src_address  = 1;
-  required string dst_address  = 2;
-  required uint32 dst_port     = 3;
-  required uint32 size         = 4;
-  repeated Neighbor to_address = 5;
-}
-
-message Comms
-{
+  /// \brief Collection of incoming messages received by a robot.
   repeated Message message = 1;
+}
+
+message VisibilityMap
+{
+  /// \brief Collection of visibility rows. Each visibility row represents the
+  /// connectivity between one robot and the rest of the swarm.
+  repeated VisibilityRow row = 1;
 }
 
 message LogEntry
 {
   /// \brief Robot ID.
-  optional string id       = 1;
+  optional string id                  = 1;
 
   /// \brief Simulation time.
-  optional double time     = 2;
+  optional double time                = 2;
 
   /// \brief Sensor information for a robot.
-  optional Sensors sensors = 3;
+  optional Sensors sensors            = 3;
 
   /// \brief Actions sent to the robot.
-  optional Actions actions = 4;
+  optional Actions actions            = 4;
 
-  /// \brief Communication among the robots.
-  optional Comms comms     = 5;
+  /// \brief Incoming messages received by a robot.
+  optional IncomingMsgs incoming_msgs = 5;
+
+  /// \brief Visibility among the robots.
+  optional VisibilityMap visibility   = 6;
 }

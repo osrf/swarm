@@ -41,6 +41,7 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
+#include "msgs/log_entry.pb.h"
 #include "msgs/neighbor_v.pb.h"
 #include "swarm/Logger.hh"
 
@@ -694,6 +695,9 @@ namespace swarm
 
     /// \brief Pointer to the shared logger.
     private: Logger *logger = Logger::GetInstance();
+
+    /// \brief Save messages received for logging.
+    private: msgs::IncomingMsgs incomingMsgs;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
