@@ -16,9 +16,11 @@
 */
 
 #include <cstdint>
+#include <cstdlib>  // getenv
 #include <iostream>
 #include <string>
 #include <gazebo/common/CommonIface.hh>
+#include <gazebo/common/Console.hh>
 #include <gazebo/common/Time.hh>
 #include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
@@ -35,23 +37,33 @@ Logger *Logger::GetInstance()
 //////////////////////////////////////////////////
 Logger::Logger()
 {
-  // The base pathname for all the logs.
-  const char *homePath = gazebo::common::getEnv("HOME");
-  boost::filesystem::path logBasePath = boost::filesystem::path(homePath);
-  logBasePath /= "/.swarm/log/";
+  // Did the user set SWARM_LOG?
+  char *logEnableEnv = std::getenv("SWARM_LOG");
+  if ((logEnableEnv) && (std::string(logEnableEnv) == "1"))
+  {
+    this->enabled = true;
 
-  std::string logTimeDir = gazebo::common::Time::GetWallTimeAsISOString();
-  this->logCompletePath = logBasePath / logTimeDir;
+    // The base pathname for all the logs.
+    const char *homePath = gazebo::common::getEnv("HOME");
+    boost::filesystem::path logBasePath = boost::filesystem::path(homePath);
+    logBasePath /= "/.swarm/log/";
 
-  // Create the log directory if necessary
-  if (!boost::filesystem::exists(this->logCompletePath))
-    boost::filesystem::create_directories(this->logCompletePath);
+    std::string logTimeDir = gazebo::common::Time::GetWallTimeAsISOString();
+    this->logCompletePath = logBasePath / logTimeDir;
 
-  this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
+    // Create the log directory if necessary
+    if (!boost::filesystem::exists(this->logCompletePath))
+      boost::filesystem::create_directories(this->logCompletePath);
 
-  // Create the log file.
-  this->output.open(this->logCompletePath.string(),
-    std::ios::out | std::ios::binary);
+    this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
+
+    // Create the log file.
+    this->output.open(this->logCompletePath.string(),
+      std::ios::out | std::ios::binary);
+
+    gzmsg << "Logging enabled [" << this->logCompletePath.string()
+          << "]" << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -77,7 +89,7 @@ bool Logger::Register(const std::string &_id, const Loggable *_client)
 //////////////////////////////////////////////////
 void Logger::Update(const double _simTime)
 {
-  if (!this->output.is_open())
+  if (!this->output.is_open() || !this->enabled)
     return;
 
   // Fill the simulation time of the log entry.
