@@ -218,9 +218,9 @@ void BrokerPlugin::DispatchMessages()
         //   std::endl;
         msg.add_recipients(neighborId);
       }
+      //   Debug output.
       // else
       // {
-      //   Debug output.
       //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
       //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
       //     std::endl;

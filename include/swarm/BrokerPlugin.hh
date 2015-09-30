@@ -115,6 +115,7 @@ namespace swarm
     /// \brief Comms model that we're using.
     private: std::unique_ptr<CommsModel> commsModel;
 
+    /// \brief Contains the logging content.
     private: msgs::LogEntry logEntryComms;
 
     /// \brief Logger instance.
