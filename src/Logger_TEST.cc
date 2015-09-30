@@ -90,7 +90,7 @@ TEST(LoggerTest, Log)
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  // Set the partition name for this process.
+  // Enable logging.
   setenv("SWARM_LOG", "1", 1);
 
   ::testing::InitGoogleTest(&argc, argv);
