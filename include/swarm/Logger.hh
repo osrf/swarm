@@ -106,6 +106,9 @@ namespace swarm
 
     /// \brief The complete pathname for the log file.
     private: boost::filesystem::path logCompletePath;
+
+    /// \brief Whether the logging is enabled or not.
+    private: bool enabled = false;
   };
 }  // namespace
 #endif
