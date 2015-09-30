@@ -67,6 +67,9 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   this->commsModel.reset(new CommsModel(this->swarm, this->world, _sdf));
 
+  // Register in the logger.
+  this->logger->Register("broker", this);
+
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&BrokerPlugin::Update, this, std::placeholders::_1));
@@ -131,6 +134,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     std::lock_guard<std::mutex> lock(this->mutex);
 
+    this->logEntryComms.Clear();
+
     // Update the state of the communication model.
     this->commsModel->Update();
 
@@ -177,6 +182,9 @@ void BrokerPlugin::DispatchMessages()
     std::lock_guard<std::mutex> lock(this->mutex);
     std::swap(incomingMsgsBuffer, this->incomingMsgs);
   }
+
+  auto commsLog = new msgs::Comms();
+
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
@@ -196,26 +204,47 @@ void BrokerPlugin::DispatchMessages()
       continue;
     }
 
+    auto msgLog = commsLog->add_message();
+    msgLog->set_src_address(msg.src_address());
+    msgLog->set_dst_address(msg.dst_address());
+    msgLog->set_dst_port(msg.dst_port());
+    msgLog->set_size(msg.data().size());
+
     // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
+    for (auto const &neighborKv : (*this->swarm)[msg.src_address()]->neighbors)
     {
+      auto neighborId = neighborKv.first;
+      auto neighborProb = neighborKv.second;
+      msgs::Neighbor::CommsResult commsResult;
+
       // Decide whether this neighbor gets this message, according to the
       // probability of communication between them right now.
-      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighbor.second)
+      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
       {
         // Debug output
         // gzdbg << "Sending message from " << msg.src_address() << " to " <<
         //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
         //   std::endl;
-        msg.add_recipients(neighbor.first);
+        msg.add_recipients(neighborId);
+
+        commsResult = msgs::Neighbor::SUCCESS;
       }
-      // Debug output.
-      // else
-      // {
+      else
+      {
+        commsResult = msgs::Neighbor::FAIL_DROP;
+      //   Debug output.
       //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
       //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
       //     std::endl;
-      // }
+      }
+
+      if ((msg.dst_address() == "broadcast") ||
+          (msg.dst_address() != "multicast" && msg.dst_address() == neighborId))
+      {
+        auto neighborLog = msgLog->add_to_address();
+        neighborLog->set_id(neighborId);
+        neighborLog->set_result(commsResult);
+      }
     }
 
     // Create the topic name for the message destination.
@@ -226,6 +255,8 @@ void BrokerPlugin::DispatchMessages()
     this->node.Advertise(topic);
     this->node.Publish(topic, msg);
   }
+
+  this->logEntryComms.set_allocated_comms(commsLog);
 }
 
 //////////////////////////////////////////////////
@@ -236,4 +267,10 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   // Queue the new message.
   this->incomingMsgs.push(_msg);
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::OnLog(msgs::LogEntry &_logEntry) const
+{
+  _logEntry.mutable_comms()->CopyFrom(this->logEntryComms.comms());
 }

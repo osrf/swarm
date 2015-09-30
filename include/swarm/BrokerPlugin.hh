@@ -36,6 +36,7 @@
 #include "swarm/Logger.hh"
 #include "swarm/SwarmTypes.hh"
 #include "msgs/datagram.pb.h"
+#include "msgs/log_entry.pb.h"
 
 namespace swarm
 {
@@ -47,7 +48,8 @@ namespace swarm
   /// Dispatch of a message may directly deliver it to
   /// the destination/s node/s or it may forward the message to a
   /// network simulator (ns-3).
-  class IGNITION_VISIBLE BrokerPlugin : public gazebo::WorldPlugin
+  class IGNITION_VISIBLE BrokerPlugin
+    : public gazebo::WorldPlugin, public swarm::Loggable
   {
     /// \brief Class constructor.
     public: BrokerPlugin() = default;
@@ -86,6 +88,9 @@ namespace swarm
     private: void OnMsgReceived(const std::string &_topic,
                                 const msgs::Datagram &_msg);
 
+    // Documentation inherited.
+    private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
+
     /// \brief World pointer.
     private: gazebo::physics::WorldPtr world;
 
@@ -109,6 +114,8 @@ namespace swarm
 
     /// \brief Comms model that we're using.
     private: std::unique_ptr<CommsModel> commsModel;
+
+    private: msgs::LogEntry logEntryComms;
 
     /// \brief Logger instance.
     private: Logger *logger = Logger::GetInstance();

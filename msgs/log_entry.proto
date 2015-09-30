@@ -106,6 +106,35 @@ message Actions
   required Vector3 angvel = 2;
 }
 
+message Neighbor
+{
+  enum CommsResult
+  {
+    SUCCESS       = 1;
+    FAIL_OUTAGE   = 2;
+    FAIL_DROP     = 3;
+    FAIL_FAR      = 4;
+    FAIL_OBSTACLE = 5;
+  }
+
+  required string id          = 1;
+  required CommsResult result = 2;
+}
+
+message Message
+{
+  required string src_address  = 1;
+  required string dst_address  = 2;
+  required uint32 dst_port     = 3;
+  required uint32 size         = 4;
+  repeated Neighbor to_address = 5;
+}
+
+message Comms
+{
+  repeated Message message = 1;
+}
+
 message LogEntry
 {
   /// \brief Robot ID.
@@ -119,4 +148,7 @@ message LogEntry
 
   /// \brief Actions sent to the robot.
   optional Actions actions = 4;
+
+  /// \brief Communication among the robots.
+  optional Comms comms     = 5;
 }
