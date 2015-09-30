@@ -15,6 +15,7 @@
  *
 */
 
+#include <stdlib.h>  // setenv
 #include "gtest/gtest.h"
 #include "msgs/log_entry.pb.h"
 #include "swarm/Logger.hh"
@@ -81,11 +82,17 @@ TEST(LoggerTest, Log)
   EXPECT_EQ(logEntry.id(), client2.id);
   logEntry.Clear();
   EXPECT_FALSE(logParser.Next(logEntry));
+
+  // Remove the log file.
+  EXPECT_TRUE(boost::filesystem::remove(boost::filesystem::path(filePath)));
 }
 
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+  // Set the partition name for this process.
+  setenv("SWARM_LOG", "1", 1);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
