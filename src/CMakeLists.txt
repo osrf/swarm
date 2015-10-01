@@ -13,6 +13,10 @@ set (robot_plugin_sources
   RobotPlugin.cc
 )
 
+set (lost_person_plugin_sources
+  LostPersonPlugin.cc
+)
+
 set (boo_plugin_sources
   BooPlugin.cc
 )
@@ -60,3 +64,10 @@ target_link_libraries(${PROJECT_LIB_BOO_NAME}
                       ${PROTOBUF_LIBRARY}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_BOO_NAME})
+
+# Create the libLostPersonPlugin.so library.
+ign_add_library(${PROJECT_LIB_LOST_PERSON_NAME} ${lost_person_plugin_sources})
+target_link_libraries(${PROJECT_LIB_LOST_PERSON_NAME}
+                      ${PROTOBUF_LIBRARY}
+                      ${IGNITION-TRANSPORT_LIBRARIES})
+ign_install_library(${PROJECT_LIB_LOST_PERSON_NAME})

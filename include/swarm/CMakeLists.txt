@@ -7,6 +7,7 @@ set (headers
   Helpers.hh
   Logger.hh
   LogParser.hh
+  LostPersonPlugin.hh
   RobotPlugin.hh
   SwarmTypes.hh
 )
