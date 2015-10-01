@@ -23,7 +23,7 @@ link_directories(${IGNITION-MATH_LIBRARY_DIRS})
 
 #################################################
 # Ignition transport
-find_package(ignition-transport0 QUIET REQUIRED)
+find_package(ignition-transport QUIET REQUIRED)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-TRANSPORT_CXX_FLAGS}")
 include_directories(${IGNITION-TRANSPORT_INCLUDE_DIRS})
 link_directories(${IGNITION-TRANSPORT_LIBRARY_DIRS})
