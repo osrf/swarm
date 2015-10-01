@@ -216,12 +216,12 @@ void RobotPlugin::UpdateSensors()
             this->cameraFalsePositiveProbMax) < distSquaredNormalized)
       {
         // Randomly choose a model name
-        _img.objects[this->modelNames[
+        this->img.objects[this->modelNames[
           ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)]] = p;
       }
       else
       {
-        _img.objects[imgModel.name()] = p;
+        this->img.objects[imgModel.name()] = p;
       }
     }
   }

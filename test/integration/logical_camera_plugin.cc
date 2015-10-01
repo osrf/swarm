@@ -56,11 +56,11 @@ void LogicalCameraPlugin::Update0()
   static int iteration = 0;
   static int count = 0;
 
-  swarm::ImageData img;
-  EXPECT_TRUE(this->Image(img));
+  swarm::ImageData logImg;
+  EXPECT_TRUE(this->Image(logImg));
 
   // Keep track of the number of times the lost_person is observed
-  if (img.objects.find("lost_person") != img.objects.end())
+  if (logImg.objects.find("lost_person") != logImg.objects.end())
   {
     ++count;
   }
@@ -87,11 +87,11 @@ void LogicalCameraPlugin::Update1()
   static int iteration = 0;
   static int count = 0;
 
-  swarm::ImageData img;
-  EXPECT_TRUE(this->Image(img));
+  swarm::ImageData logImg;
+  EXPECT_TRUE(this->Image(logImg));
 
   // Keep track of the number of times the lost_person is observed
-  if (img.objects.find("lost_person") != img.objects.end())
+  if (logImg.objects.find("lost_person") != logImg.objects.end())
   {
     ++count;
   }
