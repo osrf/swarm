@@ -701,7 +701,7 @@ namespace swarm
     /// \brief Max position error in objects detected by the camera
     private: double cameraMaxPositionError = 5.0;
 
-    /// \brief Array of all the modes
+    /// \brief Array of all the models
     private: std::vector<std::string> modelNames;
 
     /// \brief BooPlugin needs access to some of the private member variables.
