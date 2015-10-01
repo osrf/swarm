@@ -22,8 +22,12 @@
 #define __SWARM_LOST_PERSON_PLUGIN_HH__
 
 #include <gazebo/physics/PhysicsTypes.hh>
+#include <gazebo/common/Event.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <ignition/math/Vector2.hh>
+#include <ignition/math/Vector3.hh>
+#include <sdf/sdf.hh>
 
 namespace swarm
 {
@@ -50,8 +54,7 @@ namespace swarm
     /// \param[in] _sdf Pointer to the SDF element of the model.
     protected: virtual void Load(sdf::ElementPtr _sdf);
 
-    /// \brief Update the plugin. This function is called once every
-    /// iteration.
+    /// \brief Update the plugin. This function is called once every iteration.
     ///
     /// \param[in] _info Update information provided by the server.
     protected: virtual void Update(const gazebo::common::UpdateInfo &_info);

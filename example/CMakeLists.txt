@@ -14,6 +14,13 @@ include_directories(${SWARM_INCLUDE_DIRS})
 link_directories(${SWARM_LIBRARY_DIRS})
 
 #################################################
+# Ignition transport
+find_package(ignition-transport0 QUIET REQUIRED)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-TRANSPORT_CXX_FLAGS}")
+include_directories(${IGNITION-TRANSPORT_INCLUDE_DIRS})
+link_directories(${IGNITION-TRANSPORT_LIBRARY_DIRS})
+
+#################################################
 # Generate the team's plugin for controlling a robot.
 add_library(TeamControllerPlugin SHARED TeamControllerPlugin.cc)
 target_link_libraries(TeamControllerPlugin ${SWARM_LIBRARIES})

@@ -15,8 +15,11 @@
  *
 */
 
+#include <functional>
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/physics/physics.hh>
+#include <ignition/math/Vector3.hh>
+#include <sdf/sdf.hh>
 #include "swarm/LostPersonPlugin.hh"
 
 using namespace swarm;
@@ -47,7 +50,7 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   this->model = _model;
   if (!this->model)
   {
-    gzerr << "Invalid model pointer. Plugin will not load.\n";
+    gzerr << "Invalid model pointer. LostPersonPlugin will not load.\n";
     return;
   }
   this->modelHeight2 = this->model->GetBoundingBox().GetZLength()*0.5;
@@ -101,7 +104,7 @@ void LostPersonPlugin::AdjustPose()
   if (!this->terrain || !this->model)
     return;
 
-  // Get the pose of the vehicle
+  // Get the pose of the model
   ignition::math::Pose3d pose = this->model->GetWorldPose().Ign();
 
   // Constrain X position to the terrain boundaries
@@ -134,7 +137,7 @@ void LostPersonPlugin::AdjustPose()
   double pitch = norm2d.Dot(normPitchDir) * acos(norm.Z());
   double roll = norm2d.Dot(normRollDir) * acos(norm.Z());
 
-  // Add half the height of the vehicle
+  // Add half the height of the model
   pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
   pose.Rot().Euler(roll, pitch, pose.Rot().Euler().Z());
 
@@ -147,12 +150,12 @@ void LostPersonPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
     ignition::math::Vector3d &_terrainPos,
     ignition::math::Vector3d &_norm) const
 {
-  // The robot position in the coordinate frame of the terrain
+  // The model position in the coordinate frame of the terrain
   ignition::math::Vector3d robotPos(
       (this->terrainSize.X() * 0.5 + _pos.X()) / this->terrainScaling.X(),
       (this->terrainSize.Y() * 0.5 - _pos.Y()) / this->terrainScaling.Y(), 0);
 
-  // Three vertices that define the triangle on which the vehicle rests
+  // Three vertices that define the triangle on which the model rests
   // The first vertex is closest point on the terrain
   ignition::math::Vector3d v1(std::round(robotPos.X()),
       std::round(robotPos.Y()), 0);

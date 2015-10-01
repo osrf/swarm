@@ -16,15 +16,14 @@
  *
 */
 
-/// \file TeamPlugin.hh
-/// \brief An example of a Gazebo plugin for controlling a member of the swarm.
+/// \file LostPersonControllerPlugin.hh
+/// \brief An example of a Gazebo plugin for controlling a lost person.
 
 #ifndef __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 #define __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 
-#include <string>
-#include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <sdf/sdf.hh>
 #include <swarm/LostPersonPlugin.hh>
 
 namespace swarm

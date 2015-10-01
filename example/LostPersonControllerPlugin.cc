@@ -15,9 +15,10 @@
  *
 */
 
-#include <string>
-#include <sdf/sdf.hh>
+#include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/physics.hh>
+#include <ignition/math/Vector3.hh>
+#include <sdf/sdf.hh>
 #include "LostPersonControllerPlugin.hh"
 
 using namespace swarm;
@@ -26,7 +27,8 @@ GZ_REGISTER_MODEL_PLUGIN(LostPersonControllerPlugin)
 
 //////////////////////////////////////////////////
 LostPersonControllerPlugin::LostPersonControllerPlugin()
-  : LostPersonPlugin()
+  : LostPersonPlugin(),
+    speed(0.0)
 {
 }
 
@@ -38,8 +40,6 @@ void LostPersonControllerPlugin::Load(sdf::ElementPtr _sdf)
   // Example of reading a value from the SDF file.
   if (_sdf->HasElement("speed"))
     this->speed = _sdf->Get<double>("speed");
-  else
-    this->speed = 0.0;
 }
 
 //////////////////////////////////////////////////
