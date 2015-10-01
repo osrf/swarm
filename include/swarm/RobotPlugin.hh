@@ -693,7 +693,7 @@ namespace swarm
     private: double fixedMaxAngularVel = 3.14;
 
     /// \brief Pointer to the shared logger.
-    private: Logger *logger = Logger::GetInstance();
+    private: Logger *logger = Logger::Instance();
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

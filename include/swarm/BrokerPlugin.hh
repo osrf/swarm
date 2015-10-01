@@ -111,7 +111,7 @@ namespace swarm
     private: std::unique_ptr<CommsModel> commsModel;
 
     /// \brief Logger instance.
-    private: Logger *logger = Logger::GetInstance();
+    private: Logger *logger = Logger::Instance();
   };
 }
 #endif

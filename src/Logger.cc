@@ -16,7 +16,7 @@
 */
 
 #include <cstdint>
-#include <cstdlib>  // getenv
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <gazebo/common/CommonIface.hh>
@@ -28,7 +28,7 @@
 using namespace swarm;
 
 //////////////////////////////////////////////////
-Logger *Logger::GetInstance()
+Logger *Logger::Instance()
 {
   static Logger instance;
   return &instance;

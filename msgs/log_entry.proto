@@ -4,7 +4,11 @@ package swarm.msgs;
 /// \interface LogEntry
 /// \brief A message containing an entry for a log.
 
-message Vector3
+import "gazebo/msgs/proto/vector3d.proto";
+import "gazebo/msgs/proto/quaterion.proto";
+import "gazebo/msgs/proto/pose.proto";
+
+/*message Vector3
 {
   /// \brief X component of the position in world coordinates.
   required double x = 1;
@@ -29,7 +33,7 @@ message Quaternion
 
   /// \brief W component.
   required double w = 4;
-}
+}*/
 
 message Gps
 {
@@ -46,23 +50,23 @@ message Gps
 message Imu
 {
   /// \brief Linear velocity.
-  required Vector3 linvel         = 1;
+  required Vector3d linvel         = 1;
 
   /// \brief Angular velocity.
-  required Vector3 angvel         = 2;
+  required Vector3d angvel         = 2;
 
   /// \brief Robot orientation.
   required Quaternion orientation = 3;
 }
 
-message Pose3D
+/*message Pose3D
 {
   /// \brief Position.
   required Vector3 position       = 1;
 
   /// \brief Orientation.
   required Quaternion orientation = 2;
-}
+}*/
 
 message ObjPose
 {
@@ -70,7 +74,7 @@ message ObjPose
   required string name = 1;
 
   /// \brief Pose of the object in the robot's camera frame.
-  required Pose3D pose = 2;
+  required Pose pose = 2;
 }
 
 message ImageData
@@ -100,10 +104,10 @@ message Sensors
 message Actions
 {
   /// \brief Last linear velocity sent to the robot.
-  required Vector3 linvel = 1;
+  required Vector3d linvel = 1;
 
   /// \brief Last angular velocity sent to the robot.
-  required Vector3 angvel = 2;
+  required Vector3d angvel = 2;
 }
 
 message LogEntry
