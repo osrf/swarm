@@ -84,7 +84,8 @@ TEST(LoggerTest, Log)
   EXPECT_FALSE(logParser.Next(logEntry));
 
   // Remove the log file.
-  EXPECT_TRUE(boost::filesystem::remove(boost::filesystem::path(filePath)));
+  auto parentPath = boost::filesystem::path(filePath).parent_path();
+  EXPECT_TRUE(boost::filesystem::remove_all(parentPath));
 }
 
 //////////////////////////////////////////////////
