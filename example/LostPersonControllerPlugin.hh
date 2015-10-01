@@ -22,8 +22,6 @@
 #ifndef __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 #define __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 
-#include <gazebo/common/UpdateInfo.hh>
-#include <sdf/sdf.hh>
 #include <swarm/LostPersonPlugin.hh>
 
 namespace swarm
@@ -44,7 +42,7 @@ namespace swarm
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
     // Speed of the lost person
-    private: double speed;
+    private: double speed = 0.0;
   };
 }
 #endif

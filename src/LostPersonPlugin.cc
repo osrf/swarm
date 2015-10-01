@@ -18,8 +18,6 @@
 #include <functional>
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/physics/physics.hh>
-#include <ignition/math/Vector3.hh>
-#include <sdf/sdf.hh>
 #include "swarm/LostPersonPlugin.hh"
 
 using namespace swarm;

@@ -15,10 +15,7 @@
  *
 */
 
-#include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/physics.hh>
-#include <ignition/math/Vector3.hh>
-#include <sdf/sdf.hh>
 #include "LostPersonControllerPlugin.hh"
 
 using namespace swarm;
@@ -27,8 +24,7 @@ GZ_REGISTER_MODEL_PLUGIN(LostPersonControllerPlugin)
 
 //////////////////////////////////////////////////
 LostPersonControllerPlugin::LostPersonControllerPlugin()
-  : LostPersonPlugin(),
-    speed(0.0)
+  : LostPersonPlugin()
 {
 }
 
