@@ -57,7 +57,6 @@ namespace swarm
     public: ObjPose_M objects;
   };
 
-
   /// \brief A Model plugin that is the base class for all agent plugins
   /// in a swarm.
   /// This plugin exposes the following functionality to the derived plugins:
@@ -694,6 +693,24 @@ namespace swarm
 
     /// \brief Pointer to the shared logger.
     private: Logger *logger = Logger::Instance();
+
+    /// \brief Min random number used to computer a false negative
+    private: double cameraFalseNegativeProbMin = 0.01;
+
+    /// \brief Max random number used to compute a false negative
+    private: double cameraFalseNegativeProbMax = 0.8;
+
+    /// \brief Min random number used to compute a false positive
+    private: double cameraFalsePositiveProbMin = 0.01;
+
+    /// \brief Max random number used to compute a false positive
+    private: double cameraFalsePositiveProbMax = 0.8;
+
+    /// \brief Max position error in objects detected by the camera
+    private: double cameraMaxPositionError = 5.0;
+
+    /// \brief Array of all the models
+    private: std::vector<std::string> modelNames;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
