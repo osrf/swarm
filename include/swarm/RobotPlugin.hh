@@ -711,7 +711,7 @@ namespace swarm
     private: std::vector<std::string> modelNames;
 
     /// \brief Pointer to the shared logger.
-    private: Logger *logger = Logger::GetInstance();
+    private: Logger *logger = Logger::Instance();
 
     /// \brief Save messages received for logging.
     private: msgs::IncomingMsgs incomingMsgs;

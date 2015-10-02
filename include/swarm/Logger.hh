@@ -71,7 +71,7 @@ namespace swarm
     /// \brief Logger is a singleton. This method gets the Logger instance
     /// shared between all the clients.
     /// \return Pointer to the current Logger instance.
-    public: static Logger *GetInstance();
+    public: static Logger *Instance();
 
     /// \brief Get the full path of the log file.
     /// \return Full path to the log.

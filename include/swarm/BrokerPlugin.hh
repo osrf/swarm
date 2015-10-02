@@ -119,7 +119,7 @@ namespace swarm
     private: msgs::IncomingMsgs logIncomingMsgs;
 
     /// \brief Logger instance.
-    private: Logger *logger = Logger::GetInstance();
+    private: Logger *logger = Logger::Instance();
   };
 }
 #endif

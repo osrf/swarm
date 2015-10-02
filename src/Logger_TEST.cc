@@ -49,10 +49,10 @@ class LogClient : public swarm::Loggable
 /// \brief Create a log based on data from two clients and parse its content.
 TEST(LoggerTest, Log)
 {
-  Logger *logger = Logger::GetInstance();
+  Logger *logger = Logger::Instance();
 
   // Client #1.
-  Logger *logger1 = Logger::GetInstance();
+  Logger *logger1 = Logger::Instance();
   LogClient client1("#1");
   EXPECT_TRUE(logger1->Register(client1.id, &client1));
 
@@ -60,7 +60,7 @@ TEST(LoggerTest, Log)
   EXPECT_FALSE(logger1->Register(client1.id, &client1));
 
   // Client #2.
-  Logger *logger2 = Logger::GetInstance();
+  Logger *logger2 = Logger::Instance();
   LogClient client2("#2");
   EXPECT_TRUE(logger2->Register(client2.id, &client2));
 
