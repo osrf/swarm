@@ -10,7 +10,7 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 # Find the Swarm library.
 find_package(swarm QUIET REQUIRED)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SWARM_CXX_FLAGS}")
-include_directories(${SWARM_INCLUDE_DIRS})
+include_directories(${SWARM_INCLUDE_DIRS} ${GAZEBO_PROTO_INCLUDE_DIRS})
 link_directories(${SWARM_LIBRARY_DIRS})
 
 #################################################
