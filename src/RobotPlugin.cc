@@ -289,7 +289,7 @@ void RobotPlugin::UpdateAngularVelocity()
       {
         double vel = ignition::math::clamp(this->targetAngVel.Z(),
             -this->groundMaxAngularVel, this->groundMaxAngularVel);
-        this->model->SetAngularVel(ignition::math::Vector3d(vel, 0, 0));
+        this->model->SetAngularVel(ignition::math::Vector3d(0, 0, vel));
         break;
       }
     case RobotPlugin::ROTOR:
