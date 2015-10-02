@@ -8,33 +8,6 @@ import "gazebo/msgs/proto/vector3d.proto";
 import "gazebo/msgs/proto/quaterion.proto";
 import "gazebo/msgs/proto/pose.proto";
 
-/*message Vector3
-{
-  /// \brief X component of the position in world coordinates.
-  required double x = 1;
-
-  /// \brief Y component of the position in world coordinates.
-  required double y = 2;
-
-  /// \brief Z component of the position in world coordinates.
-  required double z = 3;
-}
-
-message Quaternion
-{
-  /// \brief X component.
-  required double x = 1;
-
-  /// \brief Y component.
-  required double y = 2;
-
-  /// \brief Z component.
-  required double z = 3;
-
-  /// \brief W component.
-  required double w = 4;
-}*/
-
 message Gps
 {
   /// \brief Latitude.
@@ -58,15 +31,6 @@ message Imu
   /// \brief Robot orientation.
   required Quaternion orientation = 3;
 }
-
-/*message Pose3D
-{
-  /// \brief Position.
-  required Vector3 position       = 1;
-
-  /// \brief Orientation.
-  required Quaternion orientation = 2;
-}*/
 
 message ObjPose
 {

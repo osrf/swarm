@@ -4,17 +4,7 @@ package swarm.msgs;
 /// \interface PersonFound
 /// \brief A message containing information about a person found.
 
-message Vector3D
-{
-  /// \brief X component of the position in world coordinates.
-  required double x = 1;
-
-  /// \brief Y component of the position in world coordinates.
-  required double y = 2;
-
-  /// \brief Z component of the position in world coordinates.
-  required double z = 3;
-}
+import "gazebo/msgs/proto/vector3d.proto";
 
 message PersonFound
 {
@@ -22,7 +12,7 @@ message PersonFound
   required string address = 1;
 
   /// \brief Position of the lost person.
-  required Vector3D pos   = 2;
+  required Vector3d pos   = 2;
 
   /// \brief Time at which the lost person was spotted.
   required double time    = 3;
