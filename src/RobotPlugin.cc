@@ -1115,9 +1115,9 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   obsGps->set_altitude(this->observedAltitude);
 
   // Fill the last IMU observation.
-  msgs::Vector3 *obsVlin = new msgs::Vector3();
-  msgs::Vector3 *obsVang = new msgs::Vector3();
-  msgs::Quaternion *obsOrient = new msgs::Quaternion();
+  gazebo::msgs::Vector3d *obsVlin = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Vector3d *obsVang = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Quaternion *obsOrient = new gazebo::msgs::Quaternion();
   msgs::Imu *obsImu = new msgs::Imu();
   obsVlin->set_x(this->observedlinVel.X());
   obsVlin->set_y(this->observedlinVel.Y());
@@ -1159,8 +1159,8 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   _logEntry.set_allocated_sensors(sensors);
 
   // Fill the actions.
-  msgs::Vector3 *targetVlin = new msgs::Vector3();
-  msgs::Vector3 *targetVang = new msgs::Vector3();
+  gazebo::msgs::Vector3d *targetVlin = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Vector3d *targetVang = new gazebo::msgs::Vector3d();
   targetVlin->set_x(this->targetLinVel.X());
   targetVlin->set_y(this->targetLinVel.Y());
   targetVlin->set_z(this->targetLinVel.Z());

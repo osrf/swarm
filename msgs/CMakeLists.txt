@@ -55,7 +55,7 @@ if (UNIX)
   endif()
 endif()
 
-target_link_libraries(${PROJECT_LIB_MSGS_NAME} ${PROTOBUF_LIBRARY} ${PROTOBUF_PROTOC_LIBRARY})
+target_link_libraries(${PROJECT_LIB_MSGS_NAME} ${PROTOBUF_LIBRARY} ${PROTOBUF_PROTOC_LIBRARY} ${GAZEBO_PROTO_LIBRARIES})
 
 ign_install_library(${PROJECT_LIB_MSGS_NAME})
 add_dependencies(${PROJECT_LIB_MSGS_NAME} ignmsgs_out)

@@ -252,6 +252,7 @@ else (build_errors)
   include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include
+    ${GAZEBO_PROTO_INCLUDE_DIRS}
   )
   link_directories(${PROJECT_BINARY_DIR}/src)
 
