@@ -430,6 +430,9 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  // Used for logging.
+  this->incomingMsgs.Clear();
+
   // Update the state of the battery
   this->UpdateBattery();
 
@@ -819,6 +822,14 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     userCallback(_msg.src_address(), _msg.dst_address(),
                  _msg.dst_port(), _msg.data());
   }
+
+  // Save the new message received for future logging.
+  auto newMsg = this->incomingMsgs.add_message();
+  newMsg->set_src_address(_msg.src_address());
+  newMsg->set_dst_address(_msg.dst_address());
+  newMsg->set_dst_port(_msg.dst_port());
+  newMsg->set_size(_msg.data().size());
+  newMsg->set_delivered(visible);
 }
 
 //////////////////////////////////////////////////
@@ -1173,4 +1184,7 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   actions->set_allocated_angvel(targetVang);
 
   _logEntry.set_allocated_actions(actions);
+
+  // Fill the incoming messages.
+  _logEntry.mutable_incoming_msgs()->CopyFrom(this->incomingMsgs);
 }

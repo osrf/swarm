@@ -65,10 +65,10 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
     std::string dstAddress;
 
-    if (this->Host() == "192.168.2.1")
-      dstAddress = "192.168.2.2";
+    if (this->Host() == "192.168.3.1")
+      dstAddress = "192.168.3.2";
     else
-      dstAddress = "192.168.2.1";
+      dstAddress = "192.168.3.1";
 
     // Send a unicast message.
     if (!this->SendTo("Unicast data", dstAddress))

@@ -67,6 +67,9 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   this->commsModel.reset(new CommsModel(this->swarm, this->world, _sdf));
 
+  // Register in the logger.
+  this->logger->Register("broker", this);
+
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&BrokerPlugin::Update, this, std::placeholders::_1));
@@ -177,11 +180,21 @@ void BrokerPlugin::DispatchMessages()
     std::lock_guard<std::mutex> lock(this->mutex);
     std::swap(incomingMsgsBuffer, this->incomingMsgs);
   }
+
+  this->logIncomingMsgs.Clear();
+
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
     auto msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop();
+
+    // For logging purposes, we store the request for communication.
+    auto logMsg = this->logIncomingMsgs.add_message();
+    logMsg->set_src_address(msg.src_address());
+    logMsg->set_dst_address(msg.dst_address());
+    logMsg->set_dst_port(msg.dst_port());
+    logMsg->set_size(msg.data().size());
 
     // Debug output.
     // gzdbg << "Processing message from " << msg.src_address()
@@ -197,19 +210,22 @@ void BrokerPlugin::DispatchMessages()
     }
 
     // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighbor : (*this->swarm)[msg.src_address()]->neighbors)
+    for (auto const &neighborKv : (*this->swarm)[msg.src_address()]->neighbors)
     {
+      auto neighborId = neighborKv.first;
+      auto neighborProb = neighborKv.second;
+
       // Decide whether this neighbor gets this message, according to the
       // probability of communication between them right now.
-      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighbor.second)
+      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
       {
         // Debug output
         // gzdbg << "Sending message from " << msg.src_address() << " to " <<
         //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
         //   std::endl;
-        msg.add_recipients(neighbor.first);
+        msg.add_recipients(neighborId);
       }
-      // Debug output.
+      //   Debug output.
       // else
       // {
       //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
@@ -236,4 +252,14 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   // Queue the new message.
   this->incomingMsgs.push(_msg);
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::OnLog(msgs::LogEntry &_logEntry) const
+{
+  // Our logging contribution:
+  //   * Visibility information of all the nodes.
+  //   * Incoming messages.
+  _logEntry.mutable_visibility()->CopyFrom(this->commsModel->VisibilityMap());
+  _logEntry.mutable_incoming_msgs()->CopyFrom(this->logIncomingMsgs);
 }

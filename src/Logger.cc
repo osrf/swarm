@@ -93,28 +93,29 @@ void Logger::Update(const double _simTime)
     return;
 
   // Fill the simulation time of the log entry.
-  for (const auto &client : this->clients)
+  for (const auto &kv : this->clients)
   {
+    auto id = kv.first;
+    auto client = kv.second;
     msgs::LogEntry logEntryMsg;
 
     // The logger sets some fields.
-    logEntryMsg.set_id(client.first);
+    logEntryMsg.set_id(id);
     logEntryMsg.set_time(_simTime);
 
-    if (!client.second)
+    if (!client)
     {
-      std::cerr << "Logger::Update() error: Client [" << client.first
+      std::cerr << "Logger::Update() error: Client [" << id
                 << "] has been destroyed. Removing client." << std::endl;
-      this->log.erase(client.first);
+      this->log.erase(id);
       continue;
     }
 
     // The client sets some fields.
-    client.second->OnLog(logEntryMsg);
+    client->OnLog(logEntryMsg);
 
     // We save the logEntry in memory.
-    // ToDo: Allow adding information to an existing entry without replacing it.
-    this->log[client.first] = logEntryMsg;
+    this->log[id] = logEntryMsg;
   }
 
   // Flush the log into disk.

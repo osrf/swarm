@@ -98,6 +98,12 @@ void CommsModel::Update()
 }
 
 //////////////////////////////////////////////////
+const msgs::VisibilityMap &CommsModel::VisibilityMap() const
+{
+  return this->visibilityMsg;
+}
+
+//////////////////////////////////////////////////
 void CommsModel::UpdateOutages()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();
@@ -171,6 +177,8 @@ void CommsModel::UpdateOutages()
 //////////////////////////////////////////////////
 void CommsModel::UpdateNeighbors()
 {
+  this->visibilityMsg.Clear();
+
   // Update the list of neighbors for each robot.
   for (auto const &robot : (*this->swarm))
     this->UpdateNeighborList(robot.first);
@@ -182,6 +190,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
             "_address not found in the swarm.");
 
+  // Used for logging.
+  auto row = this->visibilityMsg.add_row();
+  row->set_src(_address);
+
   auto swarmMember = (*this->swarm)[_address];
   auto myPose = swarmMember->model->GetWorldPose().Ign();
 
@@ -189,23 +201,26 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   // A node will always receive its own messages (prob = 1.0).
   swarmMember->neighbors = {{_address, 1.0}};
 
-  // If I am on outage, my only neighbor is myself.
-  if (swarmMember->onOutage)
-    return;
-
   // Decide whether this node goes into our neighbor list.
   for (auto const &member : (*this->swarm))
   {
     // Where is the other node?
     auto other = member.second;
-    auto otherPose = other->model->GetWorldPose().Ign();
+
+    // Create a new visibility entry for logging with a VISIBLE status.
+    auto visibilityEntry = row->add_entry();
+    visibilityEntry->set_dst(other->address);
+    visibilityEntry->set_status(msgs::VisibilityStatus::VISIBLE);
+
+    // If I am on outage, my only neighbor is myself.
+    if (swarmMember->onOutage || other->onOutage)
+    {
+      visibilityEntry->set_status(msgs::VisibilityStatus::OUTAGE);
+      continue;
+    }
 
     // This is my own address and it's already in the list of neighbors.
     if (other->address == _address)
-      continue;
-
-    // Check if the other teammate is currenly on outage.
-    if (other->onOutage)
       continue;
 
     // Check if there's line of sight between the two vehicles.
@@ -220,12 +235,20 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // There's no communication allowed between two vehicles that have more
     // than one obstacle in between.
     if (!visible && entities.size() > 1)
+    {
+      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
       continue;
+    }
 
     auto obstacle = entities.at(0);
     if (!visible && ((obstacle.find("wall") != std::string::npos) ||
                      (obstacle.find("terrain") != std::string::npos)))
+    {
+      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
       continue;
+    }
+
+    auto otherPose = other->model->GetWorldPose().Ign();
 
     bool treesBlocking = !visible && obstacle.find("tree") != std::string::npos;
 
@@ -242,7 +265,10 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       if (treesBlocking)
       {
         if (this->neighborDistancePenaltyTree < 0.0)
+        {
+          visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
           continue;
+        }
         else
           neighborDist += this->neighborDistancePenaltyTree;
       }
@@ -250,10 +276,16 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 
     if ((this->neighborDistanceMin > 0.0) &&
         (this->neighborDistanceMin > neighborDist))
+    {
+      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
       continue;
+    }
     if ((this->neighborDistanceMax >= 0.0) &&
         (this->neighborDistanceMax < neighborDist))
+    {
+      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
       continue;
+    }
 
     // Now apply the comms model to compute a probability of a packet from
     // this neighbor arriving successfully.
@@ -312,9 +344,9 @@ void CommsModel::UpdateVisibility()
   // All combinations between a pair of vehicles.
   for (auto const &robotA : (*this->swarm))
   {
+    auto addressA = robotA.second->address;
     for (auto const &robotB : (*this->swarm))
     {
-      auto addressA = robotA.second->address;
       auto addressB = robotB.second->address;
       auto keyA = std::make_pair(addressA, addressB);
       auto keyB = std::make_pair(addressB, addressA);

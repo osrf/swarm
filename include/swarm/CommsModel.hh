@@ -30,6 +30,7 @@
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
+#include "msgs/log_entry.pb.h"
 #include "swarm/SwarmTypes.hh"
 
 namespace swarm
@@ -52,6 +53,10 @@ namespace swarm
     /// \brief Update the state of the communication model (outages, visibility
     /// between nodes and neighbors).
     public: void Update();
+
+    /// \brief Connectivity state for every pair of robots.
+    /// \return The connectivity information.
+    public: const msgs::VisibilityMap &VisibilityMap() const;
 
     /// \brief Decide if each member of the swarm enters into a comms outage.
     private: void UpdateOutages();
@@ -154,6 +159,9 @@ namespace swarm
     /// element (empty string).
     private: std::map<std::pair<std::string, std::string>,
                std::vector<std::string>> visibility;
+
+    /// \brief Visibility between all the robots.
+    private: msgs::VisibilityMap visibilityMsg;
   };
 }  // namespace
 #endif

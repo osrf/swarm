@@ -41,6 +41,7 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
+#include "msgs/log_entry.pb.h"
 #include "msgs/neighbor_v.pb.h"
 #include "swarm/Logger.hh"
 
@@ -691,9 +692,6 @@ namespace swarm
     /// Yaw and roll are computed based on the clamped linear velocity.
     private: double fixedMaxAngularVel = 3.14;
 
-    /// \brief Pointer to the shared logger.
-    private: Logger *logger = Logger::Instance();
-
     /// \brief Min random number used to computer a false negative
     private: double cameraFalseNegativeProbMin = 0.01;
 
@@ -711,6 +709,12 @@ namespace swarm
 
     /// \brief Array of all the models
     private: std::vector<std::string> modelNames;
+
+    /// \brief Pointer to the shared logger.
+    private: Logger *logger = Logger::Instance();
+
+    /// \brief Save messages received for logging.
+    private: msgs::IncomingMsgs incomingMsgs;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
