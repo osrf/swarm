@@ -29,13 +29,13 @@ message Imu
   required gazebo.msgs.Vector3d angvel         = 2;
 
   /// \brief Robot orientation.
-  required gazebo.msgs.Quaternion orientation = 3;
+  required gazebo.msgs.Quaternion orientation  = 3;
 }
 
 message ObjPose
 {
   /// \brief Name of the object.
-  required string name = 1;
+  required string name           = 1;
 
   /// \brief Pose of the object in the robot's camera frame.
   required gazebo.msgs.Pose pose = 2;
@@ -50,40 +50,46 @@ message ImageData
 message Message
 {
   /// \brief Address of the sender.
-  required string src_address = 1;
+  required string src_address       = 1;
 
   /// \brief Address of the destination.
-  required string dst_address = 2;
+  required string dst_address       = 2;
 
   /// \brief Destination port.
-  required uint32 dst_port    = 3;
+  required uint32 dst_port          = 3;
 
   /// \brief Payload size.
-  required uint32 size        = 4;
+  required uint32 size              = 4;
 
   /// \brief Whether the message was delivered or not due to drops.
-  optional bool delivered     = 5;
+  optional MessageStatus status     = 5;
 }
 
-enum VisibilityStatus
+enum MessageStatus
 {
   /// \brief Robots are visible.
-  VISIBLE  = 1;
+  VISIBLE   = 1;
   /// \brief Communication failed due to a comms outage.
-  OUTAGE   = 2;
+  OUTAGE    = 2;
   /// \brief Communication failed due to an obstacle between the robots.
-  OBSTACLE = 3;
+  OBSTACLE  = 3;
   /// \brief Communication failed due to the robots are out of range.
-  DISTANCE = 4;
+  DISTANCE  = 4;
+  /// \brief Communication failed due to the channel is busy.
+  BUSY      = 5;
+  /// \brief The message has been delivered successfully.
+  DELIVERED = 6;
+  /// \broef The message has been dropped.
+  DROPPED   = 7;
 }
 
 message VisibilityEntry
 {
   /// \brief Address of the destination.
-  required string dst          = 1;
+  required string dst           = 1;
 
   /// \brief Visibility status.
-  required VisibilityStatus status = 2;
+  required MessageStatus status = 2;
 }
 
 message VisibilityRow

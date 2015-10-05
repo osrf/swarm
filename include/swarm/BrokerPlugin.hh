@@ -118,6 +118,9 @@ namespace swarm
     /// \brief Incoming messages from other robots used for logging.
     private: msgs::IncomingMsgs logIncomingMsgs;
 
+    /// \brief The sum of all payload sizes for each iteration.
+    private: uint64_t payloadSizePerIter = 0;
+
     /// \brief Logger instance.
     private: Logger *logger = Logger::Instance();
   };

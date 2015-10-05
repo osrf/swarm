@@ -52,7 +52,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     else
       dstAddress = "192.168.2.1";
 
-    if (this->iterations == 0)
+    if ((this->iterations == 0) &&
+        ((this->testCase >= 0) && (this->testCase <= 11)))
     {
       // Try to send a message bigger than the MTU.
       std::string data(this->kMtu + 1, 'x');
@@ -159,6 +160,14 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
         int total = this->numUnicastSent + 2 * this->numBroadcastSent +
           2 * this->numMulticastSent;
         expectedNumMsgs = total - 73;
+        break;
+      }
+      // Low max data rate to generate 50% drops due to a busy channel.
+      case 12:
+      {
+        // The expectation is to have 0.5 probability of dropping the message
+        // sent. In the ideal case, we should receive 500 messages.
+        expectedNumMsgs = 230;
         break;
       }
       default:

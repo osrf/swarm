@@ -829,7 +829,10 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
   newMsg->set_dst_address(_msg.dst_address());
   newMsg->set_dst_port(_msg.dst_port());
   newMsg->set_size(_msg.data().size());
-  newMsg->set_delivered(visible);
+  if (visible)
+    newMsg->set_status(swarm::msgs::DELIVERED);
+  else
+    newMsg->set_status(swarm::msgs::DROPPED);
 }
 
 //////////////////////////////////////////////////

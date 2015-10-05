@@ -58,6 +58,16 @@ namespace swarm
     /// \return The connectivity information.
     public: const msgs::VisibilityMap &VisibilityMap() const;
 
+    /// \brief Update the probability of a package to be dropped due to
+    /// concurrent medium access.
+    /// \param[in] _numMessages Number of messages requested to send.
+    /// \param[in] _payloadSize Total payload size of the messages requested
+    /// to send in this iteration (bytes).
+    /// return The probability of a package to be dropped this cycle due to
+    /// concurrent medium access.
+    public: double MacProb(const uint32_t _numMessages,
+                           const uint32_t _payloadSize) const;
+
     /// \brief Decide if each member of the swarm enters into a comms outage.
     private: void UpdateOutages();
 
@@ -139,6 +149,13 @@ namespace swarm
     /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
     /// Used with uniform outage duration probability model.
     private: double commsOutageDurationMax = -1.0;
+
+    /// \brief Maximum net data rate (bps).
+    private: double maxDataRate = 54000000;
+
+    /// \brief UDP header (8 bytes) + IPv4 header (20 bytes) +
+    /// Ethernet 28 (bytes).
+    private: unsigned int UDPOverhead = 56;
 
     /// \brief Pointer to the swarm.
     private: SwarmMembershipPtr swarm;

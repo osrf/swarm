@@ -210,12 +210,12 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Create a new visibility entry for logging with a VISIBLE status.
     auto visibilityEntry = row->add_entry();
     visibilityEntry->set_dst(other->address);
-    visibilityEntry->set_status(msgs::VisibilityStatus::VISIBLE);
+    visibilityEntry->set_status(msgs::MessageStatus::VISIBLE);
 
     // If I am on outage, my only neighbor is myself.
     if (swarmMember->onOutage || other->onOutage)
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OUTAGE);
+      visibilityEntry->set_status(msgs::MessageStatus::OUTAGE);
       continue;
     }
 
@@ -236,7 +236,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // than one obstacle in between.
     if (!visible && entities.size() > 1)
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
+      visibilityEntry->set_status(msgs::MessageStatus::OBSTACLE);
       continue;
     }
 
@@ -244,7 +244,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if (!visible && ((obstacle.find("wall") != std::string::npos) ||
                      (obstacle.find("terrain") != std::string::npos)))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
+      visibilityEntry->set_status(msgs::MessageStatus::OBSTACLE);
       continue;
     }
 
@@ -266,7 +266,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       {
         if (this->neighborDistancePenaltyTree < 0.0)
         {
-          visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+          visibilityEntry->set_status(msgs::MessageStatus::DISTANCE);
           continue;
         }
         else
@@ -277,13 +277,13 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if ((this->neighborDistanceMin > 0.0) &&
         (this->neighborDistanceMin > neighborDist))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+      visibilityEntry->set_status(msgs::MessageStatus::DISTANCE);
       continue;
     }
     if ((this->neighborDistanceMax >= 0.0) &&
         (this->neighborDistanceMax < neighborDist))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+      visibilityEntry->set_status(msgs::MessageStatus::DISTANCE);
       continue;
     }
 
@@ -376,6 +376,17 @@ void CommsModel::UpdateVisibility()
       }
     }
   }
+}
+
+//////////////////////////////////////////////////
+double CommsModel::MacProb(const uint32_t _numMessages,
+                           const uint32_t _payloadSize) const
+{
+  auto bitsToSend = (_numMessages * this->UDPOverhead + _payloadSize) * 8;
+  if (bitsToSend == 0 || bitsToSend <= this->maxDataRate)
+    return 1.0;
+  else
+    return this->maxDataRate / bitsToSend;
 }
 
 //////////////////////////////////////////////////
@@ -472,6 +483,11 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     {
       this->commsOutageDurationMax =
         commsModelElem->Get<double>("comms_outage_duration_max");
+    }
+    if (commsModelElem->HasElement("max_data_rate"))
+    {
+      this->maxDataRate =
+        commsModelElem->Get<double>("max_data_rate");
     }
   }
 }

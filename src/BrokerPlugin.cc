@@ -137,7 +137,7 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     // Update the state of the communication model.
     this->commsModel->Update();
 
-    // Send a message to each swarm member with its updated neighbors list.
+       // Send a message to each swarm member with its updated neighbors list.
     this->NotifyNeighbors();
   }
 
@@ -145,6 +145,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   // the message according to the communication model.
   // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
+
+  this->payloadSizePerIter = 0;
 
   // Log the current iteration.
   this->logger->Update(_info.simTime.Double());
@@ -183,6 +185,11 @@ void BrokerPlugin::DispatchMessages()
 
   this->logIncomingMsgs.Clear();
 
+  // Get the probability that a package is delivered given the medium access
+  // control policy.
+  auto macProb = this->commsModel->MacProb(
+      incomingMsgsBuffer.size(), this->payloadSizePerIter);
+
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
@@ -209,6 +216,18 @@ void BrokerPlugin::DispatchMessages()
       continue;
     }
 
+    // Decide whether this package is dropped, according to the
+    // probability of finding the channel available.
+    if (ignition::math::Rand::DblUniform(0.0, 1.0) >= macProb)
+    {
+      logMsg->set_status(msgs::MessageStatus::BUSY);
+      // Debug output.
+      //  gzdbg << "Dropping message from " << msg.src_address() << " addressed"
+      //        << " to " << msg.dst_address() << ". The channel is busy."
+      //        << std::endl;
+      continue;
+    }
+
     // Add the list of neighbors of the sender to the outgoing message.
     for (auto const &neighborKv : (*this->swarm)[msg.src_address()]->neighbors)
     {
@@ -219,9 +238,9 @@ void BrokerPlugin::DispatchMessages()
       // probability of communication between them right now.
       if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
       {
-        // Debug output
+        // Debug output.
         // gzdbg << "Sending message from " << msg.src_address() << " to " <<
-        //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+        //   neighborId << " (addressed to " << msg.dst_address() << ")" <<
         //   std::endl;
         msg.add_recipients(neighborId);
       }
@@ -229,7 +248,7 @@ void BrokerPlugin::DispatchMessages()
       // else
       // {
       //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
-      //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
+      //     neighborId<< " (addressed to " << msg.dst_address() << ")" <<
       //     std::endl;
       // }
     }
@@ -252,6 +271,8 @@ void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
 
   // Queue the new message.
   this->incomingMsgs.push(_msg);
+
+  this->payloadSizePerIter += _msg.data().size();
 }
 
 //////////////////////////////////////////////////
