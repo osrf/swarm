@@ -33,6 +33,7 @@
 #include <sdf/sdf.hh>
 
 #include "swarm/CommsModel.hh"
+#include "swarm/Logger.hh"
 #include "swarm/SwarmTypes.hh"
 #include "msgs/datagram.pb.h"
 
@@ -108,6 +109,9 @@ namespace swarm
 
     /// \brief Comms model that we're using.
     private: std::unique_ptr<CommsModel> commsModel;
+
+    /// \brief Logger instance.
+    private: Logger *logger = Logger::Instance();
   };
 }
 #endif

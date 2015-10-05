@@ -51,7 +51,6 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
   GZ_ASSERT(_sdf, "BrokerPlugin::Load() error: _sdf pointer is NULL");
 
   this->world = _world;
-
   this->swarm = std::make_shared<SwarmMembership_M>();
 
   // This is the subscription that will allow us to receive incoming messages.
@@ -127,7 +126,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 }
 
 //////////////////////////////////////////////////
-void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
+void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   {
     std::lock_guard<std::mutex> lock(this->mutex);
@@ -143,6 +142,9 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
   // the message according to the communication model.
   // Mutex handling is done inside DispatchMessages().
   this->DispatchMessages();
+
+  // Log the current iteration.
+  this->logger->Update(_info.simTime.Double());
 }
 
 //////////////////////////////////////////////////

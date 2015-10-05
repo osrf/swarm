@@ -252,6 +252,7 @@ else (build_errors)
   include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include
+    ${GAZEBO_PROTO_INCLUDE_DIRS}
   )
   link_directories(${PROJECT_BINARY_DIR}/src)
 
@@ -268,6 +269,7 @@ else (build_errors)
     add_subdirectory(msgs)
     add_subdirectory(src)
     add_subdirectory(include)
+    add_subdirectory(tools)
     add_subdirectory(worlds)
     add_subdirectory(test)
   endif (BUILD_IGNITION)

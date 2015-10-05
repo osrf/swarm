@@ -42,6 +42,7 @@
 
 #include "msgs/datagram.pb.h"
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/Logger.hh"
 
 namespace swarm
 {
@@ -111,7 +112,8 @@ namespace swarm
   ///     - Type() Get the vehicle type.
   ///     - Name() Get the name of the vehicle.
   ///     - SearchArea() Get the GPS coordinates of the search area.
-  class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
+  class IGNITION_VISIBLE RobotPlugin
+    : public gazebo::ModelPlugin, public swarm::Loggable
   {
     /// \brief The type of vehicle.
     public: enum VehicleType
@@ -505,6 +507,9 @@ namespace swarm
     /// \brief Update the angular velocity of the robot model in Gazebo.
     private: void UpdateAngularVelocity();
 
+    // Documentation inherited.
+    private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -685,6 +690,9 @@ namespace swarm
     /// This is applied to the vehicle's pitch rate.
     /// Yaw and roll are computed based on the clamped linear velocity.
     private: double fixedMaxAngularVel = 3.14;
+
+    /// \brief Pointer to the shared logger.
+    private: Logger *logger = Logger::Instance();
 
     /// \brief Min random number used to computer a false negative
     private: double cameraFalseNegativeProbMin = 0.01;

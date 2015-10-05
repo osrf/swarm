@@ -26,6 +26,7 @@
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
+#include "msgs/log_entry.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -755,6 +756,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   this->AdjustPose();
 
+  // Register this plugin in the logger.
+  this->logger->Register(this->Host(), this);
+
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
 
@@ -1099,4 +1103,74 @@ ignition::math::Pose3d RobotPlugin::CameraToWorld(
 {
   auto poseInWorld = _poseinCamera + this->model->GetWorldPose().Ign();
   return poseInWorld;
+}
+
+/////////////////////////////////////////////////
+void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
+{
+  // Fill the last GPS observation.
+  msgs::Gps *obsGps = new msgs::Gps();
+  obsGps->set_latitude(this->observedLatitude);
+  obsGps->set_longitude(this->observedLongitude);
+  obsGps->set_altitude(this->observedAltitude);
+
+  // Fill the last IMU observation.
+  gazebo::msgs::Vector3d *obsVlin = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Vector3d *obsVang = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Quaternion *obsOrient = new gazebo::msgs::Quaternion();
+  msgs::Imu *obsImu = new msgs::Imu();
+  obsVlin->set_x(this->observedlinVel.X());
+  obsVlin->set_y(this->observedlinVel.Y());
+  obsVlin->set_z(this->observedlinVel.Z());
+  obsVang->set_x(this->observedAngVel.X());
+  obsVang->set_y(this->observedAngVel.Y());
+  obsVang->set_z(this->observedAngVel.Z());
+  obsOrient->set_x(this->observedOrient.X());
+  obsOrient->set_y(this->observedOrient.Y());
+  obsOrient->set_z(this->observedOrient.Z());
+  obsOrient->set_w(this->observedOrient.W());
+  obsImu->set_allocated_linvel(obsVlin);
+  obsImu->set_allocated_angvel(obsVang);
+  obsImu->set_allocated_orientation(obsOrient);
+
+  // Fill the camera observation.
+  msgs::ImageData *obsImage = new msgs::ImageData();
+  for (const auto imgObj : this->img.objects)
+  {
+    msgs::ObjPose *obj = obsImage->add_object();
+    obj->set_name(imgObj.first);
+    obj->mutable_pose()->mutable_position()->set_x(imgObj.second.Pos().X());
+    obj->mutable_pose()->mutable_position()->set_y(imgObj.second.Pos().Y());
+    obj->mutable_pose()->mutable_position()->set_z(imgObj.second.Pos().Z());
+    obj->mutable_pose()->mutable_orientation()->set_x(imgObj.second.Rot().X());
+    obj->mutable_pose()->mutable_orientation()->set_y(imgObj.second.Rot().Y());
+    obj->mutable_pose()->mutable_orientation()->set_z(imgObj.second.Rot().Z());
+    obj->mutable_pose()->mutable_orientation()->set_w(imgObj.second.Rot().W());
+  }
+
+  msgs::Sensors *sensors = new msgs::Sensors();
+  sensors->set_allocated_gps(obsGps);
+  sensors->set_allocated_imu(obsImu);
+  sensors->set_bearing(this->observedBearing.Radian());
+  sensors->set_allocated_image(obsImage);
+  sensors->set_battery_capacity(this->BatteryCapacity());
+
+  // Fill the sensor information of the log entry.
+  _logEntry.set_allocated_sensors(sensors);
+
+  // Fill the actions.
+  gazebo::msgs::Vector3d *targetVlin = new gazebo::msgs::Vector3d();
+  gazebo::msgs::Vector3d *targetVang = new gazebo::msgs::Vector3d();
+  targetVlin->set_x(this->targetLinVel.X());
+  targetVlin->set_y(this->targetLinVel.Y());
+  targetVlin->set_z(this->targetLinVel.Z());
+  targetVang->set_x(this->targetAngVel.X());
+  targetVang->set_y(this->targetAngVel.Y());
+  targetVang->set_z(this->targetAngVel.Z());
+
+  msgs::Actions *actions = new msgs::Actions();
+  actions->set_allocated_linvel(targetVlin);
+  actions->set_allocated_angvel(targetVang);
+
+  _logEntry.set_allocated_actions(actions);
 }

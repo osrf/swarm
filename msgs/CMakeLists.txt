@@ -1,5 +1,6 @@
 set(msgs
   datagram.proto
+  log_entry.proto
   neighbor_v.proto
   personfound.proto
 )
@@ -34,7 +35,7 @@ foreach(FIL ${msgs})
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --plugin=protoc-gen-ignmsgs=${CMAKE_CURRENT_BINARY_DIR}/${ignmsgs_out_binary} --cpp_out=dllexport_decl=IGNITION_MSGS_VISIBLE:${CMAKE_CURRENT_BINARY_DIR} --ignmsgs_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} ${ABS_FIL}
+    ARGS --plugin=protoc-gen-ignmsgs=${CMAKE_CURRENT_BINARY_DIR}/${ignmsgs_out_binary} --cpp_out=dllexport_decl=IGNITION_MSGS_VISIBLE:${CMAKE_CURRENT_BINARY_DIR} --ignmsgs_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
     DEPENDS ${ABS_FIL} ignmsgs_out
     COMMENT "Running C++ protocol buffer compiler on ${FIL}"
     VERBATIM )
@@ -54,7 +55,7 @@ if (UNIX)
   endif()
 endif()
 
-target_link_libraries(${PROJECT_LIB_MSGS_NAME} ${PROTOBUF_LIBRARY} ${PROTOBUF_PROTOC_LIBRARY})
+target_link_libraries(${PROJECT_LIB_MSGS_NAME} ${PROTOBUF_LIBRARY} ${PROTOBUF_PROTOC_LIBRARY} ${GAZEBO_PROTO_LIBRARIES})
 
 ign_install_library(${PROJECT_LIB_MSGS_NAME})
 add_dependencies(${PROJECT_LIB_MSGS_NAME} ignmsgs_out)

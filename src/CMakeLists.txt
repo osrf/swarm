@@ -1,5 +1,9 @@
 include (${project_cmake_dir}/Utils.cmake)
 
+set (common_sources ${common_sources}
+  Logger.cc
+)
+
 set (broker_plugin_sources
   BrokerPlugin.cc
   CommsModel.cc
@@ -19,6 +23,7 @@ set (boo_plugin_sources
 
 set (gtest_sources
   BrokerPlugin_TEST.cc
+  Logger_TEST.cc
   RobotPlugin_TEST.cc
 )
 
@@ -30,7 +35,9 @@ include_directories(${CMAKE_BINARY_DIR}/test/)
 ign_build_tests(${gtest_sources})
 
 # Create the libSwarmBrokerPlugin.so library.
-ign_add_library(${PROJECT_LIB_BROKER_NAME} ${broker_plugin_sources})
+ign_add_library(${PROJECT_LIB_BROKER_NAME}
+                ${broker_plugin_sources}
+                ${common_sources})
 target_link_libraries(${PROJECT_LIB_BROKER_NAME}
                       ${PROJECT_LIB_MSGS_NAME}
                       ${PROTOBUF_LIBRARY}
@@ -38,7 +45,9 @@ target_link_libraries(${PROJECT_LIB_BROKER_NAME}
 ign_install_library(${PROJECT_LIB_BROKER_NAME})
 
 # Create the libSwarmRobotPlugin.so library.
-ign_add_library(${PROJECT_LIB_ROBOT_NAME} ${robot_plugin_sources})
+ign_add_library(${PROJECT_LIB_ROBOT_NAME}
+                ${robot_plugin_sources}
+                ${common_sources})
 target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
                       ${PROJECT_LIB_MSGS_NAME}
                       ${PROTOBUF_LIBRARY}
@@ -46,7 +55,9 @@ target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
 ign_install_library(${PROJECT_LIB_ROBOT_NAME})
 
 # Create the libSwarmBooPlugin.so library.
-ign_add_library(${PROJECT_LIB_BOO_NAME} ${boo_plugin_sources})
+ign_add_library(${PROJECT_LIB_BOO_NAME}
+                ${boo_plugin_sources}
+                ${common_sources})
 target_link_libraries(${PROJECT_LIB_BOO_NAME}
                       ${PROJECT_LIB_ROBOT_NAME}
                       ${PROJECT_LIB_MSGS_NAME}

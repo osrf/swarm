@@ -5,6 +5,8 @@ set (headers
   BrokerPlugin.hh
   CommsModel.hh
   Helpers.hh
+  Logger.hh
+  LogParser.hh
   LostPersonPlugin.hh
   RobotPlugin.hh
   SwarmTypes.hh
