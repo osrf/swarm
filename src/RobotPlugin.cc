@@ -189,7 +189,7 @@ void RobotPlugin::UpdateSensors()
       ignition::math::Pose3d p = gazebo::msgs::ConvertIgn(imgModel.pose());
 
       // Distance to the detected model
-      double dist = p.Pos().Distance(myPose.Pos());
+      double dist = p.Pos().Length();
 
       // Normalized (to the camera's frustum) squared distance
       double distSquaredNormalized = std::pow(dist, 2) /
