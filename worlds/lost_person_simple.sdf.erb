@@ -1,0 +1,91 @@
+<!-- The lost person -->
+<model name="lost_person">
+  <pose><%=lost_person_x%> <%=lost_person_y%> 0.5 0 0 0</pose>
+    <link name="link">
+      <kinematic>true</kinematic>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>1 1 1</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+           <ode>
+             <mu>0.0</mu>
+             <mu2>0.0</mu2>
+           </ode>
+         </friction>
+       </surface>
+     </collision>
+     <visual name="visual">
+       <geometry>
+         <box>
+           <size>1 1 1</size>
+         </box>
+       </geometry>
+     </visual>
+
+     <visual name="visual_ul">
+       <pose>0.5 0.5 0.5 0 0 0</pose>
+       <geometry>
+         <sphere>
+           <radius>.04</radius>
+         </sphere>
+       </geometry>
+       <material>
+         <script>
+           <name>Gazebo/Red</name>
+         </script>
+       </material>
+     </visual>
+     <visual name="visual_ur">
+       <pose>0.5 -0.5 0.5 0 0 0</pose>
+       <geometry>
+         <sphere>
+           <radius>.04</radius>
+         </sphere>
+       </geometry>
+       <material>
+         <script>
+           <name>Gazebo/Green</name>
+         </script>
+       </material>
+     </visual>
+     <visual name="visual_lr">
+       <pose>-0.5 -0.5 0.5 0 0 0</pose>
+       <geometry>
+         <sphere>
+           <radius>.04</radius>
+         </sphere>
+       </geometry>
+       <material>
+         <script>
+           <name>Gazebo/Blue</name>
+         </script>
+       </material>
+     </visual>
+     <visual name="visual_ll">
+       <pose>-0.5 0.5 0.5 0 0 0</pose>
+       <geometry>
+         <sphere>
+           <radius>.04</radius>
+         </sphere>
+       </geometry>
+       <material>
+         <script>
+           <name>Gazebo/Yellow</name>
+         </script>
+       </material>
+     </visual>
+   </link>
+
+   <plugin name="random" filename="libRandomVelocityPlugin.so">
+     <link>link</link>
+     <initial_velocity>0 0.2 0</initial_velocity>
+     <velocity_factor>0.5</velocity_factor>
+     <update_period>10</update_period>
+     <min_z>0</min_z>
+     <max_z>0</max_z>
+   </plugin>
+</model>
