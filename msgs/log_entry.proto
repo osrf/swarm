@@ -1,0 +1,157 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface LogEntry
+/// \brief A message containing an entry for a log.
+
+import "vector3d.proto";
+import "quaternion.proto";
+import "pose.proto";
+
+message Gps
+{
+  /// \brief Latitude.
+  required double latitude  = 1;
+
+  /// \brief Longitude.
+  required double longitude = 2;
+
+  /// \brief Altitude.
+  required double altitude  = 3;
+}
+
+message Imu
+{
+  /// \brief Linear velocity.
+  required gazebo.msgs.Vector3d linvel         = 1;
+
+  /// \brief Angular velocity.
+  required gazebo.msgs.Vector3d angvel         = 2;
+
+  /// \brief Robot orientation.
+  required gazebo.msgs.Quaternion orientation = 3;
+}
+
+message ObjPose
+{
+  /// \brief Name of the object.
+  required string name = 1;
+
+  /// \brief Pose of the object in the robot's camera frame.
+  required gazebo.msgs.Pose pose = 2;
+}
+
+message ImageData
+{
+  /// \brief Collection of objects observed by the camera.
+  repeated ObjPose object = 1;
+}
+
+message Message
+{
+  /// \brief Address of the sender.
+  required string src_address = 1;
+
+  /// \brief Address of the destination.
+  required string dst_address = 2;
+
+  /// \brief Destination port.
+  required uint32 dst_port    = 3;
+
+  /// \brief Payload size.
+  required uint32 size        = 4;
+
+  /// \brief Whether the message was delivered or not due to drops.
+  optional bool delivered     = 5;
+}
+
+enum VisibilityStatus
+{
+  /// \brief Robots are visible.
+  VISIBLE  = 1;
+  /// \brief Communication failed due to a comms outage.
+  OUTAGE   = 2;
+  /// \brief Communication failed due to an obstacle between the robots.
+  OBSTACLE = 3;
+  /// \brief Communication failed due to the robots are out of range.
+  DISTANCE = 4;
+}
+
+message VisibilityEntry
+{
+  /// \brief Address of the destination.
+  required string dst          = 1;
+
+  /// \brief Visibility status.
+  required VisibilityStatus status = 2;
+}
+
+message VisibilityRow
+{
+  /// \brief Address of the sender.
+  required string src            = 1;
+
+  /// \brief Collection of visibility status between the sender and other robots
+  repeated VisibilityEntry entry = 2;
+}
+
+message Sensors
+{
+  /// \brief Last GPS observation.
+  required Gps gps                 = 1;
+
+  /// \brief Last IMU observation.
+  required Imu imu                 = 2;
+
+  /// \brief Last compass observation (radians).
+  required double bearing          = 3;
+
+  /// \brief Collection of objects perceived by the robot's camera.
+  required ImageData image         = 4;
+
+  /// \brief Current battery capacity.
+  required double battery_capacity = 5;
+}
+
+message Actions
+{
+  /// \brief Last linear velocity sent to the robot.
+  required gazebo.msgs.Vector3d linvel = 1;
+
+  /// \brief Last angular velocity sent to the robot.
+  required gazebo.msgs.Vector3d angvel = 2;
+}
+
+message IncomingMsgs
+{
+  /// \brief Collection of incoming messages received by a robot.
+  repeated Message message = 1;
+}
+
+message VisibilityMap
+{
+  /// \brief Collection of visibility rows. Each visibility row represents the
+  /// connectivity between one robot and the rest of the swarm.
+  repeated VisibilityRow row = 1;
+}
+
+message LogEntry
+{
+  /// \brief Robot ID.
+  optional string id                  = 1;
+
+  /// \brief Simulation time.
+  optional double time                = 2;
+
+  /// \brief Sensor information for a robot.
+  optional Sensors sensors            = 3;
+
+  /// \brief Actions sent to the robot.
+  optional Actions actions            = 4;
+
+  /// \brief Incoming messages received by a robot.
+  optional IncomingMsgs incoming_msgs = 5;
+
+  /// \brief Visibility among the robots.
+  optional VisibilityMap visibility   = 6;
+}

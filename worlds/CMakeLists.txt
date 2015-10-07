@@ -11,6 +11,7 @@ set (world_erb_files
   ground_easy_4.world.erb
   ground_simple_2.world.erb
   ground_simple_36.world.erb
+  lost_person.world.erb
   rotor_simple_36.world.erb
   swarm_empty.world.erb
 )

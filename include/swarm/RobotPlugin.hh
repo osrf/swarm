@@ -41,7 +41,9 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
+#include "msgs/log_entry.pb.h"
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/Logger.hh"
 
 namespace swarm
 {
@@ -55,7 +57,6 @@ namespace swarm
     /// \brief Map of detected objects.
     public: ObjPose_M objects;
   };
-
 
   /// \brief A Model plugin that is the base class for all agent plugins
   /// in a swarm.
@@ -91,6 +92,9 @@ namespace swarm
   ///     - Imu() Get the robot's linear and angular velocities and position
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
+  ///     - SetCameraOrientation() Set the pan(yaw)/tilt(pitch) of
+  ///       the camera.
+  ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
   ///
   ///  * Battery
   ///     Each vehicle begins with a starting battery capacity. This
@@ -112,7 +116,8 @@ namespace swarm
   ///     - Type() Get the vehicle type.
   ///     - Name() Get the name of the vehicle.
   ///     - SearchArea() Get the GPS coordinates of the search area.
-  class IGNITION_VISIBLE RobotPlugin : public gazebo::ModelPlugin
+  class IGNITION_VISIBLE RobotPlugin
+    : public gazebo::ModelPlugin, public swarm::Loggable
   {
     /// \brief The type of vehicle.
     public: enum VehicleType
@@ -266,7 +271,7 @@ namespace swarm
     /// \return The name given to this robot in the SDF file.
     protected: std::string Name() const;
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -285,7 +290,7 @@ namespace swarm
     protected: bool SetLinearVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's linear velocity.
+    /// \brief Set the robot's target linear velocity.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -305,7 +310,7 @@ namespace swarm
     protected: bool SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -324,7 +329,7 @@ namespace swarm
     protected: bool SetAngularVelocity(
                    const ignition::math::Vector3d &_velocity);
 
-    /// \brief Set the robot's angular velocity, using Euler angles.
+    /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
     /// The velocity is applied in the robot's local coordinate frame, where
     ///
@@ -452,6 +457,20 @@ namespace swarm
     protected: ignition::math::Pose3d CameraToWorld(
       const ignition::math::Pose3d &_poseinCamera) const;
 
+    /// \brief Set the pitch and yaw of the camera.
+    /// \param[in] _pitch The pitch of the camera in radians.
+    /// Valid values must fall between (+/-)PI/2 radian.
+    /// \param[in] _yaw The yaw of the camera in radians.
+    /// The camera can rotate 2PI radians.
+    protected: void SetCameraOrientation(const double _pitch,
+                                         const double _yaw);
+
+    /// \brief Get the camera's orientation (pitch and yaw).
+    /// \param[out] _pitch Camera's current pitch in radians.
+    /// \param[out] _yaw Camera's current yaw in radians.
+    protected: void CameraOrientation(double &_pitch,
+                                      double &_yaw) const;
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -499,6 +518,15 @@ namespace swarm
 
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
+
+    /// \brief Update the linear velocity of the robot model in Gazebo.
+    private: void UpdateLinearVelocity();
+
+    /// \brief Update the angular velocity of the robot model in Gazebo.
+    private: void UpdateAngularVelocity();
+
+    // Documentation inherited.
+    private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
@@ -590,25 +618,47 @@ namespace swarm
     /// \brief Half the height of the model.
     private: double modelHeight2;
 
-    /// \brief Linear velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d linearVelocity;
+    /// \brief Latitude observed by the robot's GPS.
+    private: double observedLatitude;
+
+    /// \brief Longitude observed by the robot's GPS.
+    private: double observedLongitude;
+
+    /// \brief Altitude observed by the robot's GPS.
+    private: double observedAltitude;
+
+    /// \brief Linear velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedlinVel;
+
+    /// \brief Angular velocity observed in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d observedAngVel;
+
+    /// \brief Orientation observed with respect the reference pos.
+    private: ignition::math::Quaterniond observedOrient;
+
+    /// \brief Bearing between the true North and the robot.
+    private: ignition::math::Angle observedBearing;
+
+    /// \brief Logical image observed by the robot's camera.
+    private: ImageData img;
+
+    /// \brief Target linear velocity in the robot's local coordinate frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetLinVel;
+
+    /// \brief Target angular velocity in the robot's local reference frame.
+    /// Units: m/s.
+    private: ignition::math::Vector3d targetAngVel;
 
     /// \brief Linear velocity in the robot's local coordinate frame (m/s).
     /// This version has no noise.
     private: ignition::math::Vector3d linearVelocityNoNoise;
 
     /// \brief Angular velocity in the robot's local coordinate frame (m/s).
-    private: ignition::math::Vector3d angularVelocity;
-
-    /// \brief Angular velocity in the robot's local coordinate frame (m/s).
     /// This version has no noise.
     private: ignition::math::Vector3d angularVelocityNoNoise;
-
-    /// \brief Offset with respect the reference pos.
-    private: ignition::math::Quaterniond orientation;
-
-    /// \brief Bearing between the true North and the robot.
-    private: ignition::math::Angle bearing;
 
     /// \brief The capacity at start. This is used to handle reset.
     private: double startCapacity;
@@ -658,6 +708,30 @@ namespace swarm
     /// This is applied to the vehicle's pitch rate.
     /// Yaw and roll are computed based on the clamped linear velocity.
     private: double fixedMaxAngularVel = 3.14;
+
+    /// \brief Min random number used to computer a false negative
+    private: double cameraFalseNegativeProbMin = 0.01;
+
+    /// \brief Max random number used to compute a false negative
+    private: double cameraFalseNegativeProbMax = 0.8;
+
+    /// \brief Min random number used to compute a false positive
+    private: double cameraFalsePositiveProbMin = 0.01;
+
+    /// \brief Max random number used to compute a false positive
+    private: double cameraFalsePositiveProbMax = 0.8;
+
+    /// \brief Max position error in objects detected by the camera
+    private: double cameraMaxPositionError = 5.0;
+
+    /// \brief Array of all the models
+    private: std::vector<std::string> modelNames;
+
+    /// \brief Pointer to the shared logger.
+    private: Logger *logger = Logger::Instance();
+
+    /// \brief Save messages received for logging.
+    private: msgs::IncomingMsgs incomingMsgs;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
