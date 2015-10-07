@@ -241,7 +241,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     }
 
     auto obstacle = entities.at(0);
-    if (!visible && ((obstacle.find("wall") != std::string::npos) ||
+    if (!visible && ((obstacle.find("building") != std::string::npos) ||
                      (obstacle.find("terrain") != std::string::npos)))
     {
       visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);

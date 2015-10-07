@@ -116,55 +116,8 @@
       <real_time_update_rate>100</real_time_update_rate>
     </physics>
 
-    <model name="terrain">
-      <static>true</static>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <heightmap>
-              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
-              <size>10000 10000 1000</size>
-              <pos>0 0 0</pos>
-            </heightmap>
-          </geometry>
-        </collision>
-        <visual name="visual_abcedf">
-          <geometry>
-            <heightmap>
-              <use_terrain_paging>false</use_terrain_paging>
-              <texture>
-                <diffuse>file://media/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-              <texture>
-                <diffuse>file://media/materials/textures/grass_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-              <texture>
-                <diffuse>file://media/materials/textures/fungus_diffusespecular.png</diffuse>
-                <normal>file://media/materials/textures/flat_normal.png</normal>
-                <size>5</size>
-              </texture>
-
-              <blend>
-                <min_height>600</min_height>
-                <fade_dist>20</fade_dist>
-              </blend>
-
-              <blend>
-                <min_height>720</min_height>
-                <fade_dist>20</fade_dist>
-              </blend>
-              <uri>file://media/materials/textures/swarm_terrain_257_random.png</uri>
-              <size>10000 10000 1000</size>
-              <pos>0 0 0</pos>
-            </heightmap>
-          </geometry>
-        </visual>
-      </link>
-    </model>
+    <%= ERB.new(File.read('terrain_model_1.sdf.erb'),
+                nil, nil, "_sub01").result(binding)%>
 
   </world>
 </sdf>
