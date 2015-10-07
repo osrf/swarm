@@ -81,6 +81,9 @@ namespace swarm
   ///                            this controller is running.
   ///     - SetLinearVelocity()  New linear velocity applied to the robot.
   ///     - SetAngularVelocity() New angular velocity applied to the robot.
+  ///     - Dock() Dock a rotor vehicle to a ground vehicle.
+  ///     - IsDocked() Return true if the rotor vehicle is docked.
+  ///     - Launch() Launch a rotor vehicle from a ground vehicle.
   ///
   ///  * Sensors.
   ///     - Pose() Get the robot's current pose from its GPS sensor.
@@ -471,6 +474,36 @@ namespace swarm
     protected: void CameraOrientation(double &_pitch,
                                       double &_yaw) const;
 
+    /// \brief Launch a rotor vehicle from a ground vehicle. When docked, a
+    /// rotor vehicle cannot move, but can process sensor data. When
+    /// launched, a rotor vehicle can move independently from the ground
+    /// vehicle.
+    /// This has no affect for ground and fixed wing vehicles.
+    /// \sa Dock
+    /// \sa IsDocked
+    protected: void Launch();
+
+    /// \brief Dock a rotor vehicle. When docked, a
+    /// rotor vehicle cannot move independently, but can process sensor data.
+    /// When launched, a rotor vehicle can move independently from the
+    /// ground vehicle.
+    /// This has no affect for ground and fixed wing vehicles.
+    /// \param[in] _vehicle Name of the vehicle to dock with.
+    /// \return True if docking was successful. Docking can fail if
+    /// the vehicle is too far away, see this->rotorDockingDistance,
+    /// the vehicle was not found, or the _vehicle is not a ground vehicle.
+    /// \sa Launch
+    /// \sa IsDocked
+    protected: bool Dock(const std::string &_vehicle);
+
+    /// \brief Get whether this vehicle is docked. This function only has
+    /// meaning for rotor vehicles.
+    /// \return True if the rotor vehicle is docked to a ground vehicle.
+    /// False if the rotor vehicle is free to move independently.
+    /// \sa Dock
+    /// \sa Launch
+    protected: bool IsDocked() const;
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -732,6 +765,16 @@ namespace swarm
 
     /// \brief Save messages received for logging.
     private: msgs::IncomingMsgs incomingMsgs;
+
+    /// \brief Flag used by rotorcraft to determine if it's docked to
+    /// a vehicle.
+    private: bool rotorDocked = true;
+
+    /// \brief Minimum distance for rotor to dock to a ground vehicle.
+    private: double rotorDockingDistance = 2.0;
+
+    /// \brief The ground vehicle that the rotorcraft is docked to.
+    private: gazebo::physics::ModelPtr rotorDockVehicle;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

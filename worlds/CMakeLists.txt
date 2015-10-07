@@ -9,6 +9,7 @@ set (world_erb_files
   complete.world.erb
   fixed_simple_36.world.erb
   ground_easy_4.world.erb
+  ground_rotor.world.erb
   ground_simple_2.world.erb
   ground_simple_36.world.erb
   lost_person.world.erb

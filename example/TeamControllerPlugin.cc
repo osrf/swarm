@@ -58,6 +58,12 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
+  // Launch rotor vehicles after 5 seconds of simulation time.
+  if (_info.simTime > gazebo::common::Time(5, 0))
+  {
+    this->Launch();
+  }
+
   // Check if we already reached the limit of messages to be sent.
   if (this->msgsSent < this->numMessageToSend)
   {
