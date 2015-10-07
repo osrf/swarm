@@ -291,7 +291,7 @@ else (build_errors)
                     ${PROJECT_LIB_BOO_NAME}
                     ${PROJECT_LIB_LOST_PERSON_NAME})
 
-  set(PKG_DEPENDS)
+  set(PKG_DEPENDS gazebo ignition-math2 ignition-transport0)
 
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/swarm-config.cmake.in"
