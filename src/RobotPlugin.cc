@@ -189,7 +189,7 @@ void RobotPlugin::UpdateSensors()
       ignition::math::Pose3d p = gazebo::msgs::ConvertIgn(imgModel.pose());
 
       // Distance to the detected model
-      double dist = p.Pos().Distance(myPose.Pos());
+      double dist = p.Pos().Length();
 
       // Normalized (to the camera's frustum) squared distance
       double distSquaredNormalized = std::pow(dist, 2) /
@@ -1187,4 +1187,29 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
 
   // Fill the incoming messages.
   _logEntry.mutable_incoming_msgs()->CopyFrom(this->incomingMsgs);
+}
+
+/////////////////////////////////////////////////
+void RobotPlugin::SetCameraOrientation(const double _pitch, const double _yaw)
+{
+  // Lock pitch to +/- 90 degrees
+  double pitch = ignition::math::clamp(_pitch, -IGN_PI_2, IGN_PI_2);
+
+  ignition::math::Pose3d camPose = this->camera->Pose();
+  ignition::math::Vector3d camEuler = camPose.Rot().Euler();
+  camEuler.Y(pitch);
+  camEuler.Z(_yaw);
+  camPose.Rot().Euler(camEuler);
+
+  // Set the new pose
+  this->camera->SetPose(camPose);
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
+{
+  // Return the pitch and yaw of the camera
+  ignition::math::Vector3d camEuler = this->camera->Pose().Rot().Euler();
+  _pitch = camEuler.Y();
+  _yaw = camEuler.Z();
 }

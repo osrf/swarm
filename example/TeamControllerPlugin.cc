@@ -156,6 +156,13 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   // Only print for one robot, to minimize console output
   if (this->Host() == "192.168.2.1")
   {
+    // The following chunk of code will pitch and yaw the camera.
+    double camPitch, camYaw;
+    this->CameraOrientation(camPitch, camYaw);
+    camYaw += 0.001;
+    camPitch -= 0.001;
+    this->SetCameraOrientation(camPitch, camYaw);
+
     gzmsg << "[" << this->Host() << "] search area: " <<
       minLatitude << " " << maxLatitude << " " <<
       minLongitude << " " << maxLongitude << std::endl;

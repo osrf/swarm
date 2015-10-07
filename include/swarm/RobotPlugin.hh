@@ -92,6 +92,9 @@ namespace swarm
   ///     - Imu() Get the robot's linear and angular velocities and position
   ///       relative to a reference position (starting pose).
   ///     - Bearing() Get the angle between the true North and the robot.
+  ///     - SetCameraOrientation() Set the pan(yaw)/tilt(pitch) of
+  ///       the camera.
+  ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
   ///
   ///  * Battery
   ///     Each vehicle begins with a starting battery capacity. This
@@ -453,6 +456,20 @@ namespace swarm
     /// \return The pose in the world frame.
     protected: ignition::math::Pose3d CameraToWorld(
       const ignition::math::Pose3d &_poseinCamera) const;
+
+    /// \brief Set the pitch and yaw of the camera.
+    /// \param[in] _pitch The pitch of the camera in radians.
+    /// Valid values must fall between (+/-)PI/2 radian.
+    /// \param[in] _yaw The yaw of the camera in radians.
+    /// The camera can rotate 2PI radians.
+    protected: void SetCameraOrientation(const double _pitch,
+                                         const double _yaw);
+
+    /// \brief Get the camera's orientation (pitch and yaw).
+    /// \param[out] _pitch Camera's current pitch in radians.
+    /// \param[out] _yaw Camera's current yaw in radians.
+    protected: void CameraOrientation(double &_pitch,
+                                      double &_yaw) const;
 
     /// \brief Update the plugin.
     ///
