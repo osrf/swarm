@@ -32,6 +32,7 @@
 #include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
+#include "swarm/Broker.hh"
 #include "swarm/CommsModel.hh"
 #include "swarm/Logger.hh"
 #include "swarm/SwarmTypes.hh"
@@ -117,6 +118,9 @@ namespace swarm
 
     /// \brief Incoming messages from other robots used for logging.
     private: msgs::IncomingMsgs logIncomingMsgs;
+
+    /// \brief Broker instance.
+    private: Broker *broker = Broker::Instance();
 
     /// \brief Logger instance.
     private: Logger *logger = Logger::Instance();

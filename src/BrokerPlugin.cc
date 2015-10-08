@@ -172,6 +172,7 @@ void BrokerPlugin::NotifyNeighbors()
 //////////////////////////////////////////////////
 void BrokerPlugin::DispatchMessages()
 {
+  auto t1 = std::chrono::steady_clock::now();
   // Create a copy of the incoming message queue, then release the mutex, to
   // avoid the potential for a deadlock later if a robot calls SendTo() inside
   // its message callback.
@@ -242,6 +243,10 @@ void BrokerPlugin::DispatchMessages()
     this->node.Advertise(topic);
     this->node.Publish(topic, msg);
   }
+  auto t2 = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed = t2 - t1;
+    std::cout << "Dispatch: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////

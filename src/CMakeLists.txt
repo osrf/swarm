@@ -1,6 +1,7 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (common_sources ${common_sources}
+  Broker.cc
   Logger.cc
 )
 

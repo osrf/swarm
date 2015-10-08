@@ -2,6 +2,7 @@ include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
   BooPlugin.hh
+  Broker.hh
   BrokerPlugin.hh
   CommsModel.hh
   Helpers.hh
