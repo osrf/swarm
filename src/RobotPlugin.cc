@@ -437,7 +437,7 @@ void RobotPlugin::Launch()
 //////////////////////////////////////////////////
 bool RobotPlugin::Dock(const std::string &_vehicle)
 {
-  if (this->type != ROTOR)
+  if (this->type != ROTOR || this->rotorDocked)
     return false;
 
   // We are assuming that all ground vehicles have the word "ground" in the
@@ -463,10 +463,6 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 
     this->rotorDockVehicle = m;
     this->rotorDocked = true;
-  }
-  else
-  {
-    this->rotorDocked = false;
   }
 
   return this->rotorDocked;
