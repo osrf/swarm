@@ -99,7 +99,7 @@ bool RobotPlugin::SendTo(const std::string &_data,
 //////////////////////////////////////////////////
 bool RobotPlugin::SetLinearVelocity(const ignition::math::Vector3d &_velocity)
 {
-  if (this->capacity <= 0)
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
     return false;
 
   this->targetLinVel = _velocity;
@@ -117,7 +117,7 @@ bool RobotPlugin::SetLinearVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 bool RobotPlugin::SetAngularVelocity(const ignition::math::Vector3d &_velocity)
 {
-  if (this->capacity <= 0)
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
     return false;
 
   this->targetAngVel = _velocity;
@@ -231,7 +231,7 @@ void RobotPlugin::UpdateSensors()
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateLinearVelocity()
 {
-  if (this->capacity <= 0)
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
     return;
 
   auto myPose = this->model->GetWorldPose().Ign();
@@ -280,7 +280,7 @@ void RobotPlugin::UpdateLinearVelocity()
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateAngularVelocity()
 {
-  if (this->capacity <= 0)
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
     return;
 
   switch (this->type)
@@ -428,6 +428,47 @@ void RobotPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 }
 
 //////////////////////////////////////////////////
+void RobotPlugin::Launch()
+{
+  this->rotorDocked = false;
+  this->rotorDockVehicle.reset();
+}
+
+//////////////////////////////////////////////////
+bool RobotPlugin::Dock(const std::string &_vehicle)
+{
+  if (this->type != ROTOR || this->rotorDocked)
+    return false;
+
+  // We are assuming that all ground vehicles have the word "ground" in the
+  // name
+  if (_vehicle.find("ground") == std::string::npos)
+  {
+    gzerr << "Can only dock with ground vehicles.\n";
+    return false;
+  }
+
+  gazebo::physics::ModelPtr m = this->world->GetModel(_vehicle);
+  if (!m)
+  {
+    gzerr << "Invalid dock vehicle[" << _vehicle << "]\n";
+    return false;
+  }
+
+  if (m->GetWorldPose().pos.Distance(this->model->GetWorldPose().pos) <=
+      this->rotorDockingDistance)
+  {
+    this->SetLinearVelocity(0, 0, 0);
+    this->SetAngularVelocity(0, 0, 0);
+
+    this->rotorDockVehicle = m;
+    this->rotorDocked = true;
+  }
+
+  return this->rotorDocked;
+}
+
+//////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
   // Used for logging.
@@ -510,12 +551,19 @@ void RobotPlugin::AdjustPose()
       }
     case ROTOR:
       {
-        if (pose.Pos().Z() < terrainPos.Z() + this->modelHeight2)
+        if (!this->rotorDocked)
         {
-          pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
+          if (pose.Pos().Z() < terrainPos.Z() + this->modelHeight2)
+          {
+            pose.Pos().Z(terrainPos.Z() + this->modelHeight2);
 
-          // Set the pose.
-          this->model->SetWorldPose(pose);
+            // Set the pose.
+            this->model->SetWorldPose(pose);
+          }
+        }
+        else
+        {
+          this->model->SetWorldPose(this->rotorDockVehicle->GetWorldPose());
         }
         break;
       }
@@ -756,6 +804,24 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       "/swarm/" + this->Host() + "/neighbors";
   this->node.Subscribe(
       kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
+
+  // Get the launch vehicle, if specified
+  if (this->type == ROTOR && _sdf->HasElement("launch_vehicle"))
+  {
+    this->rotorDockVehicle = this->world->GetModel(
+        _sdf->Get<std::string>("launch_vehicle"));
+
+    if (!this->rotorDockVehicle)
+    {
+      this->rotorDocked = false;
+      gzerr << "Unable to get dock vehicle["
+        << _sdf->Get<std::string>("launch_vehicle") << "]\n";
+    }
+  }
+  else
+  {
+    this->rotorDocked = false;
+  }
 
   this->AdjustPose();
 
@@ -1056,9 +1122,10 @@ void RobotPlugin::UpdateBattery()
   // Check to see if the robot is in a recharge state:
   //    - Near the BOO
   //    - Not moving
-  if (distToBOO < this->booRechargeDistance &&
+  if ((distToBOO < this->booRechargeDistance &&
       this->linearVelocityNoNoise == ignition::math::Vector3d::Zero &&
-      this->angularVelocityNoNoise == ignition::math::Vector3d::Zero)
+      this->angularVelocityNoNoise == ignition::math::Vector3d::Zero) ||
+      (this->type == ROTOR && this->rotorDocked))
   {
     // The amount of the capacity recharged.
     double mAhRecharged = (this->consumption * (this->consumptionFactor*4) *
