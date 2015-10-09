@@ -29,7 +29,6 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/CommsModel.hh"
 #include "swarm/BrokerPlugin.hh"
 
@@ -138,8 +137,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
   auto t2 = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed = t2 - t1;
-    std::cout << "Broker: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "Broker: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////

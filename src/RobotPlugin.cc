@@ -472,8 +472,8 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   auto t0 = std::chrono::steady_clock::now();
   auto elapsed = t0 - t;
-    std::cout << "t0: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "t0: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 
   // Only update sensors if we have enough juice
   if (this->capacity > 0)
@@ -485,16 +485,16 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   auto t1 = std::chrono::steady_clock::now();
   elapsed = t1 - t0;
-    std::cout << "t1: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "t1: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 
   // Always give the team controller an update.
   this->Update(_info);
 
   auto t2 = std::chrono::steady_clock::now();
   elapsed = t2 - t1;
-    std::cout << "t2: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "t2: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 
   // Apply the controller's actions to the simulation.
   this->UpdateLinearVelocity();
@@ -502,16 +502,19 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 
   auto t3 = std::chrono::steady_clock::now();
   elapsed = t3 - t2;
-    std::cout << "t3: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "t3: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 
   // Adjust pose as necessary.
   this->AdjustPose();
 
   auto t4 = std::chrono::steady_clock::now();
   elapsed = t4 - t3;
-    std::cout << "t4: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
+  //  std::cout << "t4: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
+  elapsed = t4 - t;
+  //  std::cout << "t5: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////
