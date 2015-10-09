@@ -158,6 +158,15 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     // Get the list of neighbors.
     auto myNeighbors = this->Neighbors();
+    // Uncomment the following block to display the list of neighbors.
+    // if (myNeighbors.empty())
+    //   std::cout << "[" << this->Host() << "] Neighbors: EMPTY" << std::endl;
+    // else
+    // {
+    //   std::cout << "[" << this->Host() << "] Neighbors:" << std::endl;
+    //   for (auto const &neighbor : myNeighbors)
+    //     std::cout << "\t" << neighbor << std::endl;
+    // }
 
     // The following chunk of code will pitch and yaw the camera.
     double camPitch, camYaw;
