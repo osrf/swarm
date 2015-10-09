@@ -39,7 +39,6 @@ namespace swarm
     public: gazebo::physics::ModelPtr model;
 
     /// \brief List of neighbors and comms probabilities for this robot.
-    //public: std::vector<std::pair<std::string, double>> neighbors;
     public: std::map<std::string, double> neighbors;
 
     /// \brief Is this robot on outage?

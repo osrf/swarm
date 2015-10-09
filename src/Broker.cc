@@ -16,6 +16,8 @@
 */
 
 #include <iostream>
+#include <string>
+#include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"
 
 using namespace swarm;

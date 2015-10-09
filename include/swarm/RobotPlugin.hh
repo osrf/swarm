@@ -505,7 +505,6 @@ namespace swarm
     /// received here. Inside this method we will execute the appropritate
     /// user's callback.
     ///
-    /// \param[in] _topic Topic name associated to the new message received.
     /// \param[in] _msg New message received.
     private: virtual void OnMsgReceived(const msgs::Datagram &_msg);
 
@@ -516,7 +515,7 @@ namespace swarm
     ///
     /// \param[in] _msg New message received containing the list of neighbors.
     private: void OnNeighborsReceived(
-                                    const std::vector<std::string> &_neighbors);
+      const std::vector<std::string> &_neighbors);
 
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.

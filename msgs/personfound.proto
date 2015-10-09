@@ -1,0 +1,19 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface PersonFound
+/// \brief A message containing information about a person found.
+
+import "vector3d.proto";
+
+message PersonFound
+{
+  /// \brief Address of the robot that found the lost person.
+  required string address = 1;
+
+  /// \brief Position of the lost person.
+  required gazebo.msgs.Vector3d pos   = 2;
+
+  /// \brief Time at which the lost person was spotted.
+  required double time    = 3;
+}
