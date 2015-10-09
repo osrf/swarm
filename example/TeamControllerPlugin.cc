@@ -65,7 +65,8 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   }
 
   // Check if we already reached the limit of messages to be sent.
-  if (this->msgsSent < this->numMessageToSend)
+  //if (this->msgsSent < this->numMessageToSend)
+  if (true)
   {
     this->msgsSent++;
 

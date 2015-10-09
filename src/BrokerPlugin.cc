@@ -26,7 +26,6 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
-#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
@@ -52,15 +51,6 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   this->world = _world;
   this->swarm = std::make_shared<SwarmMembership_M>();
-
-  // This is the subscription that will allow us to receive incoming messages.
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Subscribe(kBrokerIncomingTopic,
-      &BrokerPlugin::OnMsgReceived, this))
-  {
-    gzerr << "BrokerPlugin::Load(): Error trying to subscribe"
-          << " on topic " << kBrokerIncomingTopic << std::endl;
-  }
 
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
@@ -105,10 +95,6 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
           newMember->name = name;
           newMember->model = model;
           (*this->swarm)[address] = newMember;
-
-          // Advertise the topic for future neighbor updates for this vehicle.
-          std::string topic = "/swarm/" + address + "/neighbors";
-          this->node.Advertise(topic);
         }
         else
         {
@@ -131,6 +117,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
+  //auto t1 = std::chrono::steady_clock::now();
   {
     std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -148,6 +135,11 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
   // Log the current iteration.
   this->logger->Update(_info.simTime.Double());
+
+  //auto t2 = std::chrono::steady_clock::now();
+  //std::chrono::duration<double> elapsed = t2 - t1;
+  //  std::cout << "Neighbors: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -158,105 +150,57 @@ void BrokerPlugin::NotifyNeighbors()
   {
     auto address = robot.first;
     auto swarmMember = (*this->swarm)[address];
-    auto topic = "/swarm/" + swarmMember->address + "/neighbors";
+    //auto topic = "/swarm/" + swarmMember->address + "/neighbors";
 
     swarm::msgs::Neighbor_V msg;
     for (auto const &neighbor : swarmMember->neighbors)
       msg.add_neighbors(neighbor.first);
 
     // Notify the node with its updated list of neighbors.
-    this->node.Publish(topic, msg);
+    this->broker->clients[address]->OnNeighborsReceived(msg);
   }
 }
 
 //////////////////////////////////////////////////
 void BrokerPlugin::DispatchMessages()
 {
-  auto t1 = std::chrono::steady_clock::now();
+  //auto t1 = std::chrono::steady_clock::now();
   // Create a copy of the incoming message queue, then release the mutex, to
   // avoid the potential for a deadlock later if a robot calls SendTo() inside
   // its message callback.
   std::queue<msgs::Datagram> incomingMsgsBuffer;
   {
     std::lock_guard<std::mutex> lock(this->mutex);
-    std::swap(incomingMsgsBuffer, this->incomingMsgs);
+    std::swap(incomingMsgsBuffer, this->broker->incomingMsgs);
   }
 
-  this->logIncomingMsgs.Clear();
+  //this->logIncomingMsgs.Clear();
 
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
-    auto msg = incomingMsgsBuffer.front();
+    const auto msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop();
 
     // For logging purposes, we store the request for communication.
-    auto logMsg = this->logIncomingMsgs.add_message();
-    logMsg->set_src_address(msg.src_address());
-    logMsg->set_dst_address(msg.dst_address());
-    logMsg->set_dst_port(msg.dst_port());
-    logMsg->set_size(msg.data().size());
+    //auto logMsg = this->logIncomingMsgs.add_message();
+    //logMsg->set_src_address(msg.src_address());
+    //logMsg->set_dst_address(msg.dst_address());
+    //logMsg->set_dst_port(msg.dst_port());
+    //logMsg->set_size(msg.data().size());
 
-    // Debug output.
-    // gzdbg << "Processing message from " << msg.src_address()
-    //       << " addressed to " << msg.dst_address() << std::endl;
-
-    // Sanity check: Make sure that the sender is a member of the swarm.
-    if (this->swarm->find(msg.src_address()) == this->swarm->end())
+    auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
+    if (this->broker->listeners.find(dstEndPoint) != this->broker->listeners.end())
     {
-      gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
-            << msg.src_address() << "] is not registered as a member of the "
-            << "swarm" << std::endl;
-      continue;
+      auto clientsV = this->broker->listeners[dstEndPoint];
+      for (const auto &client : clientsV)
+        client.client->OnMsgReceived(msg);
     }
-
-    // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighborKv : (*this->swarm)[msg.src_address()]->neighbors)
-    {
-      auto neighborId = neighborKv.first;
-      auto neighborProb = neighborKv.second;
-
-      // Decide whether this neighbor gets this message, according to the
-      // probability of communication between them right now.
-      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
-      {
-        // Debug output
-        // gzdbg << "Sending message from " << msg.src_address() << " to " <<
-        //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-        //   std::endl;
-        msg.add_recipients(neighborId);
-      }
-      //   Debug output.
-      // else
-      // {
-      //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
-      //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-      //     std::endl;
-      // }
-    }
-
-    // Create the topic name for the message destination.
-    const std::string topic =
-        "/swarm/" + msg.dst_address() + "/" + std::to_string(msg.dst_port());
-
-    // Forward the message to the destination.
-    this->node.Advertise(topic);
-    this->node.Publish(topic, msg);
   }
-  auto t2 = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed = t2 - t1;
-    std::cout << "Dispatch: " << std::chrono::duration_cast<std::chrono::microseconds>
-        (elapsed).count() << std::endl;
-}
-
-//////////////////////////////////////////////////
-void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
-    const msgs::Datagram &_msg)
-{
-  std::lock_guard<std::mutex> lock(this->mutex);
-
-  // Queue the new message.
-  this->incomingMsgs.push(_msg);
+  //auto t2 = std::chrono::steady_clock::now();
+  //std::chrono::duration<double> elapsed = t2 - t1;
+  //  std::cout << "Dispatch: " << std::chrono::duration_cast<std::chrono::microseconds>
+  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////

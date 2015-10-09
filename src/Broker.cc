@@ -33,11 +33,44 @@ Broker::Broker()
 }
 
 //////////////////////////////////////////////////
-bool Broker::Register(const std::string &_id, const BrokerClient *_client)
+bool Broker::Bind(const std::string &_clientAddress,
+  BrokerClient *_client, const std::string &_endpoint)
+{
+  // Make sure that the same client didn't bind the same end point before.
+  if (this->listeners.find(_endpoint) != this->listeners.end())
+  {
+    const auto &clientsV = this->listeners[_endpoint];
+    for (const auto &client : clientsV)
+    {
+      if (client.address == _clientAddress)
+      {
+        std::cerr << "Broker::Bind() error: Address [" << _clientAddress
+                  << "] already used in a previous Bind()" << std::endl;
+        return false;
+      }
+    }
+  }
+
+  BrokerClientInfo clientInfo;
+  clientInfo.address = _clientAddress;
+  clientInfo.client = _client;
+  this->listeners[_endpoint].push_back(clientInfo);
+  return true;
+}
+
+//////////////////////////////////////////////////
+void Broker::Push(const msgs::Datagram _msg)
+{
+  // Queue the new message.
+  this->incomingMsgs.push(_msg);
+}
+
+//////////////////////////////////////////////////
+bool Broker::Register(const std::string &_id, BrokerClient *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
   {
-    std::cerr << "Broker::Register() error: ID [" << _id << "] already exists"
+    std::cerr << "Logger::Register() error: ID [" << _id << "] already exists"
               << std::endl;
     return false;
   }

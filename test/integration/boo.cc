@@ -19,10 +19,9 @@
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/physics/physics.hh>
 #include <ignition/math/Vector3.hh>
-#include <ignition/transport/Node.hh>
 #include "swarm/BooPlugin.hh"
 #include "swarm/SwarmTypes.hh"
-#include "msgs/personfound.pb.h"
+//#include "msgs/personfound.pb.h"
 #include "test/test_config.h"
 
 
@@ -65,16 +64,16 @@ void reset()
 
 //////////////////////////////////////////////////
 /// \brief Function called each time a lost person is found.
-void onFound(const std::string &_topic, const swarm::msgs::PersonFound &_msg)
-{
-  EXPECT_EQ(_topic, "/swarm/found");
-  found = true;
-  address = _msg.address();
-  pos.X(_msg.pos().x());
-  pos.Y(_msg.pos().y());
-  pos.Z(_msg.pos().z());
-  t = _msg.time();
-}
+//void onFound(const std::string &_topic, const swarm::msgs::PersonFound &_msg)
+//{
+//  EXPECT_EQ(_topic, "/swarm/found");
+//  found = true;
+//  address = _msg.address();
+//  pos.X(_msg.pos().x());
+//  pos.Y(_msg.pos().y());
+//  pos.Z(_msg.pos().z());
+//  t = _msg.time();
+//}
 
 /////////////////////////////////////////////////
 /// \brief Validate the result of each test case.
@@ -126,11 +125,11 @@ void validateResult()
 /// \brief Valid unicast message from a robot to the BOO.
 TEST_F(BooTest, Unicast)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 0;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_00.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -145,11 +144,11 @@ TEST_F(BooTest, Unicast)
 /// \brief Valid broadcast message from a robot to the BOO.
 TEST_F(BooTest, Broadcast)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 1;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_01.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -164,11 +163,11 @@ TEST_F(BooTest, Broadcast)
 /// \brief Unsupported command sent to the BOO.
 TEST_F(BooTest, UnsupportedCmd)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 2;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_02.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -183,11 +182,11 @@ TEST_F(BooTest, UnsupportedCmd)
 /// \brief Malformed message sent to the BOO.
 TEST_F(BooTest, UnsupportedArgs)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 3;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_03.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -202,11 +201,11 @@ TEST_F(BooTest, UnsupportedArgs)
 /// \brief Robot was too far from the BOO.
 TEST_F(BooTest, TooFar)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 4;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_04.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -221,11 +220,11 @@ TEST_F(BooTest, TooFar)
 /// \brief Robot sends an incorrect lost person's position to the BOO.
 TEST_F(BooTest, WrongPos)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 5;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_05.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -240,11 +239,11 @@ TEST_F(BooTest, WrongPos)
 /// \brief Negative time in the message reported to the BOO.
 TEST_F(BooTest, NegativeTime)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 6;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_06.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -259,11 +258,11 @@ TEST_F(BooTest, NegativeTime)
 /// \brief Future time in the message reported to the BOO.
 TEST_F(BooTest, FutureTime)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 7;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_07.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -278,11 +277,11 @@ TEST_F(BooTest, FutureTime)
 /// \brief Valid pos/time sent to the BOO but out of the allowed time window.
 TEST_F(BooTest, OutOfWindow)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 8;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_08.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
@@ -303,11 +302,11 @@ TEST_F(BooTest, OutOfWindow)
 /// entry stored.
 TEST_F(BooTest, ValidGuess)
 {
-  ignition::transport::Node node;
+  //ignition::transport::Node node;
 
   reset();
   testCase = 9;
-  node.Subscribe("/swarm/found", &onFound);
+  //node.Subscribe("/swarm/found", &onFound);
   Load("boo_09.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);

@@ -29,7 +29,6 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
 #include "swarm/Broker.hh"
@@ -82,13 +81,6 @@ namespace swarm
     /// \brief Dispatch all incoming messages.
     private: void DispatchMessages();
 
-    /// \brief Callback executed when a new message is received.
-    ///
-    /// \param[in] _topic Topic name associated to the new message received.
-    /// \param[in] _msg The new message received.
-    private: void OnMsgReceived(const std::string &_topic,
-                                const msgs::Datagram &_msg);
-
     // Documentation inherited.
     private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
@@ -100,12 +92,6 @@ namespace swarm
 
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;
-
-    /// \brief Pointer to a node for communication.
-    private: ignition::transport::Node node;
-
-    /// \brief Queue to store the incoming messages received from the agents.
-    private: std::queue<msgs::Datagram> incomingMsgs;
 
     /// \brief Information about the members of the swarm.
     private: SwarmMembershipPtr swarm;

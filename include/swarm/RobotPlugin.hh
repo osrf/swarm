@@ -37,12 +37,12 @@
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Quaternion.hh>
 #include <ignition/math/Vector3.hh>
-#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
 #include "msgs/log_entry.pb.h"
 #include "msgs/neighbor_v.pb.h"
+#include "swarm/Broker.hh"
 #include "swarm/Logger.hh"
 
 namespace swarm
@@ -120,7 +120,8 @@ namespace swarm
   ///     - Name() Get the name of the vehicle.
   ///     - SearchArea() Get the GPS coordinates of the search area.
   class IGNITION_VISIBLE RobotPlugin
-    : public gazebo::ModelPlugin, public swarm::Loggable
+    : public gazebo::ModelPlugin, public swarm::Loggable,
+      public swarm::BrokerClient
   {
     /// \brief The type of vehicle.
     public: enum VehicleType
@@ -195,40 +196,26 @@ namespace swarm
       }
 
       // Mapping the "unicast socket" to a topic name.
-      const std::string unicastTopic =
-        "/swarm/" + _address + "/" + std::to_string(_port);
+      const auto unicastEndPoint = _address + ":" + std::to_string(_port);
 
-      if (!this->node.Subscribe(unicastTopic,
-          &RobotPlugin::OnMsgReceived, this))
-      {
-        gzerr << "RobotPlugin::Bind() error: Subscribe() returned an "
-              << "error while subscribing the unicast/multicast address"
-              << std::endl;
+      if (!this->broker->Bind(this->Host(), this, unicastEndPoint))
         return false;
-      }
 
       // Register the user callback using the topic name as the key.
-      this->callbacks[unicastTopic] = std::bind(_cb, _obj,
+      this->callbacks[unicastEndPoint] = std::bind(_cb, _obj,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
           std::placeholders::_4);
 
       // Only enable broadcast if the address is a regular unicast address.
       if (_address != this->kMulticast)
       {
-        const std::string bcastTopic =
-          "/swarm/broadcast/" + std::to_string(_port);
+        const std::string bcastEndPoint = "broadcast:" + std::to_string(_port);
 
-        if (!this->node.Subscribe(bcastTopic,
-            &RobotPlugin::OnMsgReceived, this))
-        {
-          gzerr << "RobotPlugin::Bind() error: Subscribe() returned an "
-                << "error while subscribing the broadcast address"
-                << std::endl;
+        if (!this->broker->Bind(this->Host(), this, bcastEndPoint))
           return false;
-        }
 
         // Register the user callback using the broadcast topic as the key.
-        this->callbacks[bcastTopic] = std::bind(_cb, _obj,
+        this->callbacks[bcastEndPoint] = std::bind(_cb, _obj,
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
             std::placeholders::_4);
       }
@@ -521,18 +508,15 @@ namespace swarm
     ///
     /// \param[in] _topic Topic name associated to the new message received.
     /// \param[in] _msg New message received.
-    private: void OnMsgReceived(const std::string &_topic,
-                                const msgs::Datagram &_msg);
+    private: virtual void OnMsgReceived(const msgs::Datagram &_msg);
 
     /// \brief Callback executed each time that a neighbor update is received.
     /// The messages are coming from the broker. The broker decides which are
     /// the robots inside the communication range of each other vehicle and
     /// notifies these updates.
     ///
-    /// \param[in] _topic Topic name associated to the new message received.
     /// \param[in] _msg New message received containing the list of neighbors.
-    private: void OnNeighborsReceived(const std::string &_topic,
-                                      const msgs::Neighbor_V &_msg);
+    private: void OnNeighborsReceived(const msgs::Neighbor_V &_msg);
 
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.
@@ -593,12 +577,6 @@ namespace swarm
 
     /// \brief Addresses of all the local neighbors.
     private: std::vector<std::string> neighbors;
-
-    /// \brief List of comms probabilities (parallel to neighbors).
-    private: std::vector<double> neighborProbabilities;
-
-    /// \brief The transport node.
-    private: ignition::transport::Node node;
 
     // The gazebo transport node. Used for debugging, see source.
     // private: gazebo::transport::NodePtr gzNode;
@@ -759,6 +737,9 @@ namespace swarm
 
     /// \brief Array of all the models
     private: std::vector<std::string> modelNames;
+
+    /// \brief Pointer to the shared broker.
+    private: Broker *broker = Broker::Instance();
 
     /// \brief Pointer to the shared logger.
     private: Logger *logger = Logger::Instance();

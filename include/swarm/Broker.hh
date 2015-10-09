@@ -19,8 +19,10 @@
 /// \brief
 
 #include <map>
+#include <queue>
 #include <string>
 #include "msgs/datagram.pb.h"
+#include "msgs/neighbor_v.pb.h"
 #include "swarm/Helpers.hh"
 
 #ifndef __SWARM_BROKER_HH__
@@ -32,10 +34,24 @@ namespace swarm
   class IGNITION_VISIBLE BrokerClient
   {
     /// \brief
-    public: virtual void OnMsgReceived(const std::string &/*_topic*/,
-                                       const msgs::Datagram &/*_msg*/)
+    public: virtual void OnMsgReceived(const msgs::Datagram &/*_msg*/)
     {
     };
+
+    // \brief
+    public: virtual void OnNeighborsReceived(const msgs::Neighbor_V &/*_msg*/)
+    {
+    };
+  };
+
+  /// \brief
+  class IGNITION_VISIBLE BrokerClientInfo
+  {
+    /// \brief
+    public: std::string address;
+
+    /// \brief.
+    public: BrokerClient* client;
   };
 
   /// \brief
@@ -46,8 +62,18 @@ namespace swarm
     public: static Broker *Instance();
 
     /// \brief
+    public: bool Bind(const std::string &_clientAddress,
+                      BrokerClient *_client,
+                      const std::string &_endpoint);
+
+    /// \brief
+    public: void Push(const msgs::Datagram _msg);
+
+    /// \brief Register a new client for message handling.
+    /// \param[in] _id Unique ID of the client.
+    /// \param[in] _client Pointer to the client.
     public: bool Register(const std::string &_id,
-                          const BrokerClient *_client);
+                          BrokerClient *_client);
 
     /// \brief Constructor.
     protected: Broker();
@@ -55,9 +81,16 @@ namespace swarm
     /// \brief Destructor.
     protected: virtual ~Broker() = default;
 
+    /// \brief Queue to store the incoming messages received from the clients.
+    public: std::queue<msgs::Datagram> incomingMsgs;
+
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
-    private: std::map<std::string, const BrokerClient*> clients;
+    public: std::map<std::string, BrokerClient*> clients;
+
+    /// \brief List of clients. The key is the ID of the client and the value
+    /// is a pointer to each client.
+    public: std::map<std::string, std::vector<BrokerClientInfo>> listeners;
   };
 }  // namespace
 #endif

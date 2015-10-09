@@ -27,6 +27,7 @@
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 #include "msgs/log_entry.pb.h"
+#include "msgs/neighbor_v.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
@@ -83,15 +84,7 @@ bool RobotPlugin::SendTo(const std::string &_data,
 
   // The neighbors list will be included in the broker.
 
-  // Send the message from the agent to the broker.
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Publish(kBrokerIncomingTopic, msg))
-  {
-    gzerr << "[" << this->Host() << "] RobotPlugin::SendTo(): Error "
-          << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
-          << std::endl;
-    return false;
-  }
+  this->broker->Push(msg);
 
   return true;
 }
@@ -792,19 +785,6 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
               "Search area will be undefined." << std::endl;
   }
 
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Advertise(kBrokerIncomingTopic))
-  {
-    gzerr << "[" << this->Host() << "] RobotPlugin::Load(): Error "
-          << "trying to advertise topic [" << kBrokerIncomingTopic << "]\n";
-  }
-
-  // Subscribe to the topic for receiving neighbor updates.
-  const std::string kNeighborUpdatesTopic =
-      "/swarm/" + this->Host() + "/neighbors";
-  this->node.Subscribe(
-      kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
-
   // Get the launch vehicle, if specified
   if (this->type == ROTOR && _sdf->HasElement("launch_vehicle"))
   {
@@ -824,6 +804,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   this->AdjustPose();
+
+  // Register this plugin in the broker.
+  this->broker->Register(this->Host(), this);
 
   // Register this plugin in the logger.
   this->logger->Register(this->Host(), this);
@@ -857,10 +840,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
-    const msgs::Datagram &_msg)
+void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg)
 {
-  const std::string topic = "/swarm/" + _msg.dst_address() + "/" +
+  const std::string topic = _msg.dst_address() + ":" +
       std::to_string(_msg.dst_port());
 
   if (this->callbacks.find(topic) == this->callbacks.end())
@@ -870,41 +852,24 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     return;
   }
 
-  // Ignore if the address of this robot was not a neighbor of the sender.
-  bool visible = false;
-  for (auto i = 0; i < _msg.recipients().size(); ++i)
-  {
-    if (_msg.recipients(i) == this->Host())
-    {
-      visible = true;
-      break;
-    }
-  }
-
-  if (visible)
-  {
-    // Run the user callback.
-    auto const &userCallback = this->callbacks[topic];
-    userCallback(_msg.src_address(), _msg.dst_address(),
-                 _msg.dst_port(), _msg.data());
-  }
+  auto const &userCallback = this->callbacks[topic];
+  userCallback(_msg.src_address(), _msg.dst_address(),
+               _msg.dst_port(), _msg.data());
 
   // Save the new message received for future logging.
-  auto newMsg = this->incomingMsgs.add_message();
-  newMsg->set_src_address(_msg.src_address());
-  newMsg->set_dst_address(_msg.dst_address());
-  newMsg->set_dst_port(_msg.dst_port());
-  newMsg->set_size(_msg.data().size());
-  newMsg->set_delivered(visible);
+  //auto newMsg = this->incomingMsgs.add_message();
+  //newMsg->set_src_address(_msg.src_address());
+  //newMsg->set_dst_address(_msg.dst_address());
+  //newMsg->set_dst_port(_msg.dst_port());
+  //newMsg->set_size(_msg.data().size());
+  //newMsg->set_delivered(visible);
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
-    const msgs::Neighbor_V &_msg)
+void RobotPlugin::OnNeighborsReceived(const msgs::Neighbor_V &_msg)
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
   this->neighbors.clear();
-  this->neighborProbabilities.clear();
+  //this->neighborProbabilities.clear();
   for (auto i = 0; i < _msg.neighbors().size(); ++i)
   {
     if (_msg.neighbors(i) != this->Host())
