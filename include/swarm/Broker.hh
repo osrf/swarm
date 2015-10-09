@@ -21,8 +21,8 @@
 #include <map>
 #include <queue>
 #include <string>
+#include <vector>
 #include "msgs/datagram.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/Helpers.hh"
 
 #ifndef __SWARM_BROKER_HH__
@@ -39,7 +39,8 @@ namespace swarm
     };
 
     // \brief
-    public: virtual void OnNeighborsReceived(const msgs::Neighbor_V &/*_msg*/)
+    public: virtual void OnNeighborsReceived(
+                                       const std::vector<std::string> &/*_msg*/)
     {
     };
   };

@@ -516,7 +516,8 @@ namespace swarm
     /// notifies these updates.
     ///
     /// \param[in] _msg New message received containing the list of neighbors.
-    private: void OnNeighborsReceived(const msgs::Neighbor_V &_msg);
+    private: void OnNeighborsReceived(
+                                    const std::vector<std::string> &_neighbors);
 
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.

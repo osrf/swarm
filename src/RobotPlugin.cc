@@ -411,7 +411,6 @@ std::string RobotPlugin::Host() const
 //////////////////////////////////////////////////
 std::vector<std::string> RobotPlugin::Neighbors() const
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
   return this->neighbors;
 }
 
@@ -464,11 +463,17 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  auto t = std::chrono::steady_clock::now();
   // Used for logging.
   this->incomingMsgs.Clear();
 
   // Update the state of the battery
   this->UpdateBattery();
+
+  auto t0 = std::chrono::steady_clock::now();
+  auto elapsed = t0 - t;
+    std::cout << "t0: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
 
   // Only update sensors if we have enough juice
   if (this->capacity > 0)
@@ -478,15 +483,35 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
     this->SetAngularVelocity(0, 0, 0);
   }
 
+  auto t1 = std::chrono::steady_clock::now();
+  elapsed = t1 - t0;
+    std::cout << "t1: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
+
   // Always give the team controller an update.
   this->Update(_info);
+
+  auto t2 = std::chrono::steady_clock::now();
+  elapsed = t2 - t1;
+    std::cout << "t2: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
 
   // Apply the controller's actions to the simulation.
   this->UpdateLinearVelocity();
   this->UpdateAngularVelocity();
 
+  auto t3 = std::chrono::steady_clock::now();
+  elapsed = t3 - t2;
+    std::cout << "t3: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
+
   // Adjust pose as necessary.
   this->AdjustPose();
+
+  auto t4 = std::chrono::steady_clock::now();
+  elapsed = t4 - t3;
+    std::cout << "t4: " << std::chrono::duration_cast<std::chrono::microseconds>
+        (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -866,15 +891,17 @@ void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg)
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnNeighborsReceived(const msgs::Neighbor_V &_msg)
+void RobotPlugin::OnNeighborsReceived(
+                                     const std::vector<std::string> &_neighbors)
 {
-  this->neighbors.clear();
+  this->neighbors = _neighbors;
+
   //this->neighborProbabilities.clear();
-  for (auto i = 0; i < _msg.neighbors().size(); ++i)
-  {
-    if (_msg.neighbors(i) != this->Host())
-      this->neighbors.push_back(_msg.neighbors(i));
-  }
+  //for (auto i = 0; i < _msg.neighbors().size(); ++i)
+  //{
+  //  if (_msg.neighbors(i) != this->Host())
+  //    this->neighbors.push_back(_msg.neighbors(i));
+  //}
 }
 
 //////////////////////////////////////////////////
