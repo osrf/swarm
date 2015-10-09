@@ -329,10 +329,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Also a message containing the neighbor list (not the probabilities)
     // will be sent out below, to allow robot controllers to query the
     // neighbor list.
-    std::pair<std::string, double> neighborAndProb;
-    neighborAndProb.first = member.first;
-    neighborAndProb.second = commsProb;
-    swarmMember->neighbors.push_back(neighborAndProb);
+    swarmMember->neighbors[member.first] = commsProb;
   }
 }
 

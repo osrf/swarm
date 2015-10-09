@@ -27,7 +27,6 @@
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/physics.hh>
 #include "msgs/log_entry.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/RobotPlugin.hh"
 
 using namespace swarm;

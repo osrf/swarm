@@ -174,13 +174,22 @@ void BrokerPlugin::DispatchMessages()
     std::swap(incomingMsgsBuffer, this->broker->incomingMsgs);
   }
 
-  //this->logIncomingMsgs.Clear();
+  this->logIncomingMsgs.Clear();
 
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
     const auto msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop();
+
+    // Sanity check: Make sure that the sender is a member of the swarm.
+    if (this->swarm->find(msg.src_address()) == this->swarm->end())
+    {
+      gzerr << "BrokerPlugin::DispatchMessages(): Discarding message. Robot ["
+            << msg.src_address() << "] is not registered as a member of the "
+            << "swarm" << std::endl;
+      continue;
+    }
 
     // For logging purposes, we store the request for communication.
     //auto logMsg = this->logIncomingMsgs.add_message();
@@ -190,11 +199,30 @@ void BrokerPlugin::DispatchMessages()
     //logMsg->set_size(msg.data().size());
 
     auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
-    if (this->broker->listeners.find(dstEndPoint) != this->broker->listeners.end())
+    if (this->broker->receivers.find(dstEndPoint) != this->broker->receivers.end())
     {
-      auto clientsV = this->broker->listeners[dstEndPoint];
+      auto clientsV = this->broker->receivers[dstEndPoint];
       for (const auto &client : clientsV)
-        client.client->OnMsgReceived(msg);
+      {
+        // Get the list of neighbors of the sender.
+        const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
+
+        // Make sure that we're sending the message to a valid neighbor.
+        if (neighbors.find(client.address) == neighbors.end())
+          continue;
+
+        // Decide whether this neighbor gets this message, according to the
+        // probability of communication between them right now.
+        const auto &neighborProb = neighbors.at(client.address);
+        if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
+        {
+          // Debug output
+          // gzdbg << "Sending message from " << msg.src_address() << " to "
+          //       << client.address << " (addressed to " << msg.dst_address()
+          //       << ")" << std::endl;
+          client.handler->OnMsgReceived(msg);
+        }
+      }
     }
   }
   //auto t2 = std::chrono::steady_clock::now();

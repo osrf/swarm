@@ -37,9 +37,9 @@ bool Broker::Bind(const std::string &_clientAddress,
   BrokerClient *_client, const std::string &_endpoint)
 {
   // Make sure that the same client didn't bind the same end point before.
-  if (this->listeners.find(_endpoint) != this->listeners.end())
+  if (this->receivers.find(_endpoint) != this->receivers.end())
   {
-    const auto &clientsV = this->listeners[_endpoint];
+    const auto &clientsV = this->receivers[_endpoint];
     for (const auto &client : clientsV)
     {
       if (client.address == _clientAddress)
@@ -53,8 +53,8 @@ bool Broker::Bind(const std::string &_clientAddress,
 
   BrokerClientInfo clientInfo;
   clientInfo.address = _clientAddress;
-  clientInfo.client = _client;
-  this->listeners[_endpoint].push_back(clientInfo);
+  clientInfo.handler = _client;
+  this->receivers[_endpoint].push_back(clientInfo);
   return true;
 }
 

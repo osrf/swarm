@@ -41,7 +41,6 @@
 
 #include "msgs/datagram.pb.h"
 #include "msgs/log_entry.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/Broker.hh"
 #include "swarm/Logger.hh"
 

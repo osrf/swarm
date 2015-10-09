@@ -16,7 +16,7 @@
 */
 
 /// \file Broker.hh
-/// \brief
+/// \brief Broker for handling message delivery among robots.
 
 #include <map>
 #include <queue>
@@ -30,44 +30,54 @@
 
 namespace swarm
 {
-  /// \brief
+  /// \brief Interface that classes should implement for using the broker.
+  /// These methods will be automatically executed in the client for delivering
+  /// new messages or new neighbors updates.
   class IGNITION_VISIBLE BrokerClient
   {
-    /// \brief
-    public: virtual void OnMsgReceived(const msgs::Datagram &/*_msg*/)
-    {
-    };
+    /// \brief Executed when a new message is delivered to the client.
+    /// \param[in] _msg New message.
+    public: virtual void OnMsgReceived(const msgs::Datagram &_msg) = 0;
 
-    // \brief
+    // \brief Executed when a new neighbor update is received in the client.
     public: virtual void OnNeighborsReceived(
-                                       const std::vector<std::string> &/*_msg*/)
-    {
-    };
+      const std::vector<std::string> &_msg) = 0;
   };
 
-  /// \brief
+  /// \brief Stores information about a client broker.
   class IGNITION_VISIBLE BrokerClientInfo
   {
-    /// \brief
+    /// \brief Address of the client. E.g.: 192.168.2.2
     public: std::string address;
 
-    /// \brief.
-    public: BrokerClient* client;
+    /// \brief Pointer to the client.
+    public: BrokerClient* handler;
   };
 
-  /// \brief
+  /// \brief Store messages, and exposes an API for registering new clients,
+  /// bind to a particular address, push new messages or get the list of
+  /// messages already stored in the queue.
   class IGNITION_VISIBLE Broker
   {
-    /// \brief
+    /// \brief Broker is a singleton. This method gets the Broker instance
+    /// shared between all the clients.
     /// \return Pointer to the current Broker instance.
     public: static Broker *Instance();
 
-    /// \brief
+    /// \brief This method associates an endpoint with a broker client and its
+    /// address. An endpoint is constructed as an address followed by ':',
+    /// followed by the port. E.g.: "192.168.1.5:8000" is a valid endpoint.
+    /// \param[in] _clientAddress Address of the broker client.
+    /// \param[in] _client Pointer to the broker client.
+    /// \param[in] _endpoint End point requested to bind.
+    /// \return True if the operation succeed or false otherwise (if the client
+    /// was already bound to the same endpoint).
     public: bool Bind(const std::string &_clientAddress,
                       BrokerClient *_client,
                       const std::string &_endpoint);
 
-    /// \brief
+    /// \brief Queue a new message.
+    /// \param[in] _msg A new message.
     public: void Push(const msgs::Datagram _msg);
 
     /// \brief Register a new client for message handling.
@@ -89,9 +99,9 @@ namespace swarm
     /// is a pointer to each client.
     public: std::map<std::string, BrokerClient*> clients;
 
-    /// \brief List of clients. The key is the ID of the client and the value
-    /// is a pointer to each client.
-    public: std::map<std::string, std::vector<BrokerClientInfo>> listeners;
+    /// \brief List of bound clients. The key is an endpoint and the
+    /// value is the vector of clients bounded on that endpoint.
+    public: std::map<std::string, std::vector<BrokerClientInfo>> receivers;
   };
 }  // namespace
 #endif
