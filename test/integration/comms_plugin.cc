@@ -118,8 +118,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
         // 100 of your own broadcast messages.
         // 100 of your own multicast messages.
         // 50% of the 302 messages sent from the other robot.
-        // Using 13458 as seed, the expected number of messages is 354.
-        expectedNumMsgs = 354;
+        // Using 13458 as seed, the expected number of messages is 349.
+        expectedNumMsgs = 349;
         break;
       }
       // Temporary outage.
@@ -129,7 +129,7 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
         // going to be 10 iterations. We should miss 60 messages.
         // Using 13458 as seed, we get one outage.
         expectedNumMsgs = (this->numUnicastSent + 2 *
-            this->numBroadcastSent + 2 * this->numMulticastSent) - 60;
+            this->numBroadcastSent + 2 * this->numMulticastSent) - 30;
         break;
       }
       // Permanent outage.
@@ -176,9 +176,20 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 }
 
 //////////////////////////////////////////////////
-void CommsPlugin::OnDataReceived(const std::string &/*_srcAddress*/,
-    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
-    const std::string &/*_data*/)
+void CommsPlugin::OnDataReceived(const std::string &_srcAddress,
+    const std::string &_dstAddress, const uint32_t _dstPort,
+    const std::string &_data)
 {
   this->numMsgsRecv++;
+
+  //if (_srcAddress == "192.168.2.2")
+  //{
+  //  std::cout << "---" << std::endl;
+  //  gazebo::common::Time curTime = gazebo::physics::get_world()->GetSimTime();
+  //  std::cout << curTime << std::endl;
+  //  std::cout << "[" << this->Host() << "] New message received" << std::endl;
+  //  std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
+  //  std::cout << "\tTo: [" << _dstAddress << ":" << _dstPort << "]" << std::endl;
+  //  std::cout << "\tData: [" << _data << "]" << std::endl;
+  //}
 }
