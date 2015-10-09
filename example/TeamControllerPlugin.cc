@@ -58,9 +58,6 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
-  auto t = std::chrono::steady_clock::now();
-  std::chrono::steady_clock::time_point t2;
-
   // Launch rotor vehicles after 5 seconds of simulation time.
   if (_info.simTime > gazebo::common::Time(5, 0))
   {
@@ -68,8 +65,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   }
 
   // Check if we already reached the limit of messages to be sent.
-  //if (this->msgsSent < this->numMessageToSend)
-  if (true)
+  if (this->msgsSent < this->numMessageToSend)
   {
     this->msgsSent++;
 
@@ -89,11 +85,6 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       return;
     }
 
-    auto t0 = std::chrono::steady_clock::now();
-    auto elapsed = t0 - t;
-    //std::cout << "tt0: " << std::chrono::duration_cast<std::chrono::microseconds>
-    //    (elapsed).count() << std::endl;
-
     // Send a broadcast message.
     dstAddress = this->kBroadcast;
     if (!this->SendTo("Broadcast data", dstAddress))
@@ -104,11 +95,6 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       return;
     }
 
-    auto t1 = std::chrono::steady_clock::now();
-    elapsed = t1 - t0;
-    //std::cout << "tt1: " << std::chrono::duration_cast<std::chrono::microseconds>
-    //    (elapsed).count() << std::endl;
-
     // Send a multicast message.
     dstAddress = this->kMulticast;
     if (!this->SendTo("Multicast data", dstAddress))
@@ -118,17 +104,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
             << std::endl;
       return;
     }
-
-    t2 = std::chrono::steady_clock::now();
-    elapsed = t2 - t1;
-    //std::cout << "tt2: " << std::chrono::duration_cast<std::chrono::microseconds>
-    //    (elapsed).count() << std::endl;
   }
-
-  auto t3 = std::chrono::steady_clock::now();
-  auto elapsed = t3 - t2;
-  //std::cout << "tt3: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //      (elapsed).count() << std::endl;
 
   // Simple example for moving each type of robot.
   switch (this->Type())
@@ -158,21 +134,11 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       }
   };
 
-  auto t4 = std::chrono::steady_clock::now();
-  elapsed = t4 - t3;
-  //std::cout << "tt4: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //    (elapsed).count() << std::endl;
-
   // Get pose
   double latitude, longitude, altitude;
   this->Pose(latitude, longitude, altitude);
   double minLatitude, maxLatitude, minLongitude, maxLongitude;
   this->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-
-  auto t5 = std::chrono::steady_clock::now();
-  elapsed = t5 - t4;
-  //std::cout << "tt5: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //    (elapsed).count() << std::endl;
 
   // Get the camera information
   ImageData img;
@@ -180,26 +146,18 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     // check if we can see the lost person
     if (img.objects.find("lost_person") != img.objects.end())
-      std::cout << "Lost person found at[" << img.objects["lost_person"] << "]\n";
+    {
+      // Uncomment the following block to display if you found the lost person.
+      // std::cout << "Lost person found at[" << img.objects["lost_person"]
+      //          << "]" << std::endl;
+    }
   }
-
-  auto t6 = std::chrono::steady_clock::now();
-  elapsed = t6 - t5;
-  //std::cout << "tt6: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //    (elapsed).count() << std::endl;
 
   // Only print for one robot, to minimize console output
   if (this->Host() == "192.168.2.1")
   {
-    // Show the list of neighbors.
-    //if (this->Neighbors().empty())
-    //  std::cout << "[" << this->Host() << "] Neighbors: EMPTY" << std::endl;
-    //else
-    //{
-    //  std::cout << "[" << this->Host() << "] Neighbors:" << std::endl;
-    //  for (auto const &neighbor : this->Neighbors())
-    //    std::cout << "\t" << neighbor << std::endl;
-    //}
+    // Get the list of neighbors.
+    auto myNeighbors = this->Neighbors();
 
     // The following chunk of code will pitch and yaw the camera.
     double camPitch, camYaw;
@@ -208,37 +166,38 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     camPitch -= 0.001;
     this->SetCameraOrientation(camPitch, camYaw);
 
-    //std::cout << "[" << this->Host() << "] search area: " <<
-    //  minLatitude << " " << maxLatitude << " " <<
-    //  minLongitude << " " << maxLongitude << std::endl;
-    //std::cout << "[" << this->Host() << "] lat long alt: " <<
-    //  latitude << " " << longitude << " " << altitude << std::endl;
+    // Uncomment the following block to display the search area.
+    // std::cout << "[" << this->Host() << "] search area: "
+    //           << minLatitude << " " << maxLatitude << " "
+    //           << minLongitude << " " << maxLongitude << std::endl;
 
-    auto t7 = std::chrono::steady_clock::now();
-    elapsed = t7 - t6;
-    //std::cout << "tt7: " << std::chrono::duration_cast<std::chrono::microseconds>
-    //    (elapsed).count() << std::endl;
+    // Uncomment this line to show your current position according to the GPS.
+    // std::cout << "[" << this->Host() << "] lat long alt: "
+    //           << latitude << " " << longitude << " " << altitude
+    //           << std::endl;
 
     // Get IMU information
     ignition::math::Vector3d linVel, angVel;
     ignition::math::Quaterniond orient;
     if (this->Imu(linVel, angVel, orient))
     {
-      //std::cout << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
-      //std::cout << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-      //std::cout << "[" << this->Host() << "] Orientation: " << orient.Euler()
-      //      << std::endl;
+      // Uncomment the following block to display the IMU information.
+      // std::cout << "[" << this->Host() << "] Linear Vel: " << linVel
+      //           << std::endl;
+      // std::cout << "[" << this->Host() << "] Angular Vel: " << angVel
+      //           << std::endl;
+      // std::cout << "[" << this->Host() << "] Orientation: " << orient.Euler()
+      //           << std::endl;
     }
 
     // Get bearing
     ignition::math::Angle bearing;
     if (this->Bearing(bearing))
-      std::cout << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
-
-    auto t8 = std::chrono::steady_clock::now();
-    elapsed = t8 - t7;
-    //std::cout << "tt8: " << std::chrono::duration_cast<std::chrono::microseconds>
-    //    (elapsed).count() << std::endl;
+    {
+      // Uncomment the following block to display the compass information.
+      // std::cout << "[" << this->Host() << "] Bearing: " << bearing
+      //           << std::endl;
+    }
   }
 }
 

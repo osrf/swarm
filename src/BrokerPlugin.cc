@@ -116,7 +116,6 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
-  auto t1 = std::chrono::steady_clock::now();
   {
     std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -134,11 +133,6 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
   // Log the current iteration.
   this->logger->Update(_info.simTime.Double());
-
-  auto t2 = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed = t2 - t1;
-  //  std::cout << "Broker: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -150,9 +144,7 @@ void BrokerPlugin::NotifyNeighbors()
     std::vector<std::string> v;
     auto address = robot.first;
     auto swarmMember = (*this->swarm)[address];
-    //auto topic = "/swarm/" + swarmMember->address + "/neighbors";
 
-    //swarm::msgs::Neighbor_V msg;
     for (auto const &neighbor : swarmMember->neighbors)
       v.push_back(neighbor.first);
 
@@ -225,10 +217,6 @@ void BrokerPlugin::DispatchMessages()
       }
     }
   }
-  //auto t2 = std::chrono::steady_clock::now();
-  //std::chrono::duration<double> elapsed = t2 - t1;
-  //  std::cout << "Dispatch: " << std::chrono::duration_cast<std::chrono::microseconds>
-  //      (elapsed).count() << std::endl;
 }
 
 //////////////////////////////////////////////////
