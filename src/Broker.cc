@@ -30,11 +30,6 @@ Broker *Broker::Instance()
 }
 
 //////////////////////////////////////////////////
-Broker::Broker()
-{
-}
-
-//////////////////////////////////////////////////
 bool Broker::Bind(const std::string &_clientAddress,
   BrokerClient *_client, const std::string &_endpoint)
 {
@@ -78,5 +73,33 @@ bool Broker::Register(const std::string &_id, BrokerClient *_client)
   }
 
   this->clients[_id] = _client;
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool Broker::Unregister(const std::string &_id)
+{
+  if (this->clients.erase(_id) != 1)
+  {
+    std::cerr << "Broker::Unregister() error: ID [" << _id << "] doesn't exist"
+              << std::endl;
+    return false;
+  }
+
+  // Unbind.
+  for (auto &receiversKv : this->receivers)
+  {
+    auto &v = receiversKv.second;
+
+    auto i = std::begin(v);
+    while (i != std::end(v))
+    {
+      if (i->address == _id)
+        i = v.erase(i);
+      else
+        ++i;
+    }
+  }
+
   return true;
 }

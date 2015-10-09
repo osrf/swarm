@@ -60,7 +60,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       return;
   }
   // The rest of the tests send the message to the BOO at iterations=0.
-  else if (this->iterations != 0)
+  else if (this->iterations != 2)
     return;
 
   switch (this->testCase)

@@ -87,6 +87,19 @@ bool Logger::Register(const std::string &_id, const Loggable *_client)
 }
 
 //////////////////////////////////////////////////
+bool Logger::Unregister(const std::string &_id)
+{
+  if (this->clients.erase(_id) != 1)
+  {
+    std::cerr << "Logger::Unregister() error: ID [" << _id << "] doesn't exist"
+              << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+//////////////////////////////////////////////////
 void Logger::Update(const double _simTime)
 {
   if (!this->output.is_open() || !this->enabled)

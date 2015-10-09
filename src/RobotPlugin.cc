@@ -55,6 +55,8 @@ RobotPlugin::RobotPlugin()
 RobotPlugin::~RobotPlugin()
 {
   gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  this->broker->Unregister(this->Host());
+  this->logger->Unregister(this->Host());
 }
 
 //////////////////////////////////////////////////

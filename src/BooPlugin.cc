@@ -28,7 +28,6 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <sdf/sdf.hh>
-#include "msgs/personfound.pb.h"
 #include "swarm/BooPlugin.hh"
 #include "swarm/SwarmTypes.hh"
 
@@ -92,12 +91,6 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Bind on my BOO address and default BOO port.
   this->Bind(&BooPlugin::OnDataReceived, this, this->kBoo, this->kBooPort);
-
-  // Initialize the Gazebo transport node.
-  this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
-  this->gzNode->Init();
-  this->foundPub =
-    this->gzNode->Advertise<swarm::msgs::PersonFound>("~/marker");
 
   // Listen to the OnWorldUpdateEnd event broadcasted every simulation iteration
   this->updateEndConnection = gazebo::event::Events::ConnectWorldUpdateEnd(
@@ -265,17 +258,9 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
 
     if (reportedPosInGrid == realPosInGrid)
     {
-      found = true;
+      this->found = true;
       gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
             << "the lost person at time [" << t << "]" << std::endl;
-
-      swarm::msgs::PersonFound msg;
-      msg.set_address(_srcAddress);
-      msg.mutable_pos()->set_x(reportedPos.X());
-      msg.mutable_pos()->set_y(reportedPos.Y());
-      msg.mutable_pos()->set_z(reportedPos.Z());
-      msg.set_time(t.Double());
-      this->foundPub->Publish(msg);
 
       // Pause the simulation to make the lost person detection obvious.
       gazebo::physics::get_world()->SetPaused(true);

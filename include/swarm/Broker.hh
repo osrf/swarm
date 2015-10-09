@@ -83,11 +83,19 @@ namespace swarm
     /// \brief Register a new client for message handling.
     /// \param[in] _id Unique ID of the client.
     /// \param[in] _client Pointer to the client.
+    /// \return True if the operation succeed of false otherwise (if the same
+    /// id was already registered).
     public: bool Register(const std::string &_id,
                           BrokerClient *_client);
 
+    /// \brief Unregister a client and unbind from all the endpoints.
+    /// \param[in] _id Unique ID of the client.
+    /// \return True if the operation succeed or false otherwise (if there is
+    /// no client registered for this ID).
+    public: bool Unregister(const std::string &_id);
+
     /// \brief Constructor.
-    protected: Broker();
+    protected: Broker() = default;
 
     /// \brief Destructor.
     protected: virtual ~Broker() = default;

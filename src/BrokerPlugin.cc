@@ -40,6 +40,7 @@ GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 BrokerPlugin::~BrokerPlugin()
 {
   gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  this->logger->Unregister("broker");
 }
 
 //////////////////////////////////////////////////
