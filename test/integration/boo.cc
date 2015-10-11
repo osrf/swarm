@@ -15,10 +15,10 @@
  *
 */
 
+#include <boost/shared_ptr.hpp>
 #include <chrono>
 #include <string>
 #include <thread>
-#include <boost/shared_ptr.hpp>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <ignition/math/Vector3.hh>

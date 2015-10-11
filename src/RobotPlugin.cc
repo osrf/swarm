@@ -464,9 +464,6 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
-  // Used for logging.
-  this->incomingMsgs.Clear();
-
   // Update the state of the battery
   this->UpdateBattery();
 
@@ -840,7 +837,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg)
+void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
 {
   const std::string topic = _msg.dst_address() + ":" +
       std::to_string(_msg.dst_port());
@@ -852,17 +849,9 @@ void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg)
     return;
   }
 
-  auto const &userCallback = this->callbacks[topic];
+  auto const &userCallback = this->callbacks.at(topic);
   userCallback(_msg.src_address(), _msg.dst_address(),
                _msg.dst_port(), _msg.data());
-
-  // Save the new message received for future logging.
-  //auto newMsg = this->incomingMsgs.add_message();
-  //newMsg->set_src_address(_msg.src_address());
-  //newMsg->set_dst_address(_msg.dst_address());
-  //newMsg->set_dst_port(_msg.dst_port());
-  //newMsg->set_size(_msg.data().size());
-  //newMsg->set_delivered(visible);
 }
 
 //////////////////////////////////////////////////
@@ -1211,9 +1200,6 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   actions->set_allocated_angvel(targetVang);
 
   _logEntry.set_allocated_actions(actions);
-
-  // Fill the incoming messages.
-  _logEntry.mutable_incoming_msgs()->CopyFrom(this->incomingMsgs);
 }
 
 /////////////////////////////////////////////////

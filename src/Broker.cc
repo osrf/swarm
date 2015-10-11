@@ -16,6 +16,8 @@
 */
 
 #include <iostream>
+#include <map>
+#include <queue>
 #include <string>
 #include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"
@@ -31,12 +33,12 @@ Broker *Broker::Instance()
 
 //////////////////////////////////////////////////
 bool Broker::Bind(const std::string &_clientAddress,
-  BrokerClient *_client, const std::string &_endpoint)
+  const BrokerClient *_client, const std::string &_endpoint)
 {
   // Make sure that the same client didn't bind the same end point before.
-  if (this->receivers.find(_endpoint) != this->receivers.end())
+  if (this->endpoints.find(_endpoint) != this->endpoints.end())
   {
-    const auto &clientsV = this->receivers[_endpoint];
+    const auto &clientsV = this->endpoints[_endpoint];
     for (const auto &client : clientsV)
     {
       if (client.address == _clientAddress)
@@ -51,7 +53,7 @@ bool Broker::Bind(const std::string &_clientAddress,
   BrokerClientInfo clientInfo;
   clientInfo.address = _clientAddress;
   clientInfo.handler = _client;
-  this->receivers[_endpoint].push_back(clientInfo);
+  this->endpoints[_endpoint].push_back(clientInfo);
   return true;
 }
 
@@ -77,6 +79,25 @@ bool Broker::Register(const std::string &_id, BrokerClient *_client)
 }
 
 //////////////////////////////////////////////////
+const std::map<std::string, BrokerClient*> &Broker::Clients() const
+{
+  return this->clients;
+}
+
+//////////////////////////////////////////////////
+const std::map<std::string, std::vector<BrokerClientInfo>>
+      &Broker::EndPoints() const
+{
+  return this->endpoints;
+}
+
+//////////////////////////////////////////////////
+std::queue<msgs::Datagram> &Broker::Messages()
+{
+  return this->incomingMsgs;
+}
+
+//////////////////////////////////////////////////
 bool Broker::Unregister(const std::string &_id)
 {
   if (this->clients.erase(_id) != 1)
@@ -87,15 +108,15 @@ bool Broker::Unregister(const std::string &_id)
   }
 
   // Unbind.
-  for (auto &receiversKv : this->receivers)
+  for (auto &endpointKv : this->endpoints)
   {
-    auto &v = receiversKv.second;
+    auto &clientsV = endpointKv.second;
 
-    auto i = std::begin(v);
-    while (i != std::end(v))
+    auto i = std::begin(clientsV);
+    while (i != std::end(clientsV))
     {
       if (i->address == _id)
-        i = v.erase(i);
+        i = clientsV.erase(i);
       else
         ++i;
     }

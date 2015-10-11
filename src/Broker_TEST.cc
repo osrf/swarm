@@ -33,7 +33,7 @@ class Client : public swarm::BrokerClient
   }
 
   // Documentation inherited.
-  void OnMsgReceived(const msgs::Datagram &/*_msg*/)
+  void OnMsgReceived(const msgs::Datagram &/*_msg*/) const
   {
   }
 
@@ -64,6 +64,8 @@ TEST(brokerTest, Broker)
   Client client2("192.168.3.2");
   EXPECT_TRUE(broker2->Register(client2.id, &client2));
 
+  EXPECT_EQ(broker->Clients().size(), 2u);
+
   // Bind.
   int port = 5000;
   std::string endPoint1 = client1.id + ":" + std::to_string(port);
@@ -73,10 +75,12 @@ TEST(brokerTest, Broker)
   EXPECT_TRUE(broker2->Bind(client2.id, &client2, endPoint2));
   EXPECT_FALSE(broker2->Bind(client2.id, &client2, endPoint2));
 
-  ASSERT_TRUE(broker->receivers.find(endPoint1) != broker->receivers.end());
-  EXPECT_EQ(broker->receivers.at(endPoint1).size(), 1u);
-  ASSERT_TRUE(broker->receivers.find(endPoint2) != broker->receivers.end());
-  EXPECT_EQ(broker->receivers.at(endPoint2).size(), 1u);
+  const auto &endpoints = broker->EndPoints();
+
+  ASSERT_TRUE(endpoints.find(endPoint1) != endpoints.end());
+  EXPECT_EQ(endpoints.at(endPoint1).size(), 1u);
+  ASSERT_TRUE(endpoints.find(endPoint2) != endpoints.end());
+  EXPECT_EQ(endpoints.at(endPoint2).size(), 1u);
 
   // Push.
   msgs::Datagram msg;
@@ -86,7 +90,7 @@ TEST(brokerTest, Broker)
   msg.set_data("some data");
   broker1->Push(msg);
   broker2->Push(msg);
-  EXPECT_EQ(broker->incomingMsgs.size(), 2u);
+  EXPECT_EQ(broker->Messages().size(), 2u);
 
   // Unregister the clients.
   EXPECT_TRUE(broker1->Unregister(client1.id));

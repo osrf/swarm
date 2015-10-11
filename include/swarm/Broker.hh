@@ -37,7 +37,7 @@ namespace swarm
   {
     /// \brief Executed when a new message is delivered to the client.
     /// \param[in] _msg New message.
-    public: virtual void OnMsgReceived(const msgs::Datagram &_msg) = 0;
+    public: virtual void OnMsgReceived(const msgs::Datagram &_msg) const = 0;
 
     // \brief Executed when a new neighbor update is received in the client.
     public: virtual void OnNeighborsReceived(
@@ -51,7 +51,7 @@ namespace swarm
     public: std::string address;
 
     /// \brief Pointer to the client.
-    public: BrokerClient* handler;
+    public: const BrokerClient* handler;
   };
 
   /// \brief Store messages, and exposes an API for registering new clients,
@@ -73,7 +73,7 @@ namespace swarm
     /// \return True if the operation succeed or false otherwise (if the client
     /// was already bound to the same endpoint).
     public: bool Bind(const std::string &_clientAddress,
-                      BrokerClient *_client,
+                      const BrokerClient *_client,
                       const std::string &_endpoint);
 
     /// \brief Queue a new message.
@@ -88,6 +88,23 @@ namespace swarm
     public: bool Register(const std::string &_id,
                           BrokerClient *_client);
 
+    /// \brief Get the list of registered clients.
+    /// \return Map of registered clients. The key is the client ID and the
+    /// value is a pointer to the client.
+    public: const std::map<std::string, BrokerClient*> &Clients() const;
+
+    /// \brief Get the list of endpoints bound.
+    /// \return Map of endpoints. The key is the endpoint and the value is a
+    /// vector containing the information of all the clients bound to this
+    /// endpoint.
+    /// \sa BrokerClientInfo.
+    public: const std::map<std::string, std::vector<BrokerClientInfo>>
+      &EndPoints() const;
+
+    /// \brief Get the current message queue.
+    /// \return Reference to the queue of messages.
+    public: std::queue<msgs::Datagram> &Messages();
+
     /// \brief Unregister a client and unbind from all the endpoints.
     /// \param[in] _id Unique ID of the client.
     /// \return True if the operation succeed or false otherwise (if there is
@@ -101,15 +118,15 @@ namespace swarm
     protected: virtual ~Broker() = default;
 
     /// \brief Queue to store the incoming messages received from the clients.
-    public: std::queue<msgs::Datagram> incomingMsgs;
+    protected: std::queue<msgs::Datagram> incomingMsgs;
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
-    public: std::map<std::string, BrokerClient*> clients;
+    protected: std::map<std::string, BrokerClient*> clients;
 
-    /// \brief List of bound clients. The key is an endpoint and the
+    /// \brief List of bound endpoints. The key is an endpoint and the
     /// value is the vector of clients bounded on that endpoint.
-    public: std::map<std::string, std::vector<BrokerClientInfo>> receivers;
+    protected: std::map<std::string, std::vector<BrokerClientInfo>> endpoints;
   };
 }  // namespace
 #endif

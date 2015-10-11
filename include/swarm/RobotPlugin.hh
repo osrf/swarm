@@ -506,7 +506,7 @@ namespace swarm
     /// user's callback.
     ///
     /// \param[in] _msg New message received.
-    private: virtual void OnMsgReceived(const msgs::Datagram &_msg);
+    private: virtual void OnMsgReceived(const msgs::Datagram &_msg) const;
 
     /// \brief Callback executed each time that a neighbor update is received.
     /// The messages are coming from the broker. The broker decides which are
@@ -742,9 +742,6 @@ namespace swarm
 
     /// \brief Pointer to the shared logger.
     private: Logger *logger = Logger::Instance();
-
-    /// \brief Save messages received for logging.
-    private: msgs::IncomingMsgs incomingMsgs;
 
     /// \brief Flag used by rotorcraft to determine if it's docked to
     /// a vehicle.

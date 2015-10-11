@@ -139,6 +139,8 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 //////////////////////////////////////////////////
 void BrokerPlugin::NotifyNeighbors()
 {
+  const auto &clients = this->broker->Clients();
+
   // Send neighbors update to each member of the swarm.
   for (auto const &robot : (*this->swarm))
   {
@@ -146,11 +148,15 @@ void BrokerPlugin::NotifyNeighbors()
     auto address = robot.first;
     auto swarmMember = (*this->swarm)[address];
 
+    // This address is not registered as a broker client.
+    if (clients.find(address) == clients.end())
+      continue;
+
     for (auto const &neighbor : swarmMember->neighbors)
       v.push_back(neighbor.first);
 
     // Notify the node with its updated list of neighbors.
-    this->broker->clients[address]->OnNeighborsReceived(v);
+    clients.at(address)->OnNeighborsReceived(v);
   }
 }
 
@@ -163,10 +169,13 @@ void BrokerPlugin::DispatchMessages()
   std::queue<msgs::Datagram> incomingMsgsBuffer;
   {
     std::lock_guard<std::mutex> lock(this->mutex);
-    std::swap(incomingMsgsBuffer, this->broker->incomingMsgs);
+    std::swap(incomingMsgsBuffer, this->broker->Messages());
   }
 
   this->logIncomingMsgs.Clear();
+
+  // Get the current list of endpoints and clients bound.
+  const auto &endpoints = this->broker->EndPoints();
 
   while (!incomingMsgsBuffer.empty())
   {
@@ -191,10 +200,9 @@ void BrokerPlugin::DispatchMessages()
     logMsg->set_size(msg.data().size());
 
     auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
-    if (this->broker->receivers.find(dstEndPoint) !=
-        this->broker->receivers.end())
+    if (endpoints.find(dstEndPoint) != endpoints.end())
     {
-      auto clientsV = this->broker->receivers[dstEndPoint];
+      auto clientsV = endpoints.at(dstEndPoint);
       for (const auto &client : clientsV)
       {
         // Get the list of neighbors of the sender.
