@@ -39,7 +39,8 @@ namespace swarm
     /// \param[in] _msg New message.
     public: virtual void OnMsgReceived(const msgs::Datagram &_msg) const = 0;
 
-    // \brief Executed when a new neighbor update is received in the client.
+    /// \brief Executed when a new neighbor update is received in the client.
+    /// \param[in] _msg List of neighbors.
     public: virtual void OnNeighborsReceived(
       const std::vector<std::string> &_msg) = 0;
   };

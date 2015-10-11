@@ -133,8 +133,8 @@ void CommsModel::UpdateOutages()
         swarmMember->onOutage = false;
 
         // Debug output.
-        gzdbg << "[" << curTime << "] Robot " << address
-              << " is back from an outage." << std::endl;
+        // gzdbg << "[" << curTime << "] Robot " << address
+        //       << " is back from an outage." << std::endl;
       }
     }
     else if (!swarmMember->onOutage)

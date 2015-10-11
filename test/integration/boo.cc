@@ -15,7 +15,6 @@
  *
 */
 
-#include <boost/shared_ptr.hpp>
 #include <chrono>
 #include <string>
 #include <thread>
