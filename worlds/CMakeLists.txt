@@ -4,6 +4,17 @@ add_subdirectory(terrains)
 set (world_files
 )
 
+# Non-world erb files
+set (other_erb_files
+  boo.sdf.erb
+  common.sdf.erb
+  fixedwing_vehicle.sdf.erb
+  ground_vehicle.sdf.erb
+  lost_person_simple.sdf.erb
+  rotor_vehicle.sdf.erb
+  terrain_model_1.sdf.erb
+)
+
 # World files that need to be processed with erb
 set (world_erb_files
   complete.world.erb
@@ -23,7 +34,7 @@ foreach(_erb ${world_erb_files})
   set(_world ${CMAKE_CURRENT_BINARY_DIR}/${_world})
   add_custom_command(OUTPUT ${_world}
                      COMMAND ${ERB_EXE_PATH} ${_erb} > ${_world}
-                     DEPENDS ${_erb}
+                     DEPENDS ${_erb} ${other_erb_files}
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
   list(APPEND world_files ${_world})
