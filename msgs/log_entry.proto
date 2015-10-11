@@ -23,10 +23,10 @@ message Gps
 message Imu
 {
   /// \brief Linear velocity.
-  required gazebo.msgs.Vector3d linvel         = 1;
+  required gazebo.msgs.Vector3d linvel        = 1;
 
   /// \brief Angular velocity.
-  required gazebo.msgs.Vector3d angvel         = 2;
+  required gazebo.msgs.Vector3d angvel        = 2;
 
   /// \brief Robot orientation.
   required gazebo.msgs.Quaternion orientation = 3;
@@ -35,7 +35,7 @@ message Imu
 message ObjPose
 {
   /// \brief Name of the object.
-  required string name = 1;
+  required string name           = 1;
 
   /// \brief Pose of the object in the robot's camera frame.
   required gazebo.msgs.Pose pose = 2;
@@ -50,49 +50,53 @@ message ImageData
 message Message
 {
   /// \brief Address of the sender.
-  required string src_address = 1;
+  required string src_address     = 1;
 
   /// \brief Address of the destination.
-  required string dst_address = 2;
+  required string dst_address     = 2;
 
   /// \brief Destination port.
-  required uint32 dst_port    = 3;
+  required uint32 dst_port        = 3;
 
   /// \brief Payload size.
-  required uint32 size        = 4;
+  required uint32 size            = 4;
 
-  /// \brief Whether the message was delivered or not due to drops.
-  optional bool delivered     = 5;
+  /// \brief Collection of neighbors and their comms status for this message.
+  repeated NeighborEntry neighbor = 5;
 }
 
-enum VisibilityStatus
+enum CommsStatus
 {
   /// \brief Robots are visible.
-  VISIBLE  = 1;
+  VISIBLE   = 1;
   /// \brief Communication failed due to a comms outage.
-  OUTAGE   = 2;
+  OUTAGE    = 2;
   /// \brief Communication failed due to an obstacle between the robots.
-  OBSTACLE = 3;
+  OBSTACLE  = 3;
   /// \brief Communication failed due to the robots are out of range.
-  DISTANCE = 4;
+  DISTANCE  = 4;
+  /// \brief Communication failed due to a random drop.
+  DROPPED   = 5;
+  /// \brief Communication succeed.
+  DELIVERED = 6;
 }
 
-message VisibilityEntry
+message NeighborEntry
 {
   /// \brief Address of the destination.
-  required string dst          = 1;
+  required string dst         = 1;
 
-  /// \brief Visibility status.
-  required VisibilityStatus status = 2;
+  /// \brief Status of the communication.
+  required CommsStatus status = 2;
 }
 
 message VisibilityRow
 {
   /// \brief Address of the sender.
-  required string src            = 1;
+  required string src          = 1;
 
-  /// \brief Collection of visibility status between the sender and other robots
-  repeated VisibilityEntry entry = 2;
+  /// \brief Collection of comms status between the sender and other robots.
+  repeated NeighborEntry entry = 2;
 }
 
 message Sensors

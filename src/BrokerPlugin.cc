@@ -184,14 +184,15 @@ void BrokerPlugin::DispatchMessages()
     }
 
     // For logging purposes, we store the request for communication.
-    //auto logMsg = this->logIncomingMsgs.add_message();
-    //logMsg->set_src_address(msg.src_address());
-    //logMsg->set_dst_address(msg.dst_address());
-    //logMsg->set_dst_port(msg.dst_port());
-    //logMsg->set_size(msg.data().size());
+    auto logMsg = this->logIncomingMsgs.add_message();
+    logMsg->set_src_address(msg.src_address());
+    logMsg->set_dst_address(msg.dst_address());
+    logMsg->set_dst_port(msg.dst_port());
+    logMsg->set_size(msg.data().size());
 
     auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
-    if (this->broker->receivers.find(dstEndPoint) != this->broker->receivers.end())
+    if (this->broker->receivers.find(dstEndPoint) !=
+        this->broker->receivers.end())
     {
       auto clientsV = this->broker->receivers[dstEndPoint];
       for (const auto &client : clientsV)
@@ -203,6 +204,9 @@ void BrokerPlugin::DispatchMessages()
         if (neighbors.find(client.address) == neighbors.end())
           continue;
 
+        auto neighborEntryLog = logMsg->add_neighbor();
+        neighborEntryLog->set_dst(client.address);
+
         // Decide whether this neighbor gets this message, according to the
         // probability of communication between them right now.
         const auto &neighborProb = neighbors.at(client.address);
@@ -213,6 +217,15 @@ void BrokerPlugin::DispatchMessages()
           //       << client.address << " (addressed to " << msg.dst_address()
           //       << ")" << std::endl;
           client.handler->OnMsgReceived(msg);
+          neighborEntryLog->set_status(msgs::CommsStatus::DELIVERED);
+        }
+        else
+        {
+          neighborEntryLog->set_status(msgs::CommsStatus::DROPPED);
+          // Debug output.
+          // gzdbg << "Dropping message from " << msg.src_address() << " to "
+          //       << client.address << " (addressed to " << msg.dst_address()
+          //       << ")" << std::endl;
         }
       }
     }

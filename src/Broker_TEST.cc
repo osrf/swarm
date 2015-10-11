@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2015 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#include "gtest/gtest.h"
+#include "msgs/datagram.pb.h"
+#include "swarm/Broker.hh"
+
+using namespace swarm;
+
+//////////////////////////////////////////////////
+/// \brief A sample broker client class.
+class Client : public swarm::BrokerClient
+{
+  /// \brief Constructor.
+  /// \param[in] _id The client ID.
+  public: Client(const std::string &_id)
+    : id(_id)
+  {
+  }
+
+  // Documentation inherited.
+  void OnMsgReceived(const msgs::Datagram &/*_msg*/)
+  {
+  }
+
+  void OnNeighborsReceived(const std::vector<std::string> &/*_msg*/)
+  {
+  }
+
+  /// \brief A client ID.
+  public: std::string id;
+};
+
+//////////////////////////////////////////////////
+/// \brief Test the basic API of the broker class.
+TEST(brokerTest, Broker)
+{
+  Broker *broker = Broker::Instance();
+
+  // Client #1.
+  Broker *broker1 = Broker::Instance();
+  Client client1("192.168.3.1");
+  EXPECT_TRUE(broker1->Register(client1.id, &client1));
+
+  // Try to register an existing client.
+  EXPECT_FALSE(broker1->Register(client1.id, &client1));
+
+  // Client #2.
+  Broker *broker2 = Broker::Instance();
+  Client client2("192.168.3.2");
+  EXPECT_TRUE(broker2->Register(client2.id, &client2));
+
+  // Bind.
+  int port = 5000;
+  std::string endPoint1 = client1.id + ":" + std::to_string(port);
+  EXPECT_TRUE(broker1->Bind(client1.id, &client1, endPoint1));
+  EXPECT_FALSE(broker1->Bind(client1.id, &client1, endPoint1));
+  std::string endPoint2 = client2.id + ":" + std::to_string(port);
+  EXPECT_TRUE(broker2->Bind(client2.id, &client2, endPoint2));
+  EXPECT_FALSE(broker2->Bind(client2.id, &client2, endPoint2));
+
+  ASSERT_TRUE(broker->receivers.find(endPoint1) != broker->receivers.end());
+  EXPECT_EQ(broker->receivers.at(endPoint1).size(), 1u);
+  ASSERT_TRUE(broker->receivers.find(endPoint2) != broker->receivers.end());
+  EXPECT_EQ(broker->receivers.at(endPoint2).size(), 1u);
+
+  // Push.
+  msgs::Datagram msg;
+  msg.set_src_address(client1.id);
+  msg.set_dst_address(client2.id);
+  msg.set_dst_port(port);
+  msg.set_data("some data");
+  broker1->Push(msg);
+  broker2->Push(msg);
+  EXPECT_EQ(broker->incomingMsgs.size(), 2u);
+
+  // Unregister the clients.
+  EXPECT_TRUE(broker1->Unregister(client1.id));
+  EXPECT_TRUE(broker2->Unregister(client2.id));
+
+  // Try to unregister clients that are not registered anymore.
+  EXPECT_FALSE(broker1->Unregister(client1.id));
+  EXPECT_FALSE(broker2->Unregister(client2.id));
+}
+
+//////////////////////////////////////////////////
+int main(int argc, char **argv)
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

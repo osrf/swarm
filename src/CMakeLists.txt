@@ -23,6 +23,7 @@ set (boo_plugin_sources
 )
 
 set (gtest_sources
+  Broker_TEST.cc
   BrokerPlugin_TEST.cc
   Logger_TEST.cc
   RobotPlugin_TEST.cc

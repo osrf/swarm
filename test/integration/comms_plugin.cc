@@ -126,7 +126,7 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       case 8:
       {
         // The expectation is to have two outages. The length of the outage is
-        // going to be 10 iterations. We should miss 60 messages.
+        // going to be 10 iterations. We should miss 30 messages.
         // Using 13458 as seed, we get one outage.
         expectedNumMsgs = (this->numUnicastSent + 2 *
             this->numBroadcastSent + 2 * this->numMulticastSent) - 30;
@@ -135,30 +135,29 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // Permanent outage.
       case 9:
       {
-        // The expectation is one outage to occur on 192.168.2.1 at
-        // iteration 9 and one outage on 192.168.2.2 on iteration 39.
+        // Robot with address 192.168.2.1 enters into an outage at iteration 14.
         // A vehicle always receives its own multicast/broadcast messages.
         // The expected number of messages is:
-        // broadcast + multicast + ((9 * 3) + 2)
+        // broadcast + multicast + ((12 * 3) + 2)
         // Two extra messages are sent on iteration 0, otherwise each iteration
         // sends three message (uni, multi, broad).
         expectedNumMsgs =
-          ((this->numBroadcastSent + this->numMulticastSent)) + 29;
+          ((this->numBroadcastSent + this->numMulticastSent)) + 38;
         break;
       }
       // Temporary outage + drops.
       case 10:
       {
-        // The expectation is to have one outage on iteration 9 with
-        // a duration of 20 iterations for robot 192.168.2.1 using seed
-        // 13458. This is a total of 20 * 3 = 60 missing messages.
-        // 13 packages were dropped targeted to 192.168.2.2 .
+        // Robot with address 192.168.2.1 enters into an outage at iteration 14
+        // with a duration of 20 iterations.
+        // This is a total of 20 * 3 = 60 missing messages.
+        // 17 packages were dropped targeted to 192.168.2.2 .
         // From the ideal case in which we should receive 500 messages,
-        // we missed 60 + 13 = 73.
-        // The expected number of messages is: 502 - 73 = 429.
+        // we missed 60 + 17 = 77.
+        // The expected number of messages is: 502 - 77 = 425.
         int total = this->numUnicastSent + 2 * this->numBroadcastSent +
           2 * this->numMulticastSent;
-        expectedNumMsgs = total - 73;
+        expectedNumMsgs = total - 77;
         break;
       }
       default:
@@ -176,20 +175,9 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 }
 
 //////////////////////////////////////////////////
-void CommsPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
-    const std::string &_data)
+void CommsPlugin::OnDataReceived(const std::string &/*_srcAddress*/,
+    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
+    const std::string &/*_data*/)
 {
   this->numMsgsRecv++;
-
-  //if (_srcAddress == "192.168.2.2")
-  //{
-  //  std::cout << "---" << std::endl;
-  //  gazebo::common::Time curTime = gazebo::physics::get_world()->GetSimTime();
-  //  std::cout << curTime << std::endl;
-  //  std::cout << "[" << this->Host() << "] New message received" << std::endl;
-  //  std::cout << "\tFrom: [" << _srcAddress << "]" << std::endl;
-  //  std::cout << "\tTo: [" << _dstAddress << ":" << _dstPort << "]" << std::endl;
-  //  std::cout << "\tData: [" << _data << "]" << std::endl;
-  //}
 }
