@@ -86,6 +86,14 @@ TEST(LoggerTest, Log)
   // Remove the log file.
   auto parentPath = boost::filesystem::path(filePath).parent_path();
   EXPECT_TRUE(boost::filesystem::remove_all(parentPath));
+
+  // Unregister the clients.
+  EXPECT_TRUE(logger1->Unregister(client1.id));
+  EXPECT_TRUE(logger2->Unregister(client2.id));
+
+  // Try to unregister clients that are not registered anymore.
+  EXPECT_FALSE(logger1->Unregister(client1.id));
+  EXPECT_FALSE(logger2->Unregister(client2.id));
 }
 
 //////////////////////////////////////////////////

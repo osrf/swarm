@@ -149,8 +149,8 @@ void CommsModel::UpdateOutages()
       {
         swarmMember->onOutage = true;
         // Debug output.
-        // gzdbg << "[" << curTime << "] Robot " << address
-        //       << " has started an outage." << std::endl;
+        gzdbg << "[" << curTime << "] Robot " << address
+              << " has started an outage." << std::endl;
 
         // Decide the duration of the outage.
         if (this->commsOutageDurationMin < 0 ||
@@ -210,12 +210,12 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Create a new visibility entry for logging with a VISIBLE status.
     auto visibilityEntry = row->add_entry();
     visibilityEntry->set_dst(other->address);
-    visibilityEntry->set_status(msgs::VisibilityStatus::VISIBLE);
+    visibilityEntry->set_status(msgs::CommsStatus::VISIBLE);
 
     // If I am on outage, my only neighbor is myself.
     if (swarmMember->onOutage || other->onOutage)
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OUTAGE);
+      visibilityEntry->set_status(msgs::CommsStatus::OUTAGE);
       continue;
     }
 
@@ -236,7 +236,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // than one obstacle in between.
     if (!visible && entities.size() > 1)
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
+      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
       continue;
     }
 
@@ -244,7 +244,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if (!visible && ((obstacle.find("building") != std::string::npos) ||
                      (obstacle.find("terrain") != std::string::npos)))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::OBSTACLE);
+      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
       continue;
     }
 
@@ -266,7 +266,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       {
         if (this->neighborDistancePenaltyTree < 0.0)
         {
-          visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+          visibilityEntry->set_status(msgs::CommsStatus::DISTANCE);
           continue;
         }
         else
@@ -277,13 +277,13 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     if ((this->neighborDistanceMin > 0.0) &&
         (this->neighborDistanceMin > neighborDist))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+      visibilityEntry->set_status(msgs::CommsStatus::DISTANCE);
       continue;
     }
     if ((this->neighborDistanceMax >= 0.0) &&
         (this->neighborDistanceMax < neighborDist))
     {
-      visibilityEntry->set_status(msgs::VisibilityStatus::DISTANCE);
+      visibilityEntry->set_status(msgs::CommsStatus::DISTANCE);
       continue;
     }
 
@@ -329,10 +329,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Also a message containing the neighbor list (not the probabilities)
     // will be sent out below, to allow robot controllers to query the
     // neighbor list.
-    std::pair<std::string, double> neighborAndProb;
-    neighborAndProb.first = member.first;
-    neighborAndProb.second = commsProb;
-    swarmMember->neighbors.push_back(neighborAndProb);
+    swarmMember->neighbors[member.first] = commsProb;
   }
 }
 

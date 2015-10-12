@@ -1,6 +1,7 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (common_sources ${common_sources}
+  Broker.cc
   Logger.cc
 )
 
@@ -22,6 +23,7 @@ set (boo_plugin_sources
 )
 
 set (gtest_sources
+  Broker_TEST.cc
   BrokerPlugin_TEST.cc
   Logger_TEST.cc
   RobotPlugin_TEST.cc

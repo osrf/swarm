@@ -26,11 +26,9 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
-#include <ignition/transport.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
-#include "msgs/neighbor_v.pb.h"
 #include "swarm/CommsModel.hh"
 #include "swarm/BrokerPlugin.hh"
 
@@ -42,6 +40,7 @@ GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 BrokerPlugin::~BrokerPlugin()
 {
   gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  this->logger->Unregister("broker");
 }
 
 //////////////////////////////////////////////////
@@ -52,15 +51,6 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   this->world = _world;
   this->swarm = std::make_shared<SwarmMembership_M>();
-
-  // This is the subscription that will allow us to receive incoming messages.
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Subscribe(kBrokerIncomingTopic,
-      &BrokerPlugin::OnMsgReceived, this))
-  {
-    gzerr << "BrokerPlugin::Load(): Error trying to subscribe"
-          << " on topic " << kBrokerIncomingTopic << std::endl;
-  }
 
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
@@ -105,10 +95,6 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
           newMember->name = name;
           newMember->model = model;
           (*this->swarm)[address] = newMember;
-
-          // Advertise the topic for future neighbor updates for this vehicle.
-          std::string topic = "/swarm/" + address + "/neighbors";
-          this->node.Advertise(topic);
         }
         else
         {
@@ -153,19 +139,24 @@ void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 //////////////////////////////////////////////////
 void BrokerPlugin::NotifyNeighbors()
 {
+  const auto &clients = this->broker->Clients();
+
   // Send neighbors update to each member of the swarm.
   for (auto const &robot : (*this->swarm))
   {
+    std::vector<std::string> v;
     auto address = robot.first;
     auto swarmMember = (*this->swarm)[address];
-    auto topic = "/swarm/" + swarmMember->address + "/neighbors";
 
-    swarm::msgs::Neighbor_V msg;
+    // This address is not registered as a broker client.
+    if (clients.find(address) == clients.end())
+      continue;
+
     for (auto const &neighbor : swarmMember->neighbors)
-      msg.add_neighbors(neighbor.first);
+      v.push_back(neighbor.first);
 
     // Notify the node with its updated list of neighbors.
-    this->node.Publish(topic, msg);
+    clients.at(address)->OnNeighborsReceived(v);
   }
 }
 
@@ -178,16 +169,28 @@ void BrokerPlugin::DispatchMessages()
   std::queue<msgs::Datagram> incomingMsgsBuffer;
   {
     std::lock_guard<std::mutex> lock(this->mutex);
-    std::swap(incomingMsgsBuffer, this->incomingMsgs);
+    std::swap(incomingMsgsBuffer, this->broker->Messages());
   }
 
   this->logIncomingMsgs.Clear();
 
+  // Get the current list of endpoints and clients bound.
+  const auto &endpoints = this->broker->EndPoints();
+
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
-    auto msg = incomingMsgsBuffer.front();
+    const auto msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop();
+
+    // Sanity check: Make sure that the sender is a member of the swarm.
+    if (this->swarm->find(msg.src_address()) == this->swarm->end())
+    {
+      gzerr << "BrokerPlugin::DispatchMessages(): Discarding message. Robot ["
+            << msg.src_address() << "] is not registered as a member of the "
+            << "swarm" << std::endl;
+      continue;
+    }
 
     // For logging purposes, we store the request for communication.
     auto logMsg = this->logIncomingMsgs.add_message();
@@ -196,62 +199,45 @@ void BrokerPlugin::DispatchMessages()
     logMsg->set_dst_port(msg.dst_port());
     logMsg->set_size(msg.data().size());
 
-    // Debug output.
-    // gzdbg << "Processing message from " << msg.src_address()
-    //       << " addressed to " << msg.dst_address() << std::endl;
-
-    // Sanity check: Make sure that the sender is a member of the swarm.
-    if (this->swarm->find(msg.src_address()) == this->swarm->end())
+    auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
+    if (endpoints.find(dstEndPoint) != endpoints.end())
     {
-      gzerr << "BrokerPlugin::Update(): Discarding message. Robot ["
-            << msg.src_address() << "] is not registered as a member of the "
-            << "swarm" << std::endl;
-      continue;
-    }
-
-    // Add the list of neighbors of the sender to the outgoing message.
-    for (auto const &neighborKv : (*this->swarm)[msg.src_address()]->neighbors)
-    {
-      auto neighborId = neighborKv.first;
-      auto neighborProb = neighborKv.second;
-
-      // Decide whether this neighbor gets this message, according to the
-      // probability of communication between them right now.
-      if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
+      auto clientsV = endpoints.at(dstEndPoint);
+      for (const auto &client : clientsV)
       {
-        // Debug output
-        // gzdbg << "Sending message from " << msg.src_address() << " to " <<
-        //   neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-        //   std::endl;
-        msg.add_recipients(neighborId);
+        // Get the list of neighbors of the sender.
+        const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
+
+        // Make sure that we're sending the message to a valid neighbor.
+        if (neighbors.find(client.address) == neighbors.end())
+          continue;
+
+        auto neighborEntryLog = logMsg->add_neighbor();
+        neighborEntryLog->set_dst(client.address);
+
+        // Decide whether this neighbor gets this message, according to the
+        // probability of communication between them right now.
+        const auto &neighborProb = neighbors.at(client.address);
+        if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
+        {
+          // Debug output
+          // gzdbg << "Sending message from " << msg.src_address() << " to "
+          //       << client.address << " (addressed to " << msg.dst_address()
+          //       << ")" << std::endl;
+          client.handler->OnMsgReceived(msg);
+          neighborEntryLog->set_status(msgs::CommsStatus::DELIVERED);
+        }
+        else
+        {
+          neighborEntryLog->set_status(msgs::CommsStatus::DROPPED);
+          // Debug output.
+          // gzdbg << "Dropping message from " << msg.src_address() << " to "
+          //       << client.address << " (addressed to " << msg.dst_address()
+          //       << ")" << std::endl;
+        }
       }
-      //   Debug output.
-      // else
-      // {
-      //   gzdbg << "Dropping message from " << msg.src_address() << " to " <<
-      //     neighbor.first << " (addressed to " << msg.dst_address() << ")" <<
-      //     std::endl;
-      // }
     }
-
-    // Create the topic name for the message destination.
-    const std::string topic =
-        "/swarm/" + msg.dst_address() + "/" + std::to_string(msg.dst_port());
-
-    // Forward the message to the destination.
-    this->node.Advertise(topic);
-    this->node.Publish(topic, msg);
   }
-}
-
-//////////////////////////////////////////////////
-void BrokerPlugin::OnMsgReceived(const std::string &/*_topic*/,
-    const msgs::Datagram &_msg)
-{
-  std::lock_guard<std::mutex> lock(this->mutex);
-
-  // Queue the new message.
-  this->incomingMsgs.push(_msg);
 }
 
 //////////////////////////////////////////////////

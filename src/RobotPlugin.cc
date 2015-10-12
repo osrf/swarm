@@ -55,6 +55,8 @@ RobotPlugin::RobotPlugin()
 RobotPlugin::~RobotPlugin()
 {
   gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  this->broker->Unregister(this->Host());
+  this->logger->Unregister(this->Host());
 }
 
 //////////////////////////////////////////////////
@@ -83,15 +85,7 @@ bool RobotPlugin::SendTo(const std::string &_data,
 
   // The neighbors list will be included in the broker.
 
-  // Send the message from the agent to the broker.
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Publish(kBrokerIncomingTopic, msg))
-  {
-    gzerr << "[" << this->Host() << "] RobotPlugin::SendTo(): Error "
-          << "trying to publish on topic [" << kBrokerIncomingTopic << "]"
-          << std::endl;
-    return false;
-  }
+  this->broker->Push(msg);
 
   return true;
 }
@@ -418,7 +412,6 @@ std::string RobotPlugin::Host() const
 //////////////////////////////////////////////////
 std::vector<std::string> RobotPlugin::Neighbors() const
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
   return this->neighbors;
 }
 
@@ -471,9 +464,6 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
-  // Used for logging.
-  this->incomingMsgs.Clear();
-
   // Update the state of the battery
   this->UpdateBattery();
 
@@ -792,19 +782,6 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
               "Search area will be undefined." << std::endl;
   }
 
-  const std::string kBrokerIncomingTopic = "/swarm/broker/incoming";
-  if (!this->node.Advertise(kBrokerIncomingTopic))
-  {
-    gzerr << "[" << this->Host() << "] RobotPlugin::Load(): Error "
-          << "trying to advertise topic [" << kBrokerIncomingTopic << "]\n";
-  }
-
-  // Subscribe to the topic for receiving neighbor updates.
-  const std::string kNeighborUpdatesTopic =
-      "/swarm/" + this->Host() + "/neighbors";
-  this->node.Subscribe(
-      kNeighborUpdatesTopic, &RobotPlugin::OnNeighborsReceived, this);
-
   // Get the launch vehicle, if specified
   if (this->type == ROTOR && _sdf->HasElement("launch_vehicle"))
   {
@@ -824,6 +801,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   this->AdjustPose();
+
+  // Register this plugin in the broker.
+  this->broker->Register(this->Host(), this);
 
   // Register this plugin in the logger.
   this->logger->Register(this->Host(), this);
@@ -857,10 +837,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
-    const msgs::Datagram &_msg)
+void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
 {
-  const std::string topic = "/swarm/" + _msg.dst_address() + "/" +
+  const std::string topic = _msg.dst_address() + ":" +
       std::to_string(_msg.dst_port());
 
   if (this->callbacks.find(topic) == this->callbacks.end())
@@ -870,46 +849,16 @@ void RobotPlugin::OnMsgReceived(const std::string &/*_topic*/,
     return;
   }
 
-  // Ignore if the address of this robot was not a neighbor of the sender.
-  bool visible = false;
-  for (auto i = 0; i < _msg.recipients().size(); ++i)
-  {
-    if (_msg.recipients(i) == this->Host())
-    {
-      visible = true;
-      break;
-    }
-  }
-
-  if (visible)
-  {
-    // Run the user callback.
-    auto const &userCallback = this->callbacks[topic];
-    userCallback(_msg.src_address(), _msg.dst_address(),
-                 _msg.dst_port(), _msg.data());
-  }
-
-  // Save the new message received for future logging.
-  auto newMsg = this->incomingMsgs.add_message();
-  newMsg->set_src_address(_msg.src_address());
-  newMsg->set_dst_address(_msg.dst_address());
-  newMsg->set_dst_port(_msg.dst_port());
-  newMsg->set_size(_msg.data().size());
-  newMsg->set_delivered(visible);
+  auto const &userCallback = this->callbacks.at(topic);
+  userCallback(_msg.src_address(), _msg.dst_address(),
+               _msg.dst_port(), _msg.data());
 }
 
 //////////////////////////////////////////////////
-void RobotPlugin::OnNeighborsReceived(const std::string &/*_topic*/,
-    const msgs::Neighbor_V &_msg)
+void RobotPlugin::OnNeighborsReceived(
+  const std::vector<std::string> &_neighbors)
 {
-  std::lock_guard<std::mutex> lock(this->mutex);
-  this->neighbors.clear();
-  this->neighborProbabilities.clear();
-  for (auto i = 0; i < _msg.neighbors().size(); ++i)
-  {
-    if (_msg.neighbors(i) != this->Host())
-      this->neighbors.push_back(_msg.neighbors(i));
-  }
+  this->neighbors = _neighbors;
 }
 
 //////////////////////////////////////////////////
@@ -1251,9 +1200,6 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   actions->set_allocated_angvel(targetVang);
 
   _logEntry.set_allocated_actions(actions);
-
-  // Fill the incoming messages.
-  _logEntry.mutable_incoming_msgs()->CopyFrom(this->incomingMsgs);
 }
 
 /////////////////////////////////////////////////

@@ -118,47 +118,46 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
         // 100 of your own broadcast messages.
         // 100 of your own multicast messages.
         // 50% of the 302 messages sent from the other robot.
-        // Using 13458 as seed, the expected number of messages is 354.
-        expectedNumMsgs = 354;
+        // Using 13458 as seed, the expected number of messages is 349.
+        expectedNumMsgs = 349;
         break;
       }
       // Temporary outage.
       case 8:
       {
         // The expectation is to have two outages. The length of the outage is
-        // going to be 10 iterations. We should miss 60 messages.
+        // going to be 10 iterations. We should miss 30 messages.
         // Using 13458 as seed, we get one outage.
         expectedNumMsgs = (this->numUnicastSent + 2 *
-            this->numBroadcastSent + 2 * this->numMulticastSent) - 60;
+            this->numBroadcastSent + 2 * this->numMulticastSent) - 30;
         break;
       }
       // Permanent outage.
       case 9:
       {
-        // The expectation is one outage to occur on 192.168.2.1 at
-        // iteration 9 and one outage on 192.168.2.2 on iteration 39.
+        // Robot with address 192.168.2.1 enters into an outage at iteration 14.
         // A vehicle always receives its own multicast/broadcast messages.
         // The expected number of messages is:
-        // broadcast + multicast + ((9 * 3) + 2)
+        // broadcast + multicast + ((12 * 3) + 2)
         // Two extra messages are sent on iteration 0, otherwise each iteration
         // sends three message (uni, multi, broad).
         expectedNumMsgs =
-          ((this->numBroadcastSent + this->numMulticastSent)) + 29;
+          ((this->numBroadcastSent + this->numMulticastSent)) + 38;
         break;
       }
       // Temporary outage + drops.
       case 10:
       {
-        // The expectation is to have one outage on iteration 9 with
-        // a duration of 20 iterations for robot 192.168.2.1 using seed
-        // 13458. This is a total of 20 * 3 = 60 missing messages.
-        // 13 packages were dropped targeted to 192.168.2.2 .
+        // Robot with address 192.168.2.1 enters into an outage at iteration 14
+        // with a duration of 20 iterations.
+        // This is a total of 20 * 3 = 60 missing messages.
+        // 17 packages were dropped targeted to 192.168.2.2 .
         // From the ideal case in which we should receive 500 messages,
-        // we missed 60 + 13 = 73.
-        // The expected number of messages is: 502 - 73 = 429.
+        // we missed 60 + 17 = 77.
+        // The expected number of messages is: 502 - 77 = 425.
         int total = this->numUnicastSent + 2 * this->numBroadcastSent +
           2 * this->numMulticastSent;
-        expectedNumMsgs = total - 73;
+        expectedNumMsgs = total - 77;
         break;
       }
       default:

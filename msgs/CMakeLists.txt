@@ -1,8 +1,6 @@
 set(msgs
   datagram.proto
   log_entry.proto
-  neighbor_v.proto
-  personfound.proto
 )
 
 add_executable(ignmsgs_out generator/IgnGenerator.cc generator/ign_generator.cc)

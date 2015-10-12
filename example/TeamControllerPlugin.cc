@@ -104,16 +104,6 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
             << std::endl;
       return;
     }
-
-    // Show the list of neighbors.
-    if (this->Neighbors().empty())
-      gzmsg << "[" << this->Host() << "] Neighbors: EMPTY" << std::endl;
-    else
-    {
-      gzmsg << "[" << this->Host() << "] Neighbors:" << std::endl;
-      for (auto const &neighbor : this->Neighbors())
-        gzmsg << "\t" << neighbor << std::endl;
-    }
   }
 
   // Simple example for moving each type of robot.
@@ -156,12 +146,28 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     // check if we can see the lost person
     if (img.objects.find("lost_person") != img.objects.end())
-      gzmsg << "Lost person found at[" << img.objects["lost_person"] << "]\n";
+    {
+      // Uncomment the following block to display if you found the lost person.
+      // std::cout << "Lost person found at[" << img.objects["lost_person"]
+      //          << "]" << std::endl;
+    }
   }
 
   // Only print for one robot, to minimize console output
   if (this->Host() == "192.168.2.1")
   {
+    // Get the list of neighbors.
+    auto myNeighbors = this->Neighbors();
+    // Uncomment the following block to display the list of neighbors.
+    // if (myNeighbors.empty())
+    //   std::cout << "[" << this->Host() << "] Neighbors: EMPTY" << std::endl;
+    // else
+    // {
+    //   std::cout << "[" << this->Host() << "] Neighbors:" << std::endl;
+    //   for (auto const &neighbor : myNeighbors)
+    //     std::cout << "\t" << neighbor << std::endl;
+    // }
+
     // The following chunk of code will pitch and yaw the camera.
     double camPitch, camYaw;
     this->CameraOrientation(camPitch, camYaw);
@@ -169,27 +175,38 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     camPitch -= 0.001;
     this->SetCameraOrientation(camPitch, camYaw);
 
-    gzmsg << "[" << this->Host() << "] search area: " <<
-      minLatitude << " " << maxLatitude << " " <<
-      minLongitude << " " << maxLongitude << std::endl;
-    gzmsg << "[" << this->Host() << "] lat long alt: " <<
-      latitude << " " << longitude << " " << altitude << std::endl;
+    // Uncomment the following block to display the search area.
+    // std::cout << "[" << this->Host() << "] search area: "
+    //           << minLatitude << " " << maxLatitude << " "
+    //           << minLongitude << " " << maxLongitude << std::endl;
+
+    // Uncomment this line to show your current position according to the GPS.
+    // std::cout << "[" << this->Host() << "] lat long alt: "
+    //           << latitude << " " << longitude << " " << altitude
+    //           << std::endl;
 
     // Get IMU information
     ignition::math::Vector3d linVel, angVel;
     ignition::math::Quaterniond orient;
     if (this->Imu(linVel, angVel, orient))
     {
-      gzmsg << "[" << this->Host() << "] Linear Vel: " << linVel << std::endl;
-      gzmsg << "[" << this->Host() << "] Angular Vel: " << angVel << std::endl;
-      gzmsg << "[" << this->Host() << "] Orientation: " << orient.Euler()
-            << std::endl;
+      // Uncomment the following block to display the IMU information.
+      // std::cout << "[" << this->Host() << "] Linear Vel: " << linVel
+      //           << std::endl;
+      // std::cout << "[" << this->Host() << "] Angular Vel: " << angVel
+      //           << std::endl;
+      // std::cout << "[" << this->Host() << "] Orientation: " << orient.Euler()
+      //           << std::endl;
     }
 
     // Get bearing
     ignition::math::Angle bearing;
     if (this->Bearing(bearing))
-      gzmsg << "[" << this->Host() << "] Bearing: " << bearing << std::endl;
+    {
+      // Uncomment the following block to display the compass information.
+      // std::cout << "[" << this->Host() << "] Bearing: " << bearing
+      //           << std::endl;
+    }
   }
 }
 

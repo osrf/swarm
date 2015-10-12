@@ -87,6 +87,12 @@ namespace swarm
     public: bool Register(const std::string &_id,
                           const Loggable *_client);
 
+    /// \brief Unregister a client.
+    /// \param[in] _id Unique ID of the client.
+    /// \return True if the operation succeed or false otherwise (if there is
+    /// no client registered for this ID).
+    public: bool Unregister(const std::string &_id);
+
     /// \brief Constructor.
     protected: Logger();
 
