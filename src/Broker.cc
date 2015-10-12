@@ -58,7 +58,7 @@ bool Broker::Bind(const std::string &_clientAddress,
 }
 
 //////////////////////////////////////////////////
-void Broker::Push(const msgs::Datagram _msg)
+void Broker::Push(const msgs::Datagram &_msg)
 {
   // Queue the new message.
   this->incomingMsgs.push(_msg);

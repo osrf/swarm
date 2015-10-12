@@ -79,7 +79,7 @@ namespace swarm
 
     /// \brief Queue a new message.
     /// \param[in] _msg A new message.
-    public: void Push(const msgs::Datagram _msg);
+    public: void Push(const msgs::Datagram &_msg);
 
     /// \brief Register a new client for message handling.
     /// \param[in] _id Unique ID of the client.
