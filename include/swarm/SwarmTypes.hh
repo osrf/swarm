@@ -46,6 +46,9 @@ namespace swarm
 
     /// \brief When will the last outage finish?
     public: gazebo::common::Time onOutageUntil;
+
+    /// \brief Current data rate usage (bits).
+    public: uint32_t dataRateUsage;
   };
 
   /// \def SwarmMembership_M

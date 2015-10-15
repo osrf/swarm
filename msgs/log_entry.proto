@@ -69,16 +69,18 @@ enum CommsStatus
 {
   /// \brief Robots are visible.
   VISIBLE   = 1;
-  /// \brief Communication failed due to a comms outage.
-  OUTAGE    = 2;
-  /// \brief Communication failed due to an obstacle between the robots.
-  OBSTACLE  = 3;
-  /// \brief Communication failed due to the robots are out of range.
-  DISTANCE  = 4;
-  /// \brief Communication failed due to a random drop.
-  DROPPED   = 5;
   /// \brief Communication succeed.
-  DELIVERED = 6;
+  DELIVERED = 2;
+  /// \brief Communication failed due to a comms outage.
+  OUTAGE    = 3;
+  /// \brief Communication failed due to an obstacle between the robots.
+  OBSTACLE  = 4;
+  /// \brief Communication failed due to the robots are out of range.
+  DISTANCE  = 5;
+  /// \brief Communication failed due to a random drop.
+  DROPPED   = 6;
+  /// \brief Communication failed due to maximum data rate reached.
+  DATARATE  = 7;
 }
 
 message NeighborEntry

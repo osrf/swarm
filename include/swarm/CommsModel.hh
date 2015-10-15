@@ -58,6 +58,14 @@ namespace swarm
     /// \return The connectivity information.
     public: const msgs::VisibilityMap &VisibilityMap() const;
 
+    /// \brief Get the maximum data rate allowed (bits per second).
+    /// \return Maximum data rate allowed (bps).
+    public: uint32_t MaxDataRate() const;
+
+    /// \brief Get the overhead caused by UDP+IP+Ethernet headers (bytes).
+    /// \return The overhead in bytes.
+    public: uint16_t UdpOverhead() const;
+
     /// \brief Decide if each member of the swarm enters into a comms outage.
     private: void UpdateOutages();
 
@@ -139,6 +147,13 @@ namespace swarm
     /// \brief Maximum length of comms outage (secs). Set to <0 for no limit.
     /// Used with uniform outage duration probability model.
     private: double commsOutageDurationMax = -1.0;
+
+    /// \brief Maximum data rate allowed (bits per second).
+    private: uint32_t commsDataRateMax = 54000000;
+
+    /// \brief UDP header (8 bytes) + IPv4 header (20 bytes) +
+    /// Ethernet 28 (bytes).
+    private: uint16_t udpOverhead = 56;
 
     /// \brief Pointer to the swarm.
     private: SwarmMembershipPtr swarm;

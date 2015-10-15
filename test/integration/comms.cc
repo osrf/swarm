@@ -200,6 +200,20 @@ TEST_F(CommsTest, Terrain)
 }
 
 /////////////////////////////////////////////////
+/// \brief Check that a subset of packages drop when the channel is busy.
+TEST_F(CommsTest, MaxDataRate)
+{
+  ignition::math::Rand::Seed(13458);
+  Load("comms_12.world", true);
+
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Step the world so that the test library experiences update events.
+  world->Step(101);
+}
+
+/////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
   // Set a specific seed to avoid occasional test failures due to

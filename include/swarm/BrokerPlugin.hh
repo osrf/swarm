@@ -24,6 +24,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <random>
 #include <string>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
@@ -110,6 +111,12 @@ namespace swarm
 
     /// \brief Logger instance.
     private: Logger *logger = Logger::Instance();
+
+    /// \brief Maximum data rate allowed per simulation cycle (bits).
+    private: uint32_t maxDataRatePerCycle;
+
+    /// \brief Random engine used to shuffle the messages.
+    private: std::default_random_engine rndEngine;
   };
 }
 #endif

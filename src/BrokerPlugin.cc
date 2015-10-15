@@ -15,7 +15,10 @@
  *
 */
 
+#include <algorithm>
+#include <deque>
 #include <memory>
+#include <random>
 #include <string>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
@@ -23,9 +26,11 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/gazebo.hh>
+#include <gazebo/physics/PhysicsEngine.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
+#include <ignition/math/Rand.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
@@ -52,10 +57,15 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
   this->world = _world;
   this->swarm = std::make_shared<SwarmMembership_M>();
 
+  this->rndEngine = std::default_random_engine(ignition::math::Rand::Seed());
+
   // Get the addresses of the swarm.
   this->ReadSwarmFromSDF(_sdf);
 
   this->commsModel.reset(new CommsModel(this->swarm, this->world, _sdf));
+
+  this->maxDataRatePerCycle = this->commsModel->MaxDataRate() *
+      this->world->GetPhysicsEngine()->GetMaxStepSize();
 
   // Register in the logger.
   this->logger->Register("broker", this);
@@ -166,7 +176,7 @@ void BrokerPlugin::DispatchMessages()
   // Create a copy of the incoming message queue, then release the mutex, to
   // avoid the potential for a deadlock later if a robot calls SendTo() inside
   // its message callback.
-  std::queue<msgs::Datagram> incomingMsgsBuffer;
+  std::deque<msgs::Datagram> incomingMsgsBuffer;
   {
     std::lock_guard<std::mutex> lock(this->mutex);
     std::swap(incomingMsgsBuffer, this->broker->Messages());
@@ -174,14 +184,22 @@ void BrokerPlugin::DispatchMessages()
 
   this->logIncomingMsgs.Clear();
 
+  // Shuffle the messages.
+  std::shuffle(incomingMsgsBuffer.begin(), incomingMsgsBuffer.end(),
+    this->rndEngine);
+
   // Get the current list of endpoints and clients bound.
   const auto &endpoints = this->broker->EndPoints();
+
+  // Clear the data rate usage for each robot.
+  for (const auto &member : (*this->swarm))
+    member.second->dataRateUsage = 0;
 
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
     const auto msg = incomingMsgsBuffer.front();
-    incomingMsgsBuffer.pop();
+    incomingMsgsBuffer.pop_front();
 
     // Sanity check: Make sure that the sender is a member of the swarm.
     if (this->swarm->find(msg.src_address()) == this->swarm->end())
@@ -199,21 +217,43 @@ void BrokerPlugin::DispatchMessages()
     logMsg->set_dst_port(msg.dst_port());
     logMsg->set_size(msg.data().size());
 
+    // Get the list of neighbors of the sender.
+    const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
+
+    // Update the data rate usage.
+    for (const auto &neighbor : neighbors)
+    {
+      // We account the overhead caused by the UDP/IP/Ethernet headers + the
+      // payload. We convert the total amount of bytes to bits.
+      (*this->swarm)[neighbor.first]->dataRateUsage +=
+        (msg.data().size() + this->commsModel->UdpOverhead()) * 8;
+    }
+
     auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
     if (endpoints.find(dstEndPoint) != endpoints.end())
     {
       auto clientsV = endpoints.at(dstEndPoint);
       for (const auto &client : clientsV)
       {
-        // Get the list of neighbors of the sender.
-        const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
-
         // Make sure that we're sending the message to a valid neighbor.
         if (neighbors.find(client.address) == neighbors.end())
           continue;
 
         auto neighborEntryLog = logMsg->add_neighbor();
         neighborEntryLog->set_dst(client.address);
+
+        // Check if the maximum data rate has been reached in the destination.
+        if ((*this->swarm)[client.address]->dataRateUsage >
+            this->maxDataRatePerCycle)
+        {
+          neighborEntryLog->set_status(msgs::CommsStatus::DATARATE);
+          // Debug output
+          // gzdbg << "Dropping message (max data rate) from "
+          //       << msg.src_address() << " to " << client.address
+          //       << " (addressed to " << msg.dst_address()
+          //       << ")" << std::endl;
+          continue;
+        }
 
         // Decide whether this neighbor gets this message, according to the
         // probability of communication between them right now.
