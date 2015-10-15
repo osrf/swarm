@@ -161,8 +161,8 @@ void CommsModel::UpdateOutages()
       {
         swarmMember->onOutage = true;
         // Debug output.
-        gzdbg << "[" << curTime << "] Robot " << address
-              << " has started an outage." << std::endl;
+        // gzdbg << "[" << curTime << "] Robot " << address
+        //       << " has started an outage." << std::endl;
 
         // Decide the duration of the outage.
         if (this->commsOutageDurationMin < 0 ||
@@ -209,9 +209,8 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   auto swarmMember = (*this->swarm)[_address];
   auto myPose = swarmMember->model->GetWorldPose().Ign();
 
-  // Initialize the neighbors list with my own address.
-  // A node will always receive its own messages (prob = 1.0).
-  swarmMember->neighbors = {{_address, 1.0}};
+  // Initialize the neighbors list.
+  swarmMember->neighbors.clear();
 
   // Decide whether this node goes into our neighbor list.
   for (auto const &member : (*this->swarm))
@@ -231,7 +230,7 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       continue;
     }
 
-    // This is my own address and it's already in the list of neighbors.
+    // Do not include myself in the list of neighbors.
     if (other->address == _address)
       continue;
 

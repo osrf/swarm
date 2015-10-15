@@ -96,8 +96,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       case 0:
       case 4:
       {
-        expectedNumMsgs = this->numUnicastSent + 2 * this->numBroadcastSent +
-          2 * this->numMulticastSent;
+        expectedNumMsgs = this->numUnicastSent + this->numBroadcastSent +
+          this->numMulticastSent;
         break;
       }
       // All packages drop.
@@ -108,57 +108,49 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       case 6:
       case 11:
       {
-        // We should only see your own broadcast/multicast messages.
-        expectedNumMsgs = this->numBroadcastSent + this->numMulticastSent;
+        // We shouldn't see any messages.
+        expectedNumMsgs = 0;
         break;
       }
       // 50% packages to remote destinations drop.
       case 7:
       {
-        // The ideal number should be 351:
-        // 100 of your own broadcast messages.
-        // 100 of your own multicast messages.
+        // The ideal number should be 151:
         // 50% of the 302 messages sent from the other robot.
-        // Using 13458 as seed, the expected number of messages is 349.
-        expectedNumMsgs = 349;
+        // Using 13458 as seed, we received 156.
+        expectedNumMsgs = 156;
         break;
       }
       // Temporary outage.
       case 8:
       {
-        // The expectation is to have two outages. The length of the outage is
-        // going to be 10 iterations. We should miss 30 messages.
-        // Using 13458 as seed, we get one outage.
-        expectedNumMsgs = (this->numUnicastSent + 2 *
-            this->numBroadcastSent + 2 * this->numMulticastSent) - 30;
+        // The length of the outage is going to be 10 iterations.
+        // We should miss 30 messages.  Using 13456 as seed, we get one outage.
+        expectedNumMsgs = this->numUnicastSent + this->numBroadcastSent +
+          this->numMulticastSent - 30;
         break;
       }
       // Permanent outage.
       case 9:
       {
-        // Robot with address 192.168.2.1 enters into an outage at iteration 14.
-        // A vehicle always receives its own multicast/broadcast messages.
-        // The expected number of messages is:
-        // broadcast + multicast + ((12 * 3) + 2)
+        // Robot with address 192.168.2.1 enters into an outage at iteration 94.
         // Two extra messages are sent on iteration 0, otherwise each iteration
         // sends three message (uni, multi, broad).
-        expectedNumMsgs =
-          ((this->numBroadcastSent + this->numMulticastSent)) + 38;
+        expectedNumMsgs = 278;
         break;
       }
       // Temporary outage + drops.
       case 10:
       {
-        // Robot with address 192.168.2.1 enters into an outage at iteration 14
+        // Robot with address 192.168.2.1 enters into an outage at iteration 47
         // with a duration of 20 iterations.
         // This is a total of 20 * 3 = 60 missing messages.
-        // 17 packages were dropped targeted to 192.168.2.2 .
-        // From the ideal case in which we should receive 500 messages,
-        // we missed 60 + 17 = 77.
-        // The expected number of messages is: 502 - 77 = 425.
-        int total = this->numUnicastSent + 2 * this->numBroadcastSent +
-          2 * this->numMulticastSent;
-        expectedNumMsgs = total - 77;
+        // 12 packages were dropped targeted to 192.168.2.2 .
+        // From the ideal case in which we should receive 302 messages,
+        // we missed 60 + 12 = 72.
+        // The expected number of messages is: 302 - 72 = 230.
+        expectedNumMsgs = this->numUnicastSent + this->numBroadcastSent +
+          this->numMulticastSent - 72;
         break;
       }
       // Low max data rate to drop half of the messages due to a busy channel.
