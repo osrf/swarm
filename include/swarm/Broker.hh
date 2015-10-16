@@ -19,7 +19,7 @@
 /// \brief Broker for handling message delivery among robots.
 
 #include <map>
-#include <queue>
+#include <deque>
 #include <string>
 #include <vector>
 #include "msgs/datagram.pb.h"
@@ -104,7 +104,7 @@ namespace swarm
 
     /// \brief Get the current message queue.
     /// \return Reference to the queue of messages.
-    public: std::queue<msgs::Datagram> &Messages();
+    public: std::deque<msgs::Datagram> &Messages();
 
     /// \brief Unregister a client and unbind from all the endpoints.
     /// \param[in] _id Unique ID of the client.
@@ -119,7 +119,7 @@ namespace swarm
     protected: virtual ~Broker() = default;
 
     /// \brief Queue to store the incoming messages received from the clients.
-    protected: std::queue<msgs::Datagram> incomingMsgs;
+    protected: std::deque<msgs::Datagram> incomingMsgs;
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.

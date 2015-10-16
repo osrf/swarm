@@ -17,7 +17,7 @@
 
 #include <iostream>
 #include <map>
-#include <queue>
+#include <deque>
 #include <string>
 #include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"
@@ -61,7 +61,7 @@ bool Broker::Bind(const std::string &_clientAddress,
 void Broker::Push(const msgs::Datagram &_msg)
 {
   // Queue the new message.
-  this->incomingMsgs.push(_msg);
+  this->incomingMsgs.push_back(_msg);
 }
 
 //////////////////////////////////////////////////
@@ -92,7 +92,7 @@ const std::map<std::string, std::vector<BrokerClientInfo>>
 }
 
 //////////////////////////////////////////////////
-std::queue<msgs::Datagram> &Broker::Messages()
+std::deque<msgs::Datagram> &Broker::Messages()
 {
   return this->incomingMsgs;
 }

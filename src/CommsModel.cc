@@ -104,6 +104,18 @@ const msgs::VisibilityMap &CommsModel::VisibilityMap() const
 }
 
 //////////////////////////////////////////////////
+uint32_t CommsModel::MaxDataRate() const
+{
+  return this->commsDataRateMax;
+}
+
+//////////////////////////////////////////////////
+uint16_t CommsModel::UdpOverhead() const
+{
+  return this->udpOverhead;
+}
+
+//////////////////////////////////////////////////
 void CommsModel::UpdateOutages()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();
@@ -468,6 +480,11 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     {
       this->commsOutageDurationMax =
         commsModelElem->Get<double>("comms_outage_duration_max");
+    }
+    if (commsModelElem->HasElement("comms_data_rate_max"))
+    {
+      this->commsDataRateMax =
+        commsModelElem->Get<double>("comms_data_rate_max");
     }
   }
 }

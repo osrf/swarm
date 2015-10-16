@@ -154,7 +154,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   }
 
   // Only print for one robot, to minimize console output
-  if (this->Host() == "192.168.2.1")
+  if (this->Host() == "192.168.3.1")
   {
     // Get the list of neighbors.
     auto myNeighbors = this->Neighbors();
