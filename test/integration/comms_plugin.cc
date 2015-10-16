@@ -117,8 +117,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       {
         // The ideal number should be 151:
         // 50% of the 302 messages sent from the other robot.
-        // Using 13458 as seed, we received 156.
-        expectedNumMsgs = 156;
+        // Using 13458 as seed, we received 142.
+        expectedNumMsgs = 142;
         break;
       }
       // Temporary outage.
@@ -145,23 +145,22 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
         // Robot with address 192.168.2.1 enters into an outage at iteration 47
         // with a duration of 20 iterations.
         // This is a total of 20 * 3 = 60 missing messages.
-        // 12 packages were dropped targeted to 192.168.2.2 .
+        // 9 packages were dropped targeted to 192.168.2.2 .
         // From the ideal case in which we should receive 302 messages,
-        // we missed 60 + 12 = 72.
-        // The expected number of messages is: 302 - 72 = 230.
+        // we missed 60 + 9 = 69.
+        // The expected number of messages is: 302 - 69 = 233.
         expectedNumMsgs = this->numUnicastSent + this->numBroadcastSent +
-          this->numMulticastSent - 72;
+          this->numMulticastSent - 69;
         break;
       }
       // Low max data rate to drop half of the messages due to a busy channel.
       case 12:
       {
         // We tweaked the maximum data rate to allow only 1 message per cycle.
-        // We'll always receive that message except if the one that goes
-        // through is the unicast message that we sent. Each iteration, we'll
-        // receive the message with prob=5/6. The expectation would be to
-        // receive 83 messages. Using 13458 as seed, we receive 80 messages.
-        expectedNumMsgs = 81;
+        // There are 6 messages sent per cycle. Each iteration, we'll
+        // receive the message with prob=3/6. The expectation would be to
+        // receive 50 messages. Using 13458 as seed, we receive 52 messages.
+        expectedNumMsgs = 52;
         break;
       }
       default:

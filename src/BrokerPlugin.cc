@@ -221,18 +221,22 @@ void BrokerPlugin::DispatchMessages()
     const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
 
     // Update the data rate usage.
+    auto dataSize = (msg.data().size() + this->commsModel->UdpOverhead()) * 8;
+    (*this->swarm)[msg.src_address()]->dataRateUsage += dataSize;
     for (const auto &neighbor : neighbors)
     {
       // We account the overhead caused by the UDP/IP/Ethernet headers + the
       // payload. We convert the total amount of bytes to bits.
-      (*this->swarm)[neighbor.first]->dataRateUsage +=
-        (msg.data().size() + this->commsModel->UdpOverhead()) * 8;
+      (*this->swarm)[neighbor.first]->dataRateUsage += dataSize;
     }
 
     auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
     if (endpoints.find(dstEndPoint) != endpoints.end())
     {
+      // Shuffle the clients bound to this endpoint.
       auto clientsV = endpoints.at(dstEndPoint);
+      std::shuffle(clientsV.begin(), clientsV.end(), this->rndEngine);
+
       for (const auto &client : clientsV)
       {
         // Make sure that we're sending the message to a valid neighbor.
