@@ -13,6 +13,7 @@ set (other_erb_files
   lost_person_simple.sdf.erb
   rotor_vehicle.sdf.erb
   terrain_model_1.sdf.erb
+  test.world.erb
 )
 
 # World files that need to be processed with erb
@@ -26,6 +27,7 @@ set (world_erb_files
   lost_person.world.erb
   rotor_simple_36.world.erb
   swarm_empty.world.erb
+  master.erb
 )
 
 # Process the erb files
