@@ -16,6 +16,22 @@ set (PROJECT_MAJOR_VERSION 0)
 set (PROJECT_MINOR_VERSION 1)
 set (PROJECT_PATCH_VERSION 0)
 
+# Try to get the hg hash
+execute_process(COMMAND hg identify
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                RESULT_VARIABLE _hg_result
+                OUTPUT_VARIABLE _hg_stdout
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+# Check for zero return code to indicate success
+if (NOT ${_hg_result})
+  message(STATUS "Determined hash version: ${_hg_stdout}")
+  set(PROJECT_HASH_VERSION ${_hg_stdout})
+else()
+  message(STATUS "Couldn't identify hg hash; defaulting version to unknown")
+  set(PROJECT_HASH_VERSION "unknown")
+endif()
+
 set (PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
 set (PROJECT_VERSION_FULL ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION})
 
