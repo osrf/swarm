@@ -36,13 +36,33 @@ def complete()
   $terrain_file = 'terrain_model_1.sdf.erb'
 end
 
+# How to a new world file:
+# 1. Create a function that matches the name of your world file
+#    without ".world". Modify the default parameters for your new world file.
+#    E.g.:
+#    def complete()
+#      $terrain_file = 'terrain_model_1.sdf.erb'
+#    end
+#
+# 2. Add a new entry to the hash "h", where:
+#      - The key should be the complete world file name.
+#      - The value should be the function that you created in step (1).
+#    E.g.:
+#    h["complete.world"] = method(:complete)
+#
+# 3. Add your new world file to worlds/CMakeLists.txt inside this block:
+#       set (generated_master_world_files
+#         complete.world
+#         <YOUR_NEW_WORLD_FILE>
+#       )
+
 # Generate a Gazebo world file.
 # Params:
 # +_world_file+:: World file to be generated.
 def generate_worlds(_world_file)
 
   h = Hash.new
-  h["complete.world"]          = method(:complete)
+  h["complete.world"] = method(:complete)
 
   # Load default parameters.
   default()
