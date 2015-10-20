@@ -54,8 +54,10 @@
                 nil, nil, "_sub01").result(binding)%>
 
     <!-- The terrain -->
-    <%= ERB.new(File.read('terrain_model_1.sdf.erb'),
-                nil, nil, "_sub01").result(binding)%>
+    <%= if !$terrain_file.empty?
+          ERB.new(File.read($terrain_file),
+                  nil, nil, "_sub01").result(binding)
+        end%>
 
     <!-- Create the ground vehicles  -->
     <% for x in 0..$ground_count %>

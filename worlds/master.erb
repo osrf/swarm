@@ -1,6 +1,7 @@
 
 <%
-def first()
+# Default parameters.
+def default()
   $ground_count = 10
   $fixed_count = 10
   $rotor_count = 10
@@ -13,7 +14,9 @@ def first()
   $latitude_deg = 35.7753257
   $longitude_deg = -120.774063
   $elevation = 208
+  $terrain_file = ''
 
+  # Comms model parameters
   $neighbor_distance_min = 0.0
   $neighbor_distance_max = 250.0
   $neighbor_distance_penalty_tree = 200.0
@@ -28,44 +31,30 @@ def first()
   $comms_data_rate_max = 54000000
 end
 
-def second()
-  $ground_count = 10
-  $fixed_count = 10
-  $rotor_count = 10
-  $camera_near = 0.1
-  $camera_far = 20
-  $camera_fov = 1.04719755
-  $camera_aspect_ratio = 1.778
-  $lost_person_x = 1000
-  $lost_person_y = 1000
-  $latitude_deg = 35.7753257
-  $longitude_deg = -120.774063
-  $elevation = 208
-
-  $neighbor_distance_min = 0.0
-  $neighbor_distance_max = 250.0
-  $neighbor_distance_penalty_tree = 200.0
-  $comms_distance_min = 0.0
-  $comms_distance_max = 250.0
-  $comms_distance_penalty_tree = 200.0
-  $comms_drop_probability_min = 0.0
-  $comms_drop_probability_max = 0.05
-  $comms_outage_probability = 0.1
-  $comms_outage_duration_min = 1.0
-  $comms_outage_duration_max = 2.0
-  $comms_data_rate_max = 74000000
+# complete.world
+def complete()
+  $terrain_file = 'terrain_model_1.sdf.erb'
 end
 
-h = Hash.new
-h["first"] = "First"
-h["second"] = "Second"
+# Generate a Gazebo world file.
+# Params:
+# +_world_file+:: World file to be generated.
+def generate_worlds(_world_file)
+
+  h = Hash.new
+  h["complete.world"]          = method(:complete)
+
+  # Load default parameters.
+  default()
+
+  f = h[_world_file]
+  f.call
+  ERB.new(File.read('template.world.erb'),
+          nil, nil, "_world").result(binding)
+end
 %>
 
 <%=
-  h.each do | key, value|
-    send(key)
-    File.open(key, 'w') { |file| file.write(
-        ERB.new(File.read('test.world.erb'),
-            nil, nil, "_world").result(binding)) }
-  end
+# We use an environment variable for specifying the world file to generate.
+generate_worlds( ENV['erb_gazebo_world_file'] )
 %>
