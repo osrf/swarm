@@ -37,17 +37,30 @@ class MapTest : public gazebo::ServerFixture
 };
 
 /////////////////////////////////////////////////
-/// \brief Valid unicast message from a robot to the BOO.
-TEST_F(MapTest, Query)
+TEST_F(MapTest, QueryPlain)
 {
   Load("map_00.world", true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
-  world->Step(1);
-  world->SetPaused(false);
+  world->Step(10);
+}
 
-  // Wait some time so that the test library experiences update events.
-  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+/////////////////////////////////////////////////
+TEST_F(MapTest, QueryForest)
+{
+  Load("map_01.world", true);
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+  world->Step(10);
+}
+
+/////////////////////////////////////////////////
+TEST_F(MapTest, QueryBuilding)
+{
+  Load("map_02.world", true);
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+  world->Step(10);
 }
 
 /////////////////////////////////////////////////

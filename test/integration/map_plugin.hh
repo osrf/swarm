@@ -40,6 +40,8 @@ namespace swarm
     /// different expectations. We read this test number from the SDF to
     /// be able to know which test is executing.
     private: int testCase = -1;
+
+    private: int iteration = 0;
   };
 }
 #endif

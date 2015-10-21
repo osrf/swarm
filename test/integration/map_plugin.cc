@@ -37,17 +37,39 @@ MapPlugin::MapPlugin()
 void MapPlugin::Load(sdf::ElementPtr _sdf)
 {
   this->testCase = _sdf->Get<int>("test_case");
+  this->iteration = 0;
 }
 
 //////////////////////////////////////////////////
 void MapPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
+  this->iteration++;
+  if (this->iteration < 5)
+    return;
+
   double lat, lon, alt;
   double height;
   RobotPlugin::TerrainType terrainType;
   this->Pose(lat, lon, alt);
   this->MapQuery(lat, lon, height, terrainType);
 
-  std::cout << "Alt[" << alt << "] Height[" << height << "]\n";
+  switch (this->testCase)
+  {
+    default:
+    case 0:
+      EXPECT_NEAR(height, 993.365, 1e-3);
+      EXPECT_EQ(terrainType, PLAIN);
+      break;
 
+    case 1:
+      EXPECT_NEAR(height, 932.8344, 1e-3);
+      EXPECT_EQ(terrainType, FOREST);
+      break;
+
+    case 2:
+      EXPECT_NEAR(height, 658.507, 1e-3);
+      EXPECT_EQ(terrainType, BUILDING);
+      break;
+
+  };
 }

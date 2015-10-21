@@ -1231,40 +1231,41 @@ void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
 bool RobotPlugin::MapQuery(const double _lat, const double _lon,
     double &_height, TerrainType &_type)
 {
-  std::cout << "Map Query[" << _lat << " " << _lon << "]\n";
+  // Get the location in the local coordinate frame
   ignition::math::Vector3d local =
     this->world->GetSphericalCoordinates()->LocalFromSpherical(
         ignition::math::Vector3d(_lat, _lon, 0));
-  local.Z(0);
-  std::cout << "  Local[" << local  << "]\n";
+
+  local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
+
   ignition::math::Vector3d pos, norm;
+
+  // Reuse the terrain lookup function.
   this->TerrainLookup(local, pos, norm);
-  std::cout << "Pos[" << pos << "]\n";
-  _height = pos.Z();
 
-  // Transform to terrain coordinate frame
-  /*local.X((this->terrainSize.X() * 0.5 + local.X()) / this->terrainScaling.X());
-  local.Y((this->terrainSize.Y() * 0.5 - local.Y()) / this->terrainScaling.Y());
+  // Add in the reference elevation.
+  _height = pos.Z() +
+    this->world->GetSphericalCoordinates()->GetElevationReference();
+  local.Z(pos.Z());
 
-  std::cout << "  Local2[" << local  << "]\n";
+  _type = PLAIN;
 
-  _height = this->terrain->GetHeight(local.X(), local.Y());
-
-  std::cout << "  Height[" << _height << "]\n";
-  std::cout << "  Pos[" << this->terrain->GetPos() << "]\n";
-
-  // Ray direction to intersect with triangle
-  ignition::math::Vector3d rayDir(0, 0, -1);
-
-  // Ray start point
-  ignition::math::Vector3d rayPt(local.X(), local.Y(), 1000);
-
-  // Distance from ray start to triangle intersection
-  double intersection = -norm.Dot(rayPt - v1) / norm.Dot(rayDir);
-
-  // Height of the terrain
-  _height = rayPt + intersection * rayDir;
-  */
+  for (auto const &mdl : this->world->GetModels())
+  {
+    if (mdl->GetBoundingBox().Contains(local))
+    {
+      if (mdl->GetName().find("tree") != std::string::npos)
+      {
+        _type = FOREST;
+        break;
+      }
+      else if (mdl->GetName().find("building") != std::string::npos)
+      {
+        _type = BUILDING;
+        break;
+      }
+    }
+  }
 
   return true;
 }
