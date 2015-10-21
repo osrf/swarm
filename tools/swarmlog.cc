@@ -34,6 +34,8 @@ void usage()
             << "Options:\n"
             << " -h, --help\tShow this help message.\n"
             << " -e, --echo\tOutput the content of a log file to screen.\n"
+            << " -i, --info\tOutput information about a log file. Log "
+            << "filename\n   \t\tshould be specified using the --file option.\n"
             << " -s, --step\tStep through the content of a log file.\n"
             << " -f, --file\tPath to a Swarm log file."
             << std::endl;
@@ -79,7 +81,7 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm)
     ("help,h" , "Show this help message.")
     ("echo,e" , "Output the content of a log file to screen.")
     ("info,i" , "Output information about a log file. Log filename "
-                "should be specified using the --file option")
+                "should be specified using the --file option.")
     ("step,s" , "Step through the content of a log file.")
     ("file,f" , po::value<std::string>()->required(),
          "Path to a Swarm log file.");
