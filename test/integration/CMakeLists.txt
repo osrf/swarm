@@ -5,6 +5,7 @@ set(tests
   boo.cc
   comms.cc
   logical_camera.cc
+  map.cc
 )
 
 ign_build_tests(${tests})
@@ -26,5 +27,10 @@ target_link_libraries(boo_finder_plugin
 
 add_library(logical_camera_plugin SHARED logical_camera_plugin.cc)
 target_link_libraries(logical_camera_plugin
+  ${GAZEBO_LIBRARIES} ${PROJECT_LIB_ROBOT_NAME}
+  ${PROJECT_LIB_MSGS_NAME} gtest gtest_main)
+
+add_library(map_plugin SHARED map_plugin.cc)
+target_link_libraries(map_plugin
   ${GAZEBO_LIBRARIES} ${PROJECT_LIB_ROBOT_NAME}
   ${PROJECT_LIB_MSGS_NAME} gtest gtest_main)
