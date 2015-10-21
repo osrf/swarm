@@ -22,6 +22,8 @@
 #include <gazebo/common/CommonIface.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Time.hh>
+#include <gazebo/gazebo_config.h>
+#include <ignition/math/Rand.hh>
 #include "msgs/log_entry.pb.h"
 #include "msgs/log_header.pb.h"
 #include "swarm/config.hh"
@@ -68,7 +70,9 @@ Logger::Logger()
 
     // Fill the header.
     msgs::LogHeader header;
-    header.set_version(SWARM_HASH_VERSION);
+    header.set_swarm_version(SWARM_HASH_VERSION);
+    header.set_gazebo_version(GAZEBO_VERSION_FULL);
+    header.set_seed(ignition::math::Rand::Seed());
 
     // Write the length of the header to be serialized.
     int32_t size = header.ByteSize();

@@ -78,7 +78,8 @@ TEST(LoggerTest, Log)
   logEntry.Clear();
   LogParser logParser(filePath);
   EXPECT_TRUE(logParser.Header(header));
-  EXPECT_NE(header.version(), "unknown");
+  EXPECT_NE(header.swarm_version(), "unknown");
+  EXPECT_NE(header.gazebo_version(), "");
   EXPECT_TRUE(logParser.Next(logEntry));
   EXPECT_EQ(logEntry.id(), client1.id);
   logEntry.Clear();
