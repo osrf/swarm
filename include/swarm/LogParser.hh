@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include "msgs/log_entry.pb.h"
+#include "msgs/log_header.pb.h"
 
 #ifndef __SWARM_LOGPARSER_HH__
 #define __SWARM_LOGPARSER_HH__
@@ -49,8 +50,38 @@ namespace swarm
         return;
       }
 
+      // Read the header size.
+      int32_t size = 0;
+      if (!this->input.read(reinterpret_cast<char*>(&size), sizeof(size)))
+        return;
+
+      // Read the header.
+      std::vector<char> buffer;
+      buffer.resize(size);
+      this->input.read(reinterpret_cast<char*>(&buffer[0]), size);
+      if (!this->header.ParseFromArray(&buffer[0], size))
+      {
+        std::cerr << "Failed to parse header log file" << std::endl;
+        return;
+      }
+
       this->isOpen = true;
     };
+
+    /// \brief Get the header of the log file.
+    /// \param[out] _header Copy of the header.
+    /// \return True if the operation succeed or false otherwise. E.g.: The
+    /// file was not opened correctly.
+    public: bool Header(msgs::LogHeader &_header) const
+    {
+      if (!this->isOpen)
+      {
+        std::cerr << "The log file has not been opened properly" << std::endl;
+        return false;
+      }
+      _header.CopyFrom(this->header);
+      return true;
+    }
 
     /// \brief Get the next entry of the log.
     /// \param[out] _entry Next entry parsed from the log.
@@ -92,6 +123,9 @@ namespace swarm
 
     /// \brief Stream object to operate on a log file.
     private: std::fstream input;
+
+    /// \brief Log header.
+    private: msgs::LogHeader header;
   };
 }  // namespace
 #endif

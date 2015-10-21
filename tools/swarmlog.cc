@@ -20,6 +20,7 @@
 #include <boost/program_options.hpp>
 #include "swarm/LogParser.hh"
 #include "msgs/log_entry.pb.h"
+#include "msgs/log_header.pb.h"
 
 namespace po = boost::program_options;
 
@@ -98,6 +99,16 @@ int main(int argc, char **argv)
   swarm::LogParser parser(logfile);
   swarm::msgs::LogEntry logEntry;
   char c = '\0';
+
+
+  swarm::msgs::LogHeader header;
+  if (!parser.Header(header))
+  {
+    std::cerr << "Error the header from [" << logfile << "]" << std::endl;
+    return 1;
+  }
+
+  std::cout << header.DebugString() << std::endl;
 
   while (parser.Next(logEntry) && c != 'q')
   {
