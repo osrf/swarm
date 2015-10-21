@@ -36,7 +36,7 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
-    /// \brief Every test in test/integration/boo.cc has a unique number and
+    /// \brief Every test in test/integration/map.cc has a unique number and
     /// different expectations. We read this test number from the SDF to
     /// be able to know which test is executing.
     private: int testCase = -1;
