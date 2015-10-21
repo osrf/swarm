@@ -15,6 +15,7 @@
  *
 */
 
+#include <gazebo/gazebo_config.h>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -22,7 +23,6 @@
 #include <gazebo/common/CommonIface.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Time.hh>
-#include <gazebo/gazebo_config.h>
 #include <ignition/math/Rand.hh>
 #include "msgs/log_entry.pb.h"
 #include "msgs/log_header.pb.h"
