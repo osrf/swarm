@@ -1231,6 +1231,15 @@ void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
 bool RobotPlugin::MapQuery(const double _lat, const double _lon,
     double &_height, TerrainType &_type)
 {
+  // Check that the lat and lon is in the search area
+  if (_lat < this->searchMinLatitude  ||
+      _lat > this->searchMaxLatitude ||
+      _lon < this->searchMinLongitude ||
+      _lon > this->searchMaxLongitude)
+  {
+    return false;
+  }
+
   // Get the location in the local coordinate frame
   ignition::math::Vector3d local =
     this->world->GetSphericalCoordinates()->LocalFromSpherical(

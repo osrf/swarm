@@ -49,7 +49,9 @@ void MapPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   double height;
   RobotPlugin::TerrainType terrainType;
   this->Pose(lat, lon, alt);
-  this->MapQuery(lat, lon, height, terrainType);
+  EXPECT_TRUE(this->MapQuery(lat, lon, height, terrainType));
+  EXPECT_FALSE(this->MapQuery(lat+1, lon+1, height, terrainType));
+  EXPECT_FALSE(this->MapQuery(lat-1, lon-1, height, terrainType));
 
   switch (this->testCase)
   {
