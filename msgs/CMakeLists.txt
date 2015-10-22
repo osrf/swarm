@@ -1,4 +1,3 @@
-file(GLOB _gazebo_protos "${GAZEBO_PROTO_PATH}/*.proto")
 set(msgs
   datagram.proto
   log_entry.proto
@@ -42,23 +41,6 @@ foreach(FIL ${msgs})
     VERBATIM )
 endforeach()
 
-foreach(FIL ${_gazebo_protos})
-  get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
-  get_filename_component(FIL_WE ${FIL} NAME_WE)
-
-  list(APPEND PROTO_PY "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py")
-
-  add_custom_command(
-    OUTPUT
-      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py"
-    COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --python_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
-    DEPENDS ${ABS_FIL} ignmsgs_out
-    COMMENT "Running Python protocol buffer compiler on ${FIL}"
-    VERBATIM )
-endforeach()
-add_custom_target(gazebo_proto_pb ALL DEPENDS ${PROTO_PY})
-
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBUILDING_DLL_IGNITION_MSGS")
 
 set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRUE)
@@ -78,10 +60,34 @@ target_link_libraries(${PROJECT_LIB_MSGS_NAME} ${PROTOBUF_LIBRARY} ${PROTOBUF_PR
 ign_install_library(${PROJECT_LIB_MSGS_NAME})
 add_dependencies(${PROJECT_LIB_MSGS_NAME} ignmsgs_out)
 
+# Also compile the underlying Gazebo messages to produce Python code
+file(GLOB _gazebo_protos "${GAZEBO_PROTO_PATH}/*.proto")
+foreach(FIL ${_gazebo_protos})
+  get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
+  get_filename_component(FIL_WE ${FIL} NAME_WE)
+
+  list(APPEND PROTO_PY "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py")
+
+  add_custom_command(
+    OUTPUT
+      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py"
+    COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
+    ARGS --python_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
+    DEPENDS ${ABS_FIL}
+    COMMENT "Running Python protocol buffer compiler on ${FIL}"
+    VERBATIM )
+endforeach()
+add_custom_target(gazebo_proto_pb ALL DEPENDS ${PROTO_PY})
+
 # Install the generated protobuf messages.
 install(FILES ${PROTO_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/msgs)
 if(PYTHON_INSTALL_DIR)
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/__init__.py "")
+  # Create an __init__.py file to import all the messages
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/__init__.py "# Auto-generated")
+  foreach(_pyfile ${PROTO_PY})
+    get_filename_component(_module ${_pyfile} NAME_WE)
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/__init__.py "import ${_module}\n")
+  endforeach()
   message(STATUS "Installing Python message code to ${PYTHON_INSTALL_DIR}/swarm")
   install(FILES ${PROTO_PY} ${CMAKE_CURRENT_BINARY_DIR}/__init__.py DESTINATION ${PYTHON_INSTALL_DIR}/swarm)
 else()
