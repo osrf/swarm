@@ -17,9 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
 #include <sdf/sdf.hh>
-#include "swarm/BooPlugin.hh"
 #include "swarm/SwarmTypes.hh"
 #include "map_plugin.hh"
 

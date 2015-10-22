@@ -15,14 +15,9 @@
  *
 */
 
-#include <chrono>
-#include <string>
-#include <thread>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <ignition/math/Vector3.hh>
-#include "swarm/BooPlugin.hh"
-#include "swarm/SwarmTypes.hh"
 #include "test/test_config.h"
 
 class MapTest : public gazebo::ServerFixture

@@ -41,6 +41,7 @@ namespace swarm
     /// be able to know which test is executing.
     private: int testCase = -1;
 
+    /// \brief Number of server iterations executed.
     private: int iteration = 0;
   };
 }
