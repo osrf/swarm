@@ -70,6 +70,5 @@ void MapPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       EXPECT_NEAR(height, 658.507, 1e-3);
       EXPECT_EQ(terrainType, BUILDING);
       break;
-
   };
 }
