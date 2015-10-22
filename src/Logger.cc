@@ -15,6 +15,7 @@
  *
 */
 
+#include <gazebo/gazebo_config.h>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -22,7 +23,10 @@
 #include <gazebo/common/CommonIface.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Time.hh>
+#include <ignition/math/Rand.hh>
 #include "msgs/log_entry.pb.h"
+#include "msgs/log_header.pb.h"
+#include "swarm/config.hh"
 #include "swarm/Logger.hh"
 
 using namespace swarm;
@@ -43,6 +47,9 @@ Logger::Logger()
   {
     this->enabled = true;
 
+    gzmsg << "Logging enabled [" << this->logCompletePath.string()
+          << "]" << std::endl;
+
     // The base pathname for all the logs.
     const char *homePath = gazebo::common::getEnv("HOME");
     boost::filesystem::path logBasePath = boost::filesystem::path(homePath);
@@ -61,8 +68,22 @@ Logger::Logger()
     this->output.open(this->logCompletePath.string(),
       std::ios::out | std::ios::binary);
 
-    gzmsg << "Logging enabled [" << this->logCompletePath.string()
-          << "]" << std::endl;
+    // Fill the header.
+    msgs::LogHeader header;
+    header.set_swarm_version(SWARM_HASH_VERSION);
+    header.set_gazebo_version(GAZEBO_VERSION_FULL);
+    header.set_seed(ignition::math::Rand::Seed());
+
+    // Write the length of the header to be serialized.
+    int32_t size = header.ByteSize();
+    this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+    if (!header.SerializeToOstream(&this->output))
+    {
+      std::cerr << "Failed to write header into disk." << std::endl;
+      return;
+    }
+    this->output.flush();
   }
 }
 
@@ -136,14 +157,14 @@ void Logger::Update(const double _simTime)
   {
     // Write the length of the message to be serialized.
     int32_t size = logPair.second.ByteSize();
-    output.write(reinterpret_cast<char*>(&size), sizeof(size));
+    this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
 
-    if (!logPair.second.SerializeToOstream(&output))
+    if (!logPair.second.SerializeToOstream(&this->output))
     {
       std::cerr << "Failed to write log into disk." << std::endl;
       return;
     }
   }
 
-  output.flush();
+  this->output.flush();
 }
