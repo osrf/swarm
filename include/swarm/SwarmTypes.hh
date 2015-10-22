@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <gazebo/common/Time.hh>
+#include <gazebo/physics/PhysicsTypes.hh>
 
 namespace swarm
 {
