@@ -1,6 +1,7 @@
 set(msgs
   datagram.proto
   log_entry.proto
+  log_header.proto
 )
 
 add_executable(ignmsgs_out generator/IgnGenerator.cc generator/ign_generator.cc)

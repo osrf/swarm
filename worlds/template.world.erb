@@ -1,16 +1,4 @@
 <?xml version="1.0" ?>
-<%ground_count = 10%>
-<%fixed_count = 10%>
-<%rotor_count = 10%>
-<%camera_near = 0.1%>
-<%camera_far = 20%>
-<%camera_fov = 1.04719755%>
-<%camera_aspect_ratio = 1.778%>
-<%lost_person_x = 1000%>
-<%lost_person_y = 1000%>
-<%latitude_deg = 35.7753257%>
-<%longitude_deg = -120.774063%>
-<%elevation = 208%>
 
 <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
      So +/- 0.01 deg defines a ~2km X ~2km region. -->
@@ -66,11 +54,13 @@
                 nil, nil, "_sub01").result(binding)%>
 
     <!-- The terrain -->
-    <%= ERB.new(File.read('terrain_model_1.sdf.erb'),
-                nil, nil, "_sub01").result(binding)%>
+    <%= if !$terrain_file.empty?
+          ERB.new(File.read($terrain_file),
+                  nil, nil, "_sub01").result(binding)
+        end%>
 
     <!-- Create the ground vehicles  -->
-    <% for x in 0..ground_count %>
+    <% for x in 0..$ground_count %>
       <%name = "ground_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = 0%>
@@ -81,7 +71,7 @@
     <% end %>
 
     <!-- Create the rotor vehicles -->
-    <% for x in 0..rotor_count %>
+    <% for x in 0..$rotor_count %>
       <%name = "rotor_#{x}" %>
       <%launch_vehicle = "ground_#{x}"%>
       <%x_pos = x * 6%>
@@ -93,7 +83,7 @@
     <% end %>
 
     <!-- Create the fixed wing vehicles -->
-    <% for x in 0..fixed_count %>
+    <% for x in 0..$fixed_count %>
       <%name = "fixed_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = -4%>

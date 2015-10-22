@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 import struct, sys, functools
-from swarm import log_entry_pb2
+from swarm import log_entry_pb2, log_header_pb2
 
 # A simple class to read log files
 class LogReader:
     def __init__(self, logfile):
         self.logfile = logfile
         self.stream = open(fname, 'rb')
+        self.header = None
 
     # Get the next message
     def next(self):
@@ -19,17 +20,27 @@ class LogReader:
         size = struct.unpack('<I', sizestring)[0]
         msg = self.stream.read(size)
         # Make a protobuf message out of it
-        pbmsg = log_entry_pb2.LogEntry()
-        pbmsg.ParseFromString(msg)
+        # The first message in the log is a LogHeader; the rest are LogEntry
+        if not self.header:
+            pbmsg = log_header_pb2.LogHeader()
+            pbmsg.ParseFromString(msg)
+            self.header = pbmsg
+        else:
+            pbmsg = log_entry_pb2.LogEntry()
+            pbmsg.ParseFromString(msg)
         return pbmsg
 
     # Apply a given function to each message in the file
     def apply(self, func):
+        first = True
         while True:
             msg = self.next()
             if not msg:
                 break
-            func(msg)
+            # Only pass through LogEntry messages (e.g., skip LogHeader
+            # messages)
+            if type(msg) == log_entry_pb2.LogEntry:
+                func(msg)
 
 # An example of processing a single log entry
 def process_msg(entry):

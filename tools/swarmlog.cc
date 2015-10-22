@@ -16,10 +16,13 @@
 */
 #include <termios.h>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <boost/filesystem/operations.hpp>
 #include <boost/program_options.hpp>
 #include "swarm/LogParser.hh"
 #include "msgs/log_entry.pb.h"
+#include "msgs/log_header.pb.h"
 
 namespace po = boost::program_options;
 
@@ -31,6 +34,8 @@ void usage()
             << "Options:\n"
             << " -h, --help\tShow this help message.\n"
             << " -e, --echo\tOutput the content of a log file to screen.\n"
+            << " -i, --info\tOutput information about a log file. Log "
+            << "filename\n   \t\tshould be specified using the --file option.\n"
             << " -s, --step\tStep through the content of a log file.\n"
             << " -f, --file\tPath to a Swarm log file."
             << std::endl;
@@ -49,6 +54,24 @@ int getChar()
   return ch;
 }
 
+/////////////////////////////////////////////////
+std::string fileSizeStr(const boost::uintmax_t &_bytesize)
+{
+  std::ostringstream size;
+
+  // Generate a human friendly string
+  if (_bytesize < 1000)
+    size << _bytesize << " B";
+  else if (_bytesize < 1000000)
+    size << _bytesize / 1.0e3 << " KB";
+  else if (_bytesize < 1000000000)
+    size << _bytesize / 1.0e6 << " MB";
+  else
+    size << _bytesize / 1.0e9 << " GB";
+
+  return size.str();
+}
+
 //////////////////////////////////////////////////
 bool parseArguments(int argc, char **argv, po::variables_map &_vm)
 {
@@ -57,6 +80,8 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm)
   desc.add_options()
     ("help,h" , "Show this help message.")
     ("echo,e" , "Output the content of a log file to screen.")
+    ("info,i" , "Output information about a log file. Log filename "
+                "should be specified using the --file option.")
     ("step,s" , "Step through the content of a log file.")
     ("file,f" , po::value<std::string>()->required(),
          "Path to a Swarm log file.");
@@ -66,7 +91,8 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm)
     po::store(po::command_line_parser(argc, argv).options(desc).run(), _vm);
 
     // We require to specify echo or step.
-    if ((_vm.count("help")) || (!_vm.count("echo") && !_vm.count("step")))
+    if ((_vm.count("help")) ||
+        (!_vm.count("echo") && !_vm.count("info") && !_vm.count("step")))
       return false;
 
     po::notify(_vm);
@@ -98,6 +124,25 @@ int main(int argc, char **argv)
   swarm::LogParser parser(logfile);
   swarm::msgs::LogEntry logEntry;
   char c = '\0';
+
+  if (vm.count("info"))
+  {
+    swarm::msgs::LogHeader header;
+    if (!parser.Header(header))
+    {
+      std::cerr << "Error parsing header from [" << logfile << "]" << std::endl;
+      return 1;
+    }
+
+    std::cout << "Swarm Version:  " << header.swarm_version() << std::endl;
+    std::cout << "Gazebo Version: " << header.gazebo_version() << std::endl;
+    boost::filesystem::path p(logfile);
+    std::cout << "Random Seed:    " << header.seed() << std::endl;
+    auto fileSize = fileSizeStr(boost::filesystem::file_size(p));
+    std::cout << "Size:           " << fileSize << std::endl;
+    std::cout << std::endl;
+    return 0;
+  }
 
   while (parser.Next(logEntry) && c != 'q')
   {
