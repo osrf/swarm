@@ -54,6 +54,9 @@ namespace swarm
     /// \param[in] _sdf Pointer to the SDF element of the model.
     protected: virtual void Load(sdf::ElementPtr _sdf);
 
+    /// \brief Handle reset
+    protected: virtual void Reset() {}
+
     /// \brief Update the plugin. This function is called once every iteration.
     ///
     /// \param[in] _info Update information provided by the server.
