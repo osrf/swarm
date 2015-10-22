@@ -47,9 +47,21 @@ endif()
 execute_process(COMMAND python -c "import sys; print(\"%d.%d\"%(sys.version_info.major,sys.version_info.minor))"
                 RESULT_VARIABLE _python_result
                 OUTPUT_VARIABLE _python_stdout
+                ERROR_QUIET
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+SET(PYTHON_INSTALL_DIR "")
 if(NOT ${_python_result})
-  SET(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/python${_python_stdout}/dist-packages)
+  # Further check that we can import google.protobuf, which indicates that the
+  # python protobuf bindings are installed.
+  execute_process(COMMAND python -c "import google.protobuf"
+                  RESULT_VARIABLE _python_result
+                  ERROR_QUIET OUTPUT_QUIET)
+  if(NOT ${_python_result})
+    message(STATUS "Will build and install Python message bindings")
+    SET(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/python${_python_stdout}/dist-packages)
+  else()
+    message(STATUS "Couldn't load protobuf Python bindings (try `sudo apt-get install python-protobuf` ?)")
+  endif()
 else()
-  SET(PYTHON_INSTALL_DIR "")
+  message(STATUS "Couldn't find Python install location; will not install Python message code")
 endif()
