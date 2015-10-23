@@ -1,6 +1,7 @@
 set(msgs
   datagram.proto
   log_entry.proto
+  log_header.proto
 )
 
 add_executable(ignmsgs_out generator/IgnGenerator.cc generator/ign_generator.cc)
@@ -27,15 +28,17 @@ foreach(FIL ${msgs})
 
   list(APPEND PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc")
   list(APPEND PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h")
+  list(APPEND PROTO_PY "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py")
 
   add_custom_command(
     OUTPUT
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
+      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py"
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --plugin=protoc-gen-ignmsgs=${CMAKE_CURRENT_BINARY_DIR}/${ignmsgs_out_binary} --cpp_out=dllexport_decl=IGNITION_MSGS_VISIBLE:${CMAKE_CURRENT_BINARY_DIR} --ignmsgs_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
+    ARGS --plugin=protoc-gen-ignmsgs=${CMAKE_CURRENT_BINARY_DIR}/${ignmsgs_out_binary} --cpp_out=dllexport_decl=IGNITION_MSGS_VISIBLE:${CMAKE_CURRENT_BINARY_DIR} --python_out=${CMAKE_CURRENT_BINARY_DIR} --ignmsgs_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
     DEPENDS ${ABS_FIL} ignmsgs_out
-    COMMENT "Running C++ protocol buffer compiler on ${FIL}"
+    COMMENT "Running C++ and Python protocol buffer compiler on ${FIL}"
     VERBATIM )
 endforeach()
 
@@ -60,4 +63,36 @@ add_dependencies(${PROJECT_LIB_MSGS_NAME} ignmsgs_out)
 
 # Install the generated protobuf messages.
 install(FILES ${PROTO_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/msgs)
+
+# Also compile the underlying Gazebo messages to produce Python code
+if(PYTHON_INSTALL_DIR)
+  file(GLOB _gazebo_protos "${GAZEBO_PROTO_PATH}/*.proto")
+  foreach(FIL ${_gazebo_protos})
+    get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
+    get_filename_component(FIL_WE ${FIL} NAME_WE)
+  
+    list(APPEND PROTO_PY "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py")
+  
+    add_custom_command(
+      OUTPUT
+        "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}_pb2.py"
+      COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
+      ARGS --python_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_SOURCE_DIR} --proto_path ${GAZEBO_PROTO_PATH} ${ABS_FIL}
+      DEPENDS ${ABS_FIL}
+      COMMENT "Running Python protocol buffer compiler on ${FIL}"
+      VERBATIM )
+  endforeach()
+  add_custom_target(gazebo_proto_pb ALL DEPENDS ${PROTO_PY})
+
+  # Create an __init__.py file to import all the messages
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/__init__.py "# Auto-generated")
+  foreach(_pyfile ${PROTO_PY})
+    get_filename_component(_module ${_pyfile} NAME_WE)
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/__init__.py "import ${_module}\n")
+  endforeach()
+
+  # Install the resulting files
+  message(STATUS "Installing Python message code to ${PYTHON_INSTALL_DIR}/swarm")
+  install(FILES ${PROTO_PY} ${CMAKE_CURRENT_BINARY_DIR}/__init__.py DESTINATION ${PYTHON_INSTALL_DIR}/swarm)
+endif()
 

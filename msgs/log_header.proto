@@ -1,0 +1,17 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface LogHeader
+/// \brief The header of a log file.
+
+message LogHeader
+{
+  /// \brief Swarm version used during logging.
+  required string swarm_version = 1;
+
+  /// \brief Gazebo version used during logging.
+  required string gazebo_version = 2;
+
+  /// \brief Seed used during logging.
+  required uint32 seed           = 3;
+}

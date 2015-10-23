@@ -1235,6 +1235,59 @@ void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
 }
 
 //////////////////////////////////////////////////
+bool RobotPlugin::MapQuery(const double _lat, const double _lon,
+    double &_height, TerrainType &_type)
+{
+  // Check that the lat and lon is in the search area
+  if (_lat < this->searchMinLatitude  ||
+      _lat > this->searchMaxLatitude ||
+      _lon < this->searchMinLongitude ||
+      _lon > this->searchMaxLongitude)
+  {
+    return false;
+  }
+
+  // Get the location in the local coordinate frame
+  ignition::math::Vector3d local =
+    this->world->GetSphericalCoordinates()->LocalFromSpherical(
+        ignition::math::Vector3d(_lat, _lon, 0));
+
+  local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
+
+  ignition::math::Vector3d pos, norm;
+
+  // Reuse the terrain lookup function.
+  this->TerrainLookup(local, pos, norm);
+
+  // Add in the reference elevation.
+  _height = pos.Z() +
+    this->world->GetSphericalCoordinates()->GetElevationReference();
+  local.Z(pos.Z());
+
+  _type = PLAIN;
+
+  for (auto const &mdl : this->world->GetModels())
+  {
+    if (mdl->GetBoundingBox().Contains(local))
+    {
+      if (mdl->GetName().find("tree") != std::string::npos)
+      {
+        _type = FOREST;
+        break;
+      }
+      else if (mdl->GetName().find("building") != std::string::npos)
+      {
+        _type = BUILDING;
+        break;
+      }
+    }
+  }
+
+  return true;
+}
+
+
+//////////////////////////////////////////////////
 void RobotPlugin::Reset()
 {
   // Set velocity to zero
