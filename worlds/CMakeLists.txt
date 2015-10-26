@@ -12,8 +12,13 @@ set (other_erb_files
   ground_vehicle.sdf.erb
   lost_person_simple.sdf.erb
   rotor_vehicle.sdf.erb
+  terrain_camp_roberts.sdf.erb
   terrain_model_1.sdf.erb
   template.world.erb
+  vegetation_01.sdf.erb
+  vegetation_camp_roberts_low.sdf.erb
+  vegetation_camp_roberts_med.sdf.erb
+  vegetation_camp_roberts_high.sdf.erb
 )
 
 # World files that need to be processed with erb

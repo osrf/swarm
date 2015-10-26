@@ -51,7 +51,7 @@
 <% for y in 0..1 %>
   <% for x in 0..8 %>
     <model name="building_group1_<%=y*8 + x%>">
-    <pose><%=0 - x * 170%> <%=1535 + 400*y%> 452 0 0 0</pose>
+    <pose><%=0 - x * 170%> <%=1535 + 400*y%> 160 0 0 0</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">
@@ -81,7 +81,7 @@
 <% for y in 0..1 %>
   <% for x in 0..8 %>
     <model name="building_group2_<%=y*10 + x%>">
-    <pose><%=1800 + x * 170%> <%=-1030 - 400*y%> 330 0 0 0</pose>
+    <pose><%=1800 + x * 170%> <%=-1030 - 400*y%> 160 0 0 0</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">

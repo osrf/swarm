@@ -42,30 +42,45 @@ end
 
 # complete.world
 def complete()
+  # Load default parameters.
+  default()
+
   $terrain_file = 'terrain_model_1.sdf.erb'
   $vegetation_file = 'vegetation_01.sdf.erb'
 end
 
 # final_01.world
 def final_01()
+  # Load default parameters.
+  default()
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
 end
 
 # final_02.world
 def final_02()
+  # Load default parameters.
+  default()
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
 end
 
 # final_03.world
 def final_03()
+  # Load default parameters.
+  default()
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
 
 # final_04.world
 def final_04()
+  # Load default parameters.
+  default()
+
   # Search area (10km x 10km)
   $min_relative_latitude_deg = -0.05
   $max_relative_latitude_deg = 0.05
@@ -78,6 +93,9 @@ end
 
 # final_05.world
 def final_05()
+  # Load default parameters.
+  default()
+
   # Search area (10km x 10km)
   $min_relative_latitude_deg = -0.05
   $max_relative_latitude_deg = 0.05
@@ -90,6 +108,9 @@ end
 
 # final_06.world
 def final_06()
+  # Load default parameters.
+  default()
+
   # Search area (10km x 10km)
   $min_relative_latitude_deg = -0.05
   $max_relative_latitude_deg = 0.05
@@ -102,6 +123,9 @@ end
 
 # final_07.world
 def final_07()
+  # Load default parameters.
+  default()
+
   # Search area (20km x 20km)
   $min_relative_latitude_deg = -0.1
   $max_relative_latitude_deg = 0.1
@@ -114,6 +138,9 @@ end
 
 # final_08.world
 def final_08()
+  # Load default parameters.
+  default()
+
   # Search area (20km x 20km)
   $min_relative_latitude_deg = -0.1
   $max_relative_latitude_deg = 0.1
@@ -126,6 +153,9 @@ end
 
 # final_09.world
 def final_09()
+  # Load default parameters.
+  default()
+
   # Search area (20km x 20km)
   $min_relative_latitude_deg = -0.1
   $max_relative_latitude_deg = 0.1
@@ -172,9 +202,6 @@ def generate_worlds(_world_file)
   h["final_07.world"] = method(:final_07)
   h["final_08.world"] = method(:final_08)
   h["final_09.world"] = method(:final_09)
-
-  # Load default parameters.
-  default()
 
   f = h[_world_file]
   f.call
