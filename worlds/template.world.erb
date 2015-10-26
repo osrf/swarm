@@ -66,7 +66,7 @@
         end%>
 
     <!-- Create the ground vehicles  -->
-    <% for x in 0..$ground_count %>
+    <% for x in 0..$ground_count-1 %>
       <%name = "ground_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = 0%>
@@ -77,7 +77,7 @@
     <% end %>
 
     <!-- Create the rotor vehicles -->
-    <% for x in 0..$rotor_count %>
+    <% for x in 0..$rotor_count-1 %>
       <%name = "rotor_#{x}" %>
       <%launch_vehicle = "ground_#{x}"%>
       <%x_pos = x * 6%>
@@ -89,7 +89,7 @@
     <% end %>
 
     <!-- Create the fixed wing vehicles -->
-    <% for x in 0..$fixed_count %>
+    <% for x in 0..$fixed_count-1 %>
       <%name = "fixed_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = -4%>

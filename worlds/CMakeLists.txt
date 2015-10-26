@@ -35,6 +35,13 @@ set (world_erb_files
 
 set (master_erb_file master.erb)
 
+# Number of robots per type for each world file.
+set (_robot_members
+  10
+  25
+  50
+)
+
 # World files that are automatically generated based on master.erb
 set (generated_master_world_files
   complete.world
@@ -64,13 +71,17 @@ add_custom_target(erb_generation ALL DEPENDS ${world_files})
 
 # Process the master.erb
 foreach(_world ${generated_master_world_files})
-  set(_target_world ${CMAKE_CURRENT_BINARY_DIR}/${_world})
-  add_custom_command(OUTPUT ${_target_world}
-                     COMMAND erb_gazebo_world_file=${_world} ${ERB_EXE_PATH} ${master_erb_file}  > ${_target_world}
-                     DEPENDS ${master_erb_file} ${other_erb_files}
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  foreach(_num_robots ${_robot_members})
+    string(REGEX REPLACE ".world" "_${_num_robots}.world" world ${_world})
+    MESSAGE(STATUS "Processing world: ${world}")
+    set(_target_world ${CMAKE_CURRENT_BINARY_DIR}/${world})
+    add_custom_command(OUTPUT ${_target_world}
+                       COMMAND erb_gazebo_world_file=${_world} erb_num_robots=${_num_robots} ${ERB_EXE_PATH} ${master_erb_file}  > ${_target_world}
+                       DEPENDS ${master_erb_file} ${other_erb_files}
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-  list(APPEND world_files ${_target_world})
+    list(APPEND world_files ${_target_world})
+  endforeach()
 endforeach()
 add_custom_target(erb_master_generation ALL DEPENDS ${world_files})
 

@@ -2,15 +2,22 @@
 <%
 # Default parameters.
 def default()
-  $ground_count = 10
-  $fixed_count = 10
-  $rotor_count = 10
+
+  $num_robots = 10
+  if !ENV['erb_num_robots'].nil?
+    $num_robots = ENV['erb_num_robots'].to_i
+  end
+
+  $ground_count = $num_robots
+  $fixed_count = $num_robots
+  $rotor_count = $num_robots
+
   $camera_near = 0.1
   $camera_far = 20
   $camera_fov = 1.04719755
   $camera_aspect_ratio = 1.778
-  $lost_person_x = 1000
-  $lost_person_y = 1000
+  $lost_person_x = 750
+  $lost_person_y = 750
   $latitude_deg = 35.7753257
   $longitude_deg = -120.774063
   $elevation = 208
@@ -87,6 +94,9 @@ def final_04()
   $min_relative_longitude_deg = -0.05
   $max_relative_longitude_deg = 0.05
 
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
 end
@@ -101,6 +111,9 @@ def final_05()
   $max_relative_latitude_deg = 0.05
   $min_relative_longitude_deg = -0.05
   $max_relative_longitude_deg = 0.05
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
@@ -117,6 +130,9 @@ def final_06()
   $min_relative_longitude_deg = -0.05
   $max_relative_longitude_deg = 0.05
 
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
@@ -131,6 +147,9 @@ def final_07()
   $max_relative_latitude_deg = 0.1
   $min_relative_longitude_deg = -0.1
   $max_relative_longitude_deg = 0.1
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
@@ -147,6 +166,9 @@ def final_08()
   $min_relative_longitude_deg = -0.1
   $max_relative_longitude_deg = 0.1
 
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
 end
@@ -161,6 +183,9 @@ def final_09()
   $max_relative_latitude_deg = 0.1
   $min_relative_longitude_deg = -0.1
   $max_relative_longitude_deg = 0.1
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
@@ -212,5 +237,5 @@ end
 
 <%=
 # We use an environment variable for specifying the world file to generate.
-generate_worlds( ENV['erb_gazebo_world_file'] )
+generate_worlds( ENV['erb_gazebo_world_file'])
 %>
