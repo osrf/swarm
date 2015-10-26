@@ -14,7 +14,16 @@ def default()
   $latitude_deg = 35.7753257
   $longitude_deg = -120.774063
   $elevation = 208
+
+  # Search area (2km x 2km)
+  $min_relative_latitude_deg = -0.01
+  $max_relative_latitude_deg = 0.01
+  $min_relative_longitude_deg = -0.01
+  $max_relative_longitude_deg = 0.01
+
+  # Terrain and environment
   $terrain_file = ''
+  $vegetation_file = ''
 
   # Comms model parameters
   $neighbor_distance_min = 0.0
@@ -34,6 +43,97 @@ end
 # complete.world
 def complete()
   $terrain_file = 'terrain_model_1.sdf.erb'
+  $vegetation_file = 'vegetation_01.sdf.erb'
+end
+
+# final_01.world
+def final_01()
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_02.world
+def final_02()
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_03.world
+def final_03()
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+end
+
+# final_04.world
+def final_04()
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_05.world
+def final_05()
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_06.world
+def final_06()
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+end
+
+# final_07.world
+def final_07()
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_08.world
+def final_08()
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_09.world
+def final_09()
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
 
 # How to a new world file:
@@ -63,6 +163,15 @@ def generate_worlds(_world_file)
 
   h = Hash.new
   h["complete.world"] = method(:complete)
+  h["final_01.world"] = method(:final_01)
+  h["final_02.world"] = method(:final_02)
+  h["final_03.world"] = method(:final_03)
+  h["final_04.world"] = method(:final_04)
+  h["final_05.world"] = method(:final_05)
+  h["final_06.world"] = method(:final_06)
+  h["final_07.world"] = method(:final_07)
+  h["final_08.world"] = method(:final_08)
+  h["final_09.world"] = method(:final_09)
 
   # Load default parameters.
   default()

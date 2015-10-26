@@ -1,5 +1,6 @@
 set (terrains
   swarm_terrain_257_random.png
+  swarm_terrain_camp_roberts.png
 )
 
 install(FILES ${terrains}

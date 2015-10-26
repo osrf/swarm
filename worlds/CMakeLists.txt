@@ -33,6 +33,15 @@ set (master_erb_file master.erb)
 # World files that are automatically generated based on master.erb
 set (generated_master_world_files
   complete.world
+  final_01.world
+  final_02.world
+  final_03.world
+  final_04.world
+  final_05.world
+  final_06.world
+  final_07.world
+  final_08.world
+  final_09.world
 )
 
 # Process the erb files
