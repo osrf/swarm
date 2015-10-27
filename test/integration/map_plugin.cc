@@ -47,28 +47,28 @@ void MapPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 
   double lat, lon, alt;
   double height;
-  RobotPlugin::TerrainType terrainType;
+  RobotPlugin::TerrainType tType;
   this->Pose(lat, lon, alt);
-  EXPECT_TRUE(this->MapQuery(lat, lon, height, terrainType));
-  EXPECT_FALSE(this->MapQuery(lat+1, lon+1, height, terrainType));
-  EXPECT_FALSE(this->MapQuery(lat-1, lon-1, height, terrainType));
+  EXPECT_TRUE(this->MapQuery(lat, lon, height, tType));
+  EXPECT_FALSE(this->MapQuery(lat+1, lon+1, height, tType));
+  EXPECT_FALSE(this->MapQuery(lat-1, lon-1, height, tType));
 
   switch (this->testCase)
   {
     default:
     case 0:
       EXPECT_NEAR(height, 993.365, 1e-3);
-      EXPECT_EQ(terrainType, PLAIN);
+      EXPECT_EQ(tType, PLAIN);
       break;
 
     case 1:
       EXPECT_NEAR(height, 932.8344, 1e-3);
-      EXPECT_EQ(terrainType, FOREST);
+      EXPECT_EQ(tType, FOREST);
       break;
 
     case 2:
       EXPECT_NEAR(height, 658.507, 1e-3);
-      EXPECT_EQ(terrainType, BUILDING);
+      EXPECT_EQ(tType, BUILDING);
       break;
   };
 }

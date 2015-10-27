@@ -232,6 +232,7 @@ void RobotPlugin::UpdateLinearVelocity()
 
   ignition::math::Vector3d linearVel;
   double limitFactor = 1.0;
+  double maxLinearVel = 0.0;
 
   switch (this->type)
   {
@@ -242,7 +243,10 @@ void RobotPlugin::UpdateLinearVelocity()
         linearVel = myPose.Rot().RotateVector(
             this->targetLinVel * ignition::math::Vector3d::UnitX);
 
-        limitFactor = linearVel.Length() / this->groundMaxLinearVel;
+        maxLinearVel = this->groundMaxLinearVel -
+          (this->terrainType != RobotPlugin::PLAIN ?
+          this->groundMaxLinearVel * 0.50 : 0);
+
         break;
       }
     case RobotPlugin::ROTOR:
@@ -250,7 +254,10 @@ void RobotPlugin::UpdateLinearVelocity()
         // Get linear velocity in world frame
         linearVel = myPose.Rot().RotateVector(this->targetLinVel);
 
-        limitFactor = linearVel.Length() / this->rotorMaxLinearVel;
+        maxLinearVel = this->rotorMaxLinearVel -
+          (this->terrainType != RobotPlugin::PLAIN ?
+          this->rotorMaxLinearVel * 0.25 : 0);
+
         break;
       }
     case RobotPlugin::FIXED_WING:
@@ -259,12 +266,16 @@ void RobotPlugin::UpdateLinearVelocity()
         linearVel = myPose.Rot().RotateVector(
             this->targetLinVel * ignition::math::Vector3d::UnitX);
 
-        limitFactor = linearVel.Length() / this->fixedMaxLinearVel;
+        maxLinearVel = this->fixedMaxLinearVel -
+          (this->terrainType != RobotPlugin::PLAIN ?
+          this->fixedMaxLinearVel * 0.75 : 0);
+
         break;
       }
   };
 
   // Clamp the linear velocity
+  limitFactor = linearVel.Length() / maxLinearVel;
   linearVel = linearVel /
     ignition::math::clamp(limitFactor, 1.0, limitFactor);
 
@@ -464,6 +475,9 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  // Get current terrain type
+  this->terrainType = this->TerrainAtPos(this->model->GetWorldPose().pos.Ign());
+
   // Update the state of the battery
   this->UpdateBattery();
 
@@ -1264,28 +1278,42 @@ bool RobotPlugin::MapQuery(const double _lat, const double _lon,
     this->world->GetSphericalCoordinates()->GetElevationReference();
   local.Z(pos.Z());
 
-  _type = PLAIN;
+  _type = this->TerrainAtPos(local);
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
+    const ignition::math::Vector3d &_pos)
+{
+  TerrainType result = PLAIN;
 
   for (auto const &mdl : this->world->GetModels())
   {
-    if (mdl->GetBoundingBox().Contains(local))
+    if (mdl->GetBoundingBox().Contains(_pos))
     {
       if (mdl->GetName().find("tree") != std::string::npos)
       {
-        _type = FOREST;
+        result = FOREST;
         break;
       }
       else if (mdl->GetName().find("building") != std::string::npos)
       {
-        _type = BUILDING;
+        result = BUILDING;
         break;
       }
     }
   }
 
-  return true;
+  return result;
 }
 
+/////////////////////////////////////////////////
+RobotPlugin::TerrainType RobotPlugin::Terrain() const
+{
+  return this->terrainType;
+}
 
 //////////////////////////////////////////////////
 void RobotPlugin::Reset()
