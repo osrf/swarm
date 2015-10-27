@@ -14,14 +14,14 @@ def default()
   # Camera with 20mm focal length projected onto 35mm film has a field
   # of view of 1.4656 radians (~84 degrees).
   $camera_near_rotor = 0.1
-  $camera_far_rotor = 50 
+  $camera_far_rotor = 50
   $camera_fov_rotor = 1.4656
   $camera_aspect_ratio_rotor = 1.778
 
   # Camera with 50mm focal length projected onto 35mm film has a field
   # of view of 0.6911 radians (~40 degrees).
   $camera_near_ground = 0.1
-  $camera_far_ground = 100 
+  $camera_far_ground = 100
   $camera_fov_ground = 0.6911
   $camera_aspect_ratio_ground = 1.778
 
@@ -72,8 +72,8 @@ def complete()
   $vegetation_file = 'vegetation_01.sdf.erb'
 end
 
-# final_01.world
-def final_01()
+# final_01_02_low.world
+def final_01_02_low()
   # Load default parameters.
   default()
 
@@ -81,8 +81,8 @@ def final_01()
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
 end
 
-# final_02.world
-def final_02()
+# final_01_02_medium.world
+def final_01_02_medium()
   # Load default parameters.
   default()
 
@@ -90,8 +90,8 @@ def final_02()
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
 end
 
-# final_03.world
-def final_03()
+# final_01_02_high.world
+def final_01_02_high()
   # Load default parameters.
   default()
 
@@ -99,8 +99,8 @@ def final_03()
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
 
-# final_04.world
-def final_04()
+# final_01_10_low.world
+def final_01_10_low()
   # Load default parameters.
   default()
 
@@ -117,8 +117,8 @@ def final_04()
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
 end
 
-# final_05.world
-def final_05()
+# final_01_10_medium.world
+def final_01_10_medium()
   # Load default parameters.
   default()
 
@@ -135,8 +135,8 @@ def final_05()
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
 end
 
-# final_06.world
-def final_06()
+# final_01_10_high.world
+def final_01_10_high()
   # Load default parameters.
   default()
 
@@ -153,8 +153,8 @@ def final_06()
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
 
-# final_07.world
-def final_07()
+# final_01_25_low.world
+def final_01_25_low()
   # Load default parameters.
   default()
 
@@ -171,8 +171,8 @@ def final_07()
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
 end
 
-# final_08.world
-def final_08()
+# final_01_25_medium.world
+def final_01_25_medium()
   # Load default parameters.
   default()
 
@@ -189,8 +189,8 @@ def final_08()
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
 end
 
-# final_09.world
-def final_09()
+# final_01_25_high.world
+def final_01_25_high()
   # Load default parameters.
   default()
 
@@ -226,6 +226,9 @@ end
 #         complete.world
 #         <YOUR_NEW_WORLD_FILE>
 #       )
+#
+# We follow the next naming convention:
+#   final_<terrain_index>_<search_area>_<vegetation>_<num_vehicles>.world
 
 # Generate a Gazebo world file.
 # Params:
@@ -234,15 +237,15 @@ def generate_worlds(_world_file)
 
   h = Hash.new
   h["complete.world"] = method(:complete)
-  h["final_01.world"] = method(:final_01)
-  h["final_02.world"] = method(:final_02)
-  h["final_03.world"] = method(:final_03)
-  h["final_04.world"] = method(:final_04)
-  h["final_05.world"] = method(:final_05)
-  h["final_06.world"] = method(:final_06)
-  h["final_07.world"] = method(:final_07)
-  h["final_08.world"] = method(:final_08)
-  h["final_09.world"] = method(:final_09)
+  h["final_01_02_low.world"] = method(:final_01_02_low)
+  h["final_01_02_medium.world"] = method(:final_01_02_medium)
+  h["final_01_02_high.world"] = method(:final_01_02_high)
+  h["final_01_10_low.world"] = method(:final_01_10_low)
+  h["final_01_10_medium.world"] = method(:final_01_10_medium)
+  h["final_01_10_high.world"] = method(:final_01_10_high)
+  h["final_01_25_low.world"] = method(:final_01_25_low)
+  h["final_01_25_medium.world"] = method(:final_01_25_medium)
+  h["final_01_25_high.world"] = method(:final_01_25_high)
 
   f = h[_world_file]
   f.call
