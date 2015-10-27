@@ -124,3 +124,10 @@ bool Broker::Unregister(const std::string &_id)
 
   return true;
 }
+
+//////////////////////////////////////////////////
+void Broker::Reset()
+{
+  this->incomingMsgs.clear();
+  this->endpoints.clear();
+}
