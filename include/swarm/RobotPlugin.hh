@@ -37,6 +37,7 @@
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Quaternion.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/math/Vector2.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
@@ -97,6 +98,7 @@ namespace swarm
   ///     - SetCameraOrientation() Set the pan(yaw)/tilt(pitch) of
   ///       the camera.
   ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
+  ///     - LostPersonDir() Get the direction from the BOO to the lost person.
   ///
   ///  * Battery
   ///     Each vehicle begins with a starting battery capacity. This
@@ -490,6 +492,16 @@ namespace swarm
     /// \sa Launch
     protected: bool IsDocked() const;
 
+    /// \brief Get the direction from the BOO to the lost person at the
+    /// start of simulation. Each component (x, y) of the result is
+    /// rounded to fall on one of: -1.0, -0.5, 0, 0.5, 1.0.
+    ///
+    /// \return 2D direction vector from base of operation to the lost
+    /// person. The direction is computed once at simulation start. If
+    /// the simulation environment has no BOO or lost_person, a value of
+    /// 0,0 is returned.
+    protected: ignition::math::Vector2d LostPersonDir() const;
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -752,6 +764,10 @@ namespace swarm
 
     /// \brief The ground vehicle that the rotorcraft is docked to.
     private: gazebo::physics::ModelPtr rotorDockVehicle;
+
+    /// \brief Initial vector from boo to lost person. This acts as
+    /// prior knowledge about where the lost person starts.
+    private: ignition::math::Vector2d lostPersonInitDir;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
