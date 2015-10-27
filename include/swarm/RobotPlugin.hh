@@ -794,7 +794,7 @@ namespace swarm
     private: gazebo::physics::ModelPtr rotorDockVehicle;
 
     /// \brief Current terrain type for this vehicle.
-    private: TerrainType terrainType;
+    private: TerrainType terrainType = PLAIN;
 
     /// \brief The vehicle which a rotor is initially docked to.
     private: gazebo::physics::ModelPtr rotorStartingDockVehicle;
