@@ -98,6 +98,7 @@ namespace swarm
   ///     - SetCameraOrientation() Set the pan(yaw)/tilt(pitch) of
   ///       the camera.
   ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
+  ///     - Terrain() Get the terrain type at this vehicle's location.
   ///
   ///  * Battery
   ///     Each vehicle begins with a starting battery capacity. This
@@ -516,6 +517,16 @@ namespace swarm
     /// \sa Launch
     protected: bool IsDocked() const;
 
+    /// \brief Get the terrain type at this vehicle's location.
+    /// \return Type of terrain at this vehicle's location.
+    protected: TerrainType Terrain() const;
+
+    /// \brief Helper function to get a terrain type at a position in
+    /// Gazebo's world coordinate frame.
+    /// \param[in] _pos Position to query.
+    /// \return Type of terrain at the location.
+    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -778,6 +789,9 @@ namespace swarm
 
     /// \brief The ground vehicle that the rotorcraft is docked to.
     private: gazebo::physics::ModelPtr rotorDockVehicle;
+
+    /// \brief Current terrain type for this vehicle.
+    private: TerrainType terrainType;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
