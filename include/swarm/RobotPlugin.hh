@@ -99,6 +99,7 @@ namespace swarm
   ///     - SetCameraOrientation() Set the pan(yaw)/tilt(pitch) of
   ///       the camera.
   ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
+  ///     - Terrain() Get the terrain type at this vehicle's location.
   ///     - LostPersonDir() Get the direction from the BOO to the lost person.
   ///
   ///  * Battery
@@ -521,6 +522,16 @@ namespace swarm
     /// \sa Launch
     protected: bool IsDocked() const;
 
+    /// \brief Get the terrain type at this vehicle's location.
+    /// \return Type of terrain at this vehicle's location.
+    protected: TerrainType Terrain() const;
+
+    /// \brief Helper function to get a terrain type at a position in
+    /// Gazebo's world coordinate frame.
+    /// \param[in] _pos Position to query.
+    /// \return Type of terrain at the location.
+    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
+
     /// \brief Get the direction from the BOO to the lost person at the
     /// start of simulation. Each component (x, y) of the result is
     /// rounded to fall on one of: -1.0, -0.5, 0, 0.5, 1.0.
@@ -793,6 +804,9 @@ namespace swarm
 
     /// \brief The ground vehicle that the rotorcraft is docked to.
     private: gazebo::physics::ModelPtr rotorDockVehicle;
+
+    /// \brief Current terrain type for this vehicle.
+    private: TerrainType terrainType = PLAIN;
 
     /// \brief Initial vector from boo to lost person. This acts as
     /// prior knowledge about where the lost person starts.
