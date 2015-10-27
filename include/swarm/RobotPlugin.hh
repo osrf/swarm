@@ -162,6 +162,9 @@ namespace swarm
     /// \param[in] _sdf Pointer to the SDF element of the model.
     protected: virtual void Load(sdf::ElementPtr _sdf);
 
+    /// \brief Handle simulation reset.
+    protected: virtual void Reset();
+
     /// \brief Update the plugin. This function is called once every
     /// iteration.
     ///
@@ -792,6 +795,15 @@ namespace swarm
 
     /// \brief Current terrain type for this vehicle.
     private: TerrainType terrainType;
+
+    /// \brief The vehicle which a rotor is initially docked to.
+    private: gazebo::physics::ModelPtr rotorStartingDockVehicle;
+
+    /// \brief Camera start pitch
+    private: double cameraStartPitch = 0.0;
+
+    /// \brief Camera start yaw
+    private: double cameraStartYaw = 0.0;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

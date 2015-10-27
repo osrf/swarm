@@ -801,6 +801,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     this->rotorDockVehicle = this->world->GetModel(
         _sdf->Get<std::string>("launch_vehicle"));
+    this->rotorStartingDockVehicle = this->rotorDockVehicle;
 
     if (!this->rotorDockVehicle)
     {
@@ -848,6 +849,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&RobotPlugin::Loop, this, std::placeholders::_1));
+
+  // Get starting camera pitch and yaw.
+  this->CameraOrientation(this->cameraStartPitch, this->cameraStartYaw);
 }
 
 //////////////////////////////////////////////////
@@ -1235,10 +1239,13 @@ void RobotPlugin::SetCameraOrientation(const double _pitch, const double _yaw)
 //////////////////////////////////////////////////
 void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
 {
-  // Return the pitch and yaw of the camera
-  ignition::math::Vector3d camEuler = this->camera->Pose().Rot().Euler();
-  _pitch = camEuler.Y();
-  _yaw = camEuler.Z();
+  if (this->camera)
+  {
+    // Return the pitch and yaw of the camera
+    ignition::math::Vector3d camEuler = this->camera->Pose().Rot().Euler();
+    _pitch = camEuler.Y();
+    _yaw = camEuler.Z();
+  }
 }
 
 //////////////////////////////////////////////////
@@ -1306,4 +1313,31 @@ RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
 RobotPlugin::TerrainType RobotPlugin::Terrain() const
 {
   return this->terrainType;
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::Reset()
+{
+  // Set velocity to zero
+  this->SetLinearVelocity(0, 0, 0);
+  this->SetAngularVelocity(0, 0, 0);
+
+  // Make sure rotor vehicle is docked.
+  if (this->type == ROTOR)
+  {
+    if (this->rotorStartingDockVehicle)
+    {
+      this->rotorDockVehicle = this->rotorStartingDockVehicle;
+      this->rotorDocked = true;
+      this->model->SetWorldPose(this->rotorDockVehicle->GetWorldPose());
+    }
+    else
+      this->rotorDocked = false;
+  }
+
+  // Reset battery
+  this->capacity = this->startCapacity;
+
+  // Set camera starting pitch and yaw
+  this->SetCameraOrientation(this->cameraStartPitch, this->cameraStartYaw);
 }

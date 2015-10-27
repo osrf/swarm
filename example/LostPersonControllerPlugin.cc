@@ -46,3 +46,9 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   // Apply a linear velocity to the model
   this->model->SetLinearVel(ignition::math::Vector3d(this->speed, 0, 0));
 }
+
+//////////////////////////////////////////////////
+void LostPersonControllerPlugin::Reset()
+{
+  // Add code to handle simulation reset.
+}

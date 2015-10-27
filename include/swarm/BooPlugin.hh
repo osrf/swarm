@@ -69,6 +69,9 @@ namespace swarm
     private: virtual void Load(gazebo::physics::ModelPtr _model,
                                sdf::ElementPtr _sdf);
 
+    /// \brief Handle reset
+    private: virtual void Reset();
+
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
     /// \param[in] _dstAddress Destination address of the message.

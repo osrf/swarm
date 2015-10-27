@@ -81,6 +81,9 @@ namespace swarm
     /// \param[in] _simTime Current simulation time.
     public: void Update(const double _simTime);
 
+    /// \brief Handle reset
+    public: void Reset();
+
     /// \brief Register a new client for logging.
     /// \param[in] _id Unique ID of the client.
     /// \param[in] _client Pointer to the client.
@@ -93,11 +96,14 @@ namespace swarm
     /// no client registered for this ID).
     public: bool Unregister(const std::string &_id);
 
+    /// \brief Create the log file
+    private: void CreateLogFile();
+
     /// \brief Constructor.
-    protected: Logger();
+    private: Logger();
 
     /// \brief Destructor.
-    protected: virtual ~Logger() = default;
+    private: virtual ~Logger() = default;
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.

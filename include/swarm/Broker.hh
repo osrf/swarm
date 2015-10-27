@@ -112,6 +112,9 @@ namespace swarm
     /// no client registered for this ID).
     public: bool Unregister(const std::string &_id);
 
+    /// \brief Handle reset.
+    public: void Reset();
+
     /// \brief Constructor.
     protected: Broker() = default;
 
