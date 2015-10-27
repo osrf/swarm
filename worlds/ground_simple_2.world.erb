@@ -9,6 +9,20 @@
 <%longitude_deg = -120.774063%>
 <%elevation = 208%>
 
+<!-- Comms model parameters -->
+<%neighbor_distance_min = 0.0%>
+<%neighbor_distance_max = 250.0%>
+<%neighbor_distance_penalty_tree = 200.0%>
+<%comms_distance_min = 0.0%>
+<%comms_distance_max = 250.0%>
+<%comms_distance_penalty_tree = 200.0%>
+<%comms_drop_probability_min = 0.0%>
+<%comms_drop_probability_max = 0.05%>
+<%comms_outage_probability = 0.1%>
+<%comms_outage_duration_min = 1.0%>
+<%comms_outage_duration_max = 2.0%>
+<%comms_data_rate_max = 54000000%>
+
 <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
      So +/- 0.01 deg defines a ~2km X ~2km region. -->
 <% search_area = '''<swarm_search_area>

@@ -32,6 +32,9 @@ set (world_erb_files
   comms_12.world.erb
   logical_camera_00.world.erb
   logical_camera_01.world.erb
+  map_00.world.erb
+  map_01.world.erb
+  map_02.world.erb
 )
 
 # Process the erb files
