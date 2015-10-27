@@ -69,6 +69,9 @@ namespace swarm
     private: virtual void Load(gazebo::physics::ModelPtr _model,
                                sdf::ElementPtr _sdf);
 
+    /// \brief Handle reset
+    private: virtual void Reset();
+
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
     /// \param[in] _dstAddress Destination address of the message.
@@ -117,7 +120,7 @@ namespace swarm
 
     /// \brief Maximum time difference allowed (seconds) between the current
     /// time and the reported lost person messages to the BOO.
-    private: gazebo::common::Time maxDt = 30.0;
+    private: gazebo::common::Time maxDt = 1000.0;
   };
 }
 #endif

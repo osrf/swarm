@@ -274,3 +274,15 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
           << "]" << std::endl;
   }
 }
+
+/////////////////////////////////////////////////
+void BooPlugin::Reset()
+{
+  this->lostPersonBuffer.clear();
+
+  // Initialize the position of the lost person.
+  auto personPos = this->lostPerson->GetWorldPose().Ign().Pos();
+  auto personPosInGrid = this->PosToGrid(personPos);
+  this->lostPersonBuffer[gazebo::common::Time::Zero] = personPosInGrid;
+  this->lastPersonPosInGrid = personPosInGrid;
+}
