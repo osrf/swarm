@@ -786,10 +786,10 @@ namespace swarm
     private: gazebo::physics::ModelPtr rotorStartingDockVehicle;
 
     /// \brief Camera start pitch
-    private: double cameraStartPitch;
+    private: double cameraStartPitch = 0.0;
 
     /// \brief Camera start yaw
-    private: double cameraStartYaw;
+    private: double cameraStartYaw = 0.0;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
