@@ -300,6 +300,7 @@ void BrokerPlugin::Reset()
 {
   this->logger->Reset();
   this->logIncomingMsgs.Clear();
+  this->broker->Reset();
 
   // Recreate the comms model
   this->commsModel.reset(new CommsModel(this->swarm, this->world, this->sdf));

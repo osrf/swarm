@@ -2,7 +2,6 @@
 <%
 # Default parameters.
 def default()
-
   $num_robots = 10
   if !ENV['erb_num_robots'].nil?
     $num_robots = ENV['erb_num_robots'].to_i
@@ -12,10 +11,27 @@ def default()
   $fixed_count = $num_robots
   $rotor_count = $num_robots
 
-  $camera_near = 0.1
-  $camera_far = 20
-  $camera_fov = 1.04719755
-  $camera_aspect_ratio = 1.778
+  # Camera with 20mm focal length projected onto 35mm film has a field
+  # of view of 1.4656 radians (~84 degrees).
+  $camera_near_rotor = 0.1
+  $camera_far_rotor = 50 
+  $camera_fov_rotor = 1.4656
+  $camera_aspect_ratio_rotor = 1.778
+
+  # Camera with 50mm focal length projected onto 35mm film has a field
+  # of view of 0.6911 radians (~40 degrees).
+  $camera_near_ground = 0.1
+  $camera_far_ground = 100 
+  $camera_fov_ground = 0.6911
+  $camera_aspect_ratio_ground = 1.778
+
+  # Camera with 200mm focal length projected onto 35mm film has a field
+  # of view of 0.1795 radians (~10 degrees).
+  $camera_near_fixed = 0.1
+  $camera_far_fixed = 200
+  $camera_fov_fixed = 0.1795
+  $camera_aspect_ratio_fixed = 1.778
+
   $lost_person_x = 750
   $lost_person_y = 750
   $latitude_deg = 35.7753257
@@ -237,5 +253,5 @@ end
 
 <%=
 # We use an environment variable for specifying the world file to generate.
-generate_worlds( ENV['erb_gazebo_world_file'])
+generate_worlds( ENV['erb_gazebo_world_file'] )
 %>
