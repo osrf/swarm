@@ -117,7 +117,7 @@ namespace swarm
 
     /// \brief Maximum time difference allowed (seconds) between the current
     /// time and the reported lost person messages to the BOO.
-    private: gazebo::common::Time maxDt = 30.0;
+    private: gazebo::common::Time maxDt = 1000.0;
   };
 }
 #endif
