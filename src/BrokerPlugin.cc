@@ -51,6 +51,7 @@ BrokerPlugin::~BrokerPlugin()
 //////////////////////////////////////////////////
 void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 {
+  this->sdf = _sdf;
   GZ_ASSERT(_world, "BrokerPlugin::Load() error: _world pointer is NULL");
   GZ_ASSERT(_sdf, "BrokerPlugin::Load() error: _sdf pointer is NULL");
 
@@ -292,4 +293,15 @@ void BrokerPlugin::OnLog(msgs::LogEntry &_logEntry) const
   //   * Incoming messages.
   _logEntry.mutable_visibility()->CopyFrom(this->commsModel->VisibilityMap());
   _logEntry.mutable_incoming_msgs()->CopyFrom(this->logIncomingMsgs);
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::Reset()
+{
+  this->logger->Reset();
+  this->logIncomingMsgs.Clear();
+  this->broker->Reset();
+
+  // Recreate the comms model
+  this->commsModel.reset(new CommsModel(this->swarm, this->world, this->sdf));
 }

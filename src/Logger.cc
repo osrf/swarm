@@ -43,7 +43,15 @@ Logger::Logger()
 {
   // Did the user set SWARM_LOG?
   char *logEnableEnv = std::getenv("SWARM_LOG");
-  if ((logEnableEnv) && (std::string(logEnableEnv) == "1"))
+  this->enabled = ((logEnableEnv) && (std::string(logEnableEnv) == "1"));
+
+  this->CreateLogFile();
+}
+
+/////////////////////////////////////////////////
+void Logger::CreateLogFile()
+{
+  if (this->enabled)
   {
     this->enabled = true;
 
@@ -63,6 +71,10 @@ Logger::Logger()
       boost::filesystem::create_directories(this->logCompletePath);
 
     this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
+
+    // Close an open stream
+    if (this->output.is_open())
+      this->output.close();
 
     // Create the log file.
     this->output.open(this->logCompletePath.string(),
@@ -167,4 +179,11 @@ void Logger::Update(const double _simTime)
   }
 
   this->output.flush();
+}
+
+/////////////////////////////////////////////////
+void Logger::Reset()
+{
+  // Create a new log file
+  this->CreateLogFile();
 }

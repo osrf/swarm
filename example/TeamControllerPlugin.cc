@@ -217,3 +217,13 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
 {
   // New data received from a teammate.
 }
+
+//////////////////////////////////////////////////
+void TeamControllerPlugin::Reset()
+{
+  // Pass reset up the chain.
+  RobotPlugin::Reset();
+
+  // Add code to handle simulation reset.
+  // Make sure to always call RobotPlugin::Reset();
+}

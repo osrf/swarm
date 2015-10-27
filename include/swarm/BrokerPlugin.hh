@@ -62,6 +62,9 @@ namespace swarm
     public: virtual void Load(gazebo::physics::WorldPtr _world,
                               sdf::ElementPtr _sdf);
 
+    /// \brief Handle reset.
+    public: virtual void Reset();
+
     /// \brief Parse the SDF world file and update a map with information about
     /// all the members of the swarm. For each member of the swarm we store its
     /// gazebo model name, its address, a pointer to the gazebo model and its

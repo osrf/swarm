@@ -38,6 +38,9 @@ namespace swarm
     // Documentation inherited.
     public: virtual void Load(sdf::ElementPtr _sdf);
 
+    /// \brief Handle reset
+    protected: virtual void Reset();
+
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
