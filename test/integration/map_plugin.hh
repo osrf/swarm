@@ -24,7 +24,7 @@
 
 namespace swarm
 {
-  /// \brief Class to test the communication with the base of operations.
+  /// \brief Class to test the map-related functions.
   class MapPlugin : public swarm::RobotPlugin
   {
     /// \brief Class constructor.

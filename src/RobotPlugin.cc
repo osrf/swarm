@@ -353,6 +353,25 @@ bool RobotPlugin::Bearing(ignition::math::Angle &_bearing) const
 }
 
 //////////////////////////////////////////////////
+double RobotPlugin::Height() const
+{
+  double terrainHeight;
+  TerrainType terrainTypeUnderMe;
+
+  this->MapQuery(this->observedLatitude, this->observedLongitude,
+      terrainHeight, terrainTypeUnderMe);
+
+  if (terrreinTypeUnderMe != PLAIN)
+  {
+    // Cast a ray.
+  }
+
+
+  auto height = this->observedAltitude - terrainHeight;
+  return std::max(0.0, height);
+}
+
+//////////////////////////////////////////////////
 bool RobotPlugin::BooPose(double &_latitude, double &_longitude) const
 {
   if (!this->boo)
@@ -1279,7 +1298,7 @@ ignition::math::Vector2d RobotPlugin::LostPersonDir() const
 
 //////////////////////////////////////////////////
 bool RobotPlugin::MapQuery(const double _lat, const double _lon,
-    double &_height, TerrainType &_type)
+    double &_height, TerrainType &_type) const
 {
   // Check that the lat and lon is in the search area
   if (_lat < this->searchMinLatitude  ||
@@ -1314,28 +1333,24 @@ bool RobotPlugin::MapQuery(const double _lat, const double _lon,
 
 /////////////////////////////////////////////////
 RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
-    const ignition::math::Vector3d &_pos)
+    const ignition::math::Vector3d &_pos) const
 {
-  TerrainType result = PLAIN;
-
   for (auto const &mdl : this->world->GetModels())
   {
     if (mdl->GetBoundingBox().Contains(_pos))
     {
       if (mdl->GetName().find("tree") != std::string::npos)
       {
-        result = FOREST;
-        break;
+        return FOREST;
       }
       else if (mdl->GetName().find("building") != std::string::npos)
       {
-        result = BUILDING;
-        break;
+        return BUILDING;
       }
     }
   }
 
-  return result;
+  return PLAIN;
 }
 
 /////////////////////////////////////////////////

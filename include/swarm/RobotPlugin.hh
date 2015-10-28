@@ -87,6 +87,7 @@ namespace swarm
   ///
   ///  * Sensors and world information.
   ///     - Pose() Get the robot's current pose from its GPS sensor.
+  ///     - Height() Get the height above ground level.
   ///     - SearchArea() Get the search area, in GPS coordinates.
   ///     - MapQuery() Query the map for height and terrain type info.
   ///     - Image() Get the list of detected objects, and other related
@@ -398,6 +399,12 @@ namespace swarm
     /// \return True if the call was successful.
     protected: bool Bearing(ignition::math::Angle &_bearing) const;
 
+    /// \brief Height above ground level.
+    ///
+    /// \return Height measured with respect to the underlying
+    /// ground surface (m).
+    protected: double Height() const;
+
     /// \brief Get the robot's current pose from its GPS sensor.
     ///
     /// \param[out] _latitude Robot latitude will be written here.
@@ -447,7 +454,7 @@ namespace swarm
     /// \return True if the latitude and longitude specify a valid point.
     /// False otherwise.
     protected: bool MapQuery(const double _lat, const double _lon,
-                             double &_height, TerrainType &_type);
+                             double &_height, TerrainType &_type) const;
 
     /// \brief Get starting battery capacity (mAh).
     /// \return The battery's start capacity in mAh.
@@ -530,7 +537,8 @@ namespace swarm
     /// Gazebo's world coordinate frame.
     /// \param[in] _pos Position to query.
     /// \return Type of terrain at the location.
-    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
+    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos)
+        const;
 
     /// \brief Get the direction from the BOO to the lost person at the
     /// start of simulation. Each component (x, y) of the result is
