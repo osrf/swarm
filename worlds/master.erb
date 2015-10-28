@@ -2,21 +2,26 @@
 <%
 # Default parameters.
 def default()
-  $ground_count = 10
-  $fixed_count = 10
-  $rotor_count = 10
+  $num_robots = 10
+  if !ENV['erb_num_robots'].nil?
+    $num_robots = ENV['erb_num_robots'].to_i
+  end
+
+  $ground_count = $num_robots
+  $fixed_count = $num_robots
+  $rotor_count = $num_robots
 
   # Camera with 20mm focal length projected onto 35mm film has a field
   # of view of 1.4656 radians (~84 degrees).
   $camera_near_rotor = 0.1
-  $camera_far_rotor = 50 
+  $camera_far_rotor = 50
   $camera_fov_rotor = 1.4656
   $camera_aspect_ratio_rotor = 1.778
 
   # Camera with 50mm focal length projected onto 35mm film has a field
   # of view of 0.6911 radians (~40 degrees).
   $camera_near_ground = 0.1
-  $camera_far_ground = 100 
+  $camera_far_ground = 100
   $camera_fov_ground = 0.6911
   $camera_aspect_ratio_ground = 1.778
 
@@ -27,12 +32,21 @@ def default()
   $camera_fov_fixed = 0.1795
   $camera_aspect_ratio_fixed = 1.778
 
-  $lost_person_x = 1000
-  $lost_person_y = 1000
+  $lost_person_x = 750
+  $lost_person_y = 750
   $latitude_deg = 35.7753257
   $longitude_deg = -120.774063
   $elevation = 208
+
+  # Search area (2km x 2km)
+  $min_relative_latitude_deg = -0.01
+  $max_relative_latitude_deg = 0.01
+  $min_relative_longitude_deg = -0.01
+  $max_relative_longitude_deg = 0.01
+
+  # Terrain and environment
   $terrain_file = ''
+  $vegetation_file = ''
 
   # Comms model parameters
   $neighbor_distance_min = 0.0
@@ -51,7 +65,146 @@ end
 
 # complete.world
 def complete()
+  # Load default parameters.
+  default()
+
   $terrain_file = 'terrain_model_1.sdf.erb'
+  $vegetation_file = 'vegetation_01.sdf.erb'
+end
+
+# final_01_02_low.world
+def final_01_02_low()
+  # Load default parameters.
+  default()
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_01_02_medium.world
+def final_01_02_medium()
+  # Load default parameters.
+  default()
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_01_02_high.world
+def final_01_02_high()
+  # Load default parameters.
+  default()
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+end
+
+# final_01_10_low.world
+def final_01_10_low()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_01_10_medium.world
+def final_01_10_medium()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_01_10_high.world
+def final_01_10_high()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+end
+
+# final_01_25_low.world
+def final_01_25_low()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+end
+
+# final_01_25_medium.world
+def final_01_25_medium()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+end
+
+# final_01_25_high.world
+def final_01_25_high()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $terrain_file = 'terrain_camp_roberts.sdf.erb'
+  $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
 end
 
 # How to a new world file:
@@ -73,6 +226,9 @@ end
 #         complete.world
 #         <YOUR_NEW_WORLD_FILE>
 #       )
+#
+# We follow the next naming convention:
+#   final_<terrain_index>_<search_area>_<vegetation>_<num_vehicles>.world
 
 # Generate a Gazebo world file.
 # Params:
@@ -81,9 +237,15 @@ def generate_worlds(_world_file)
 
   h = Hash.new
   h["complete.world"] = method(:complete)
-
-  # Load default parameters.
-  default()
+  h["final_01_02_low.world"] = method(:final_01_02_low)
+  h["final_01_02_medium.world"] = method(:final_01_02_medium)
+  h["final_01_02_high.world"] = method(:final_01_02_high)
+  h["final_01_10_low.world"] = method(:final_01_10_low)
+  h["final_01_10_medium.world"] = method(:final_01_10_medium)
+  h["final_01_10_high.world"] = method(:final_01_10_high)
+  h["final_01_25_low.world"] = method(:final_01_25_low)
+  h["final_01_25_medium.world"] = method(:final_01_25_medium)
+  h["final_01_25_high.world"] = method(:final_01_25_high)
 
   f = h[_world_file]
   f.call

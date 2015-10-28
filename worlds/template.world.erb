@@ -3,10 +3,10 @@
 <!-- At 35 degrees latitude, 0.01 degrees is ~1km lat/long.
      So +/- 0.01 deg defines a ~2km X ~2km region. -->
 <% search_area = '''<swarm_search_area>
-           <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
-           <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
-           <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
-           <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
+           <min_relative_latitude_deg>''' + $min_relative_latitude_deg.to_s + '''</min_relative_latitude_deg>
+           <max_relative_latitude_deg>''' + $max_relative_latitude_deg.to_s + '''</max_relative_latitude_deg>
+           <min_relative_longitude_deg>''' + $min_relative_longitude_deg.to_s + '''</min_relative_longitude_deg>
+           <max_relative_longitude_deg>''' + $max_relative_longitude_deg.to_s + '''</max_relative_longitude_deg>
          </swarm_search_area>''' %>
 
 <% rotor_battery = '''<battery>
@@ -59,8 +59,14 @@
                   nil, nil, "_sub01").result(binding)
         end%>
 
+    <!-- The vegetation -->
+    <%= if !$vegetation_file.empty?
+          ERB.new(File.read($vegetation_file),
+                  nil, nil, "_sub01").result(binding)
+        end%>
+
     <!-- Create the ground vehicles  -->
-    <% for x in 0..$ground_count %>
+    <% for x in 0..$ground_count-1 %>
       <%name = "ground_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = 0%>
@@ -71,7 +77,7 @@
     <% end %>
 
     <!-- Create the rotor vehicles -->
-    <% for x in 0..$rotor_count %>
+    <% for x in 0..$rotor_count-1 %>
       <%name = "rotor_#{x}" %>
       <%launch_vehicle = "ground_#{x}"%>
       <%x_pos = x * 6%>
@@ -83,7 +89,7 @@
     <% end %>
 
     <!-- Create the fixed wing vehicles -->
-    <% for x in 0..$fixed_count %>
+    <% for x in 0..$fixed_count-1 %>
       <%name = "fixed_#{x}" %>
       <%x_pos = x * 6%>
       <%y_pos = -4%>

@@ -12,8 +12,13 @@ set (other_erb_files
   ground_vehicle.sdf.erb
   lost_person_simple.sdf.erb
   rotor_vehicle.sdf.erb
+  terrain_camp_roberts.sdf.erb
   terrain_model_1.sdf.erb
   template.world.erb
+  vegetation_01.sdf.erb
+  vegetation_camp_roberts_low.sdf.erb
+  vegetation_camp_roberts_med.sdf.erb
+  vegetation_camp_roberts_high.sdf.erb
 )
 
 # World files that need to be processed with erb
@@ -30,9 +35,25 @@ set (world_erb_files
 
 set (master_erb_file master.erb)
 
+# Number of robots per type for each world file.
+set (_robot_members
+  10
+  25
+  50
+)
+
 # World files that are automatically generated based on master.erb
 set (generated_master_world_files
   complete.world
+  final_01_02_low.world
+  final_01_02_medium.world
+  final_01_02_high.world
+  final_01_10_low.world
+  final_01_10_medium.world
+  final_01_10_high.world
+  final_01_25_low.world
+  final_01_25_medium.world
+  final_01_25_high.world
 )
 
 # Process the erb files
@@ -50,13 +71,17 @@ add_custom_target(erb_generation ALL DEPENDS ${world_files})
 
 # Process the master.erb
 foreach(_world ${generated_master_world_files})
-  set(_target_world ${CMAKE_CURRENT_BINARY_DIR}/${_world})
-  add_custom_command(OUTPUT ${_target_world}
-                     COMMAND erb_gazebo_world_file=${_world} ${ERB_EXE_PATH} ${master_erb_file}  > ${_target_world}
-                     DEPENDS ${master_erb_file} ${other_erb_files}
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  foreach(_num_robots ${_robot_members})
+    string(REGEX REPLACE ".world" "_${_num_robots}.world" world ${_world})
+    MESSAGE(STATUS "Processing world: ${world}")
+    set(_target_world ${CMAKE_CURRENT_BINARY_DIR}/${world})
+    add_custom_command(OUTPUT ${_target_world}
+                       COMMAND erb_gazebo_world_file=${_world} erb_num_robots=${_num_robots} ${ERB_EXE_PATH} ${master_erb_file}  > ${_target_world}
+                       DEPENDS ${master_erb_file} ${other_erb_files}
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-  list(APPEND world_files ${_target_world})
+    list(APPEND world_files ${_target_world})
+  endforeach()
 endforeach()
 add_custom_target(erb_master_generation ALL DEPENDS ${world_files})
 
