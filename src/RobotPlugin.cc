@@ -846,6 +846,29 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     }
   }
 
+  gazebo::physics::ModelPtr lostPerson = this->world->GetModel("lost_person");
+  if (lostPerson && this->boo)
+  {
+    ignition::math::Vector3d dir = (lostPerson->GetWorldPose().pos -
+      this->boo->GetWorldPose().pos).Ign();
+
+    this->lostPersonInitDir.Set(dir.X(), dir.Y());
+    this->lostPersonInitDir.Normalize();
+
+    // Drop a few decimal places.
+    this->lostPersonInitDir.X() =
+      static_cast<int>(this->lostPersonInitDir.X() * 10) / 10.0;
+    this->lostPersonInitDir.Y() =
+        static_cast<int>(this->lostPersonInitDir.Y() * 10) / 10.0;
+
+    // Round each direction component (x,y) to be
+    // one of: -1, -0.5, 0, 0.5, 1
+    this->lostPersonInitDir *= 2.0;
+    this->lostPersonInitDir.X() = std::round(this->lostPersonInitDir.X());
+    this->lostPersonInitDir.Y() = std::round(this->lostPersonInitDir.Y());
+    this->lostPersonInitDir *= 0.5;
+  }
+
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&RobotPlugin::Loop, this, std::placeholders::_1));
@@ -1246,6 +1269,12 @@ void RobotPlugin::CameraOrientation(double &_pitch, double &_yaw) const
     _pitch = camEuler.Y();
     _yaw = camEuler.Z();
   }
+}
+
+//////////////////////////////////////////////////
+ignition::math::Vector2d RobotPlugin::LostPersonDir() const
+{
+  return this->lostPersonInitDir;
 }
 
 //////////////////////////////////////////////////

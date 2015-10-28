@@ -37,6 +37,7 @@
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Quaternion.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/math/Vector2.hh>
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
@@ -99,6 +100,7 @@ namespace swarm
   ///       the camera.
   ///     - CameraOrientation() Get the pan(yaw)/tilt(pitch) of the camera.
   ///     - Terrain() Get the terrain type at this vehicle's location.
+  ///     - LostPersonDir() Get the direction from the BOO to the lost person.
   ///
   ///  * Battery
   ///     Each vehicle begins with a starting battery capacity. This
@@ -530,6 +532,16 @@ namespace swarm
     /// \return Type of terrain at the location.
     private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
 
+    /// \brief Get the direction from the BOO to the lost person at the
+    /// start of simulation. Each component (x, y) of the result is
+    /// rounded to fall on one of: -1.0, -0.5, 0, 0.5, 1.0.
+    ///
+    /// \return 2D direction vector from base of operation to the lost
+    /// person. The direction is computed once at simulation start. If
+    /// the simulation environment has no BOO or lost_person, a value of
+    /// 0,0 is returned.
+    protected: ignition::math::Vector2d LostPersonDir() const;
+
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
@@ -795,6 +807,10 @@ namespace swarm
 
     /// \brief Current terrain type for this vehicle.
     private: TerrainType terrainType = PLAIN;
+
+    /// \brief Initial vector from boo to lost person. This acts as
+    /// prior knowledge about where the lost person starts.
+    private: ignition::math::Vector2d lostPersonInitDir;
 
     /// \brief The vehicle which a rotor is initially docked to.
     private: gazebo::physics::ModelPtr rotorStartingDockVehicle;

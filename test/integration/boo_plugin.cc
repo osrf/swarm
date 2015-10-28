@@ -66,6 +66,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   switch (this->testCase)
   {
     case 0:
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(0.5, 0.5));
     case 4:
     case 8:
     {
@@ -76,13 +77,15 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 1:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(1.0, 0.0));
       // Send a broadcast message to the BOO with a valid lost person pos/time.
-      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5 0.0", this->kBroadcast,
+      EXPECT_TRUE(this->SendTo("FOUND 110.0 0.0 0.5 0.0", this->kBroadcast,
         this->kBooPort));
       break;
     }
     case 2:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(0.0, 1.0));
       // Send a message to the BOO containing an unsupported command.
       EXPECT_TRUE(this->SendTo("HELP 1.0 2.0 3.0 0.0", this->kBoo,
         this->kBooPort));
@@ -90,6 +93,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 3:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(-0.5, -0.5));
       // Send a message to the BOO containing a malformed FOUND command.
       EXPECT_TRUE(this->SendTo("FOUND 1.0 xxx 3.0 0.0", this->kBoo,
         this->kBooPort));
@@ -97,6 +101,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 5:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(-1.0, 0.0));
       // Send a message to the BOO containing a wrong position.
       EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 0.0", this->kBoo,
         this->kBooPort));
@@ -104,6 +109,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 6:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(-0.5, -0.5));
       // Send a message to the BOO containing a negative time.
       EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 -1.0", this->kBoo,
         this->kBooPort));
@@ -111,6 +117,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 7:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(-1.0, 0.0));
       // Send a message to the BOO containing a future time.
       EXPECT_TRUE(this->SendTo("FOUND 1.0 2.0 3.0 10.0", this->kBoo,
         this->kBooPort));
@@ -118,9 +125,10 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     }
     case 9:
     {
+      EXPECT_EQ(this->LostPersonDir(), ignition::math::Vector2d(-0.5, -0.5));
       // Send a message with a valid pos/time that is not the only one stored
       // by the BOO.
-      EXPECT_TRUE(this->SendTo("FOUND 100.0 100.0 0.5 0.8", this->kBoo,
+      EXPECT_TRUE(this->SendTo("FOUND -25.0 -30.0 0.5 0.8", this->kBoo,
         this->kBooPort));
       break;
     }
