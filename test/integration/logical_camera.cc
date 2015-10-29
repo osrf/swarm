@@ -56,10 +56,24 @@ TEST_F(LogicalCameraTest, FalsePositive)
   world->Step(1000);
 }
 
+/////////////////////////////////////////////////
+TEST_F(LogicalCameraTest, FalsePositiveDuration)
+{
+  Load("logical_camera_02.world", true);
+
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Step the world so that the test library experiences update events.
+  world->Step(1000);
+}
+
 int main(int argc, char **argv)
 {
   // Set a specific seed to avoid occasional test failures due to
   // statistically unlikely, but possible results.
+  ignition::math::Rand::Seed(13458);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
