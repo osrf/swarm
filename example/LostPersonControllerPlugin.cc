@@ -16,6 +16,7 @@
 */
 
 #include <gazebo/physics/physics.hh>
+#include <ignition/math/Rand.hh>
 #include "LostPersonControllerPlugin.hh"
 
 using namespace swarm;
@@ -33,9 +34,17 @@ void LostPersonControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
   // Add code here that should be executed once on load.
 
-  // Example of reading a value from the SDF file.
-  if (_sdf->HasElement("speed"))
-    this->speed = _sdf->Get<double>("speed");
+  // Set the initial velocity, if present
+  if (_sdf->HasElement("initial_velocity"))
+    this->velocity = _sdf->Get<ignition::math::Vector3d>("initial_velocity");
+
+  // Set the velocity factor
+  if (_sdf->HasElement("velocity_factor"))
+    this->velocityFactor = _sdf->Get<double>("velocity_factor");
+
+  // Set the update period
+  if (_sdf->HasElement("update_period"))
+    this->updatePeriod = _sdf->Get<double>("update_period");
 }
 
 //////////////////////////////////////////////////
@@ -43,12 +52,30 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   // Add code here that should be updated every iteration.
 
-  // Apply a linear velocity to the model
-  this->model->SetLinearVel(ignition::math::Vector3d(this->speed, 0, 0));
+  // Change direction when enough time has elapsed
+  if (_info.simTime - this->prevUpdate > this->updatePeriod)
+  {
+
+    // Get a random velocity value.
+    this->velocity.Set(
+        ignition::math::Rand::DblUniform(-1, 1),
+        ignition::math::Rand::DblUniform(-1, 1),
+        ignition::math::Rand::DblUniform(-1, 1));
+
+    // Apply scaling factor
+    this->velocity.Normalize();
+    this->velocity *= this->velocityFactor;
+
+    this->prevUpdate = _info.simTime;
+  }
+
+  // Apply velocity
+  this->model->SetLinearVel(this->velocity);
 }
 
 //////////////////////////////////////////////////
 void LostPersonControllerPlugin::Reset()
 {
   // Add code to handle simulation reset.
+  this->prevUpdate.Set(0, 0);
 }
