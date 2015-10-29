@@ -130,13 +130,6 @@ void RobotPlugin::UpdateSensors()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();
 
-  // In case we reset simulation.
-  if (curTime <= this->lastUpdateTime)
-  {
-    this->lastUpdateTime = curTime;
-    return;
-  }
-
   if (this->gps)
   {
     this->observedLatitude = this->gps->Latitude().Degree();
@@ -219,8 +212,6 @@ void RobotPlugin::UpdateSensors()
           curTime);
     }
   }
-
-  this->lastUpdateTime = curTime;
 }
 
 //////////////////////////////////////////////////

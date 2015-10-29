@@ -859,9 +859,6 @@ namespace swarm
     /// \brief Camera start yaw
     private: double cameraStartYaw = 0.0;
 
-    /// \brief Keep track of update sim-time.
-    private: gazebo::common::Time lastUpdateTime;
-
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
   };
