@@ -30,6 +30,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -783,6 +784,23 @@ namespace swarm
     /// \brief Max random number used to compute a false positive
     private: double cameraFalsePositiveProbMax = 0.8;
 
+    /// \brief Minimum length of a false positive (secs).
+    /// Set to <0 for no limit.
+    private: double cameraFalsePositiveDurationMin = 0.001;
+
+    /// \brief Maximum length of a false positive (secs).
+    /// Set to <0 for no limit.
+    private: double cameraFalsePositiveDurationMax = 0.03;
+
+    /// \brief Is this robot on a false positive period?
+    private: bool cameraOnFalsePositive = false;
+
+    /// \brief When will the last false positive period finish?
+    private: gazebo::common::Time cameraOnFalsePositiveUntil;
+
+    /// \brief Name of the model to appear as a false positive.
+    private: std::string cameraFalsePositiveModelName;
+
     /// \brief Max position error in objects detected by the camera
     private: double cameraMaxPositionError = 5.0;
 
@@ -820,6 +838,9 @@ namespace swarm
 
     /// \brief Camera start yaw
     private: double cameraStartYaw = 0.0;
+
+    /// \brief Keep track of update sim-time.
+    private: gazebo::common::Time lastUpdateTime;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

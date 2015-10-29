@@ -128,6 +128,15 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateSensors()
 {
+  gazebo::common::Time curTime = this->world->GetSimTime();
+
+  // In case we reset simulation.
+  if (curTime <= this->lastUpdateTime)
+  {
+    this->lastUpdateTime = curTime;
+    return;
+  }
+
   if (this->gps)
   {
     this->observedLatitude = this->gps->Latitude().Degree();
@@ -205,21 +214,65 @@ void RobotPlugin::UpdateSensors()
       p.Pos().Y() += ignition::math::Rand::DblUniform(-posError, posError);
       p.Pos().Z() += ignition::math::Rand::DblUniform(-posError, posError);
 
-      // A percentage of the time we get a false positive for the lost person,
+      this->img.objects[imgModel.name()] = p;
+    }
+
+    // Check if we are currently on a false positive period.
+    if (this->cameraOnFalsePositive &&
+        this->cameraOnFalsePositiveUntil != gazebo::common::Time::Zero)
+    {
+      // Check if the false positive period should finish.
+      if (curTime >= this->cameraOnFalsePositiveUntil)
+      {
+        this->cameraOnFalsePositive = false;
+
+        // Debug output.
+        // gzdbg << "[" << curTime << "] Robot " << address
+        //       << " is back from a false positive period." << std::endl;
+      }
+    }
+    else if (!this->cameraOnFalsePositive)
+    {
+      // A percentage of the time we get a false positive for the lost person.
       if (ignition::math::Rand::DblUniform(
             this->cameraFalsePositiveProbMin,
             this->cameraFalsePositiveProbMax) < distSquaredNormalized)
       {
-        // Randomly choose a model name
-        this->img.objects[this->modelNames[
-          ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)]] = p;
-      }
-      else
-      {
-        this->img.objects[imgModel.name()] = p;
+        // We enter into a false positive period.
+        this->cameraOnFalsePositive = true;
+
+        // Decide the duration of the false positive.
+        if (this->cameraFalsePositiveProbMin < 0 ||
+            this->cameraFalsePositiveProbMax < 0)
+        {
+          // Permanent false positive.
+          cameraOnFalsePositiveUntil = gazebo::common::Time::Zero;
+        }
+        else
+        {
+          // Temporal false positive.
+          this->cameraOnFalsePositiveUntil = curTime +
+              ignition::math::Rand::DblUniform(
+                this->cameraFalsePositiveDurationMin,
+                this->cameraFalsePositiveDurationMax);
+        }
+
+        // Randomly choose a model name.
+        this->cameraFalsePositiveModelName = this->modelNames[
+        ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)];
       }
     }
+
+    // Add the false positive to the list of models detected.
+    if (this->cameraOnFalsePositive)
+    {
+      // Choose a random location.
+
+      this->img.objects[this->cameraFalsePositiveModelName] = p;
+    }
   }
+
+  this->lastUpdateTime = curTime;
 }
 
 //////////////////////////////////////////////////
