@@ -87,6 +87,22 @@ namespace swarm
     /// \return The coordinates of a cell in the 3D grid.
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
 
+    /// \brief Send an ACK message to the vehicle after processing a request.
+    /// The format of the message is: ACK <code>
+    /// \param[in] _dstAddress Destination address.
+    /// \param[in] _code Reply code:
+    ///   0. Found. The person has been found on the reported position.
+    ///   1. Not found. Incorrect position.
+    ///   2. Not found. The reported time is too old.
+    ///   3. Error: Unable to parse request.
+    ///   4. Error: Incorrect number of arguments in request.
+    ///   5. Error: Parsing arguments.
+    ///   6. Error: Negative time reported.
+    ///   7. Error: Future time reported.
+    ///   8. Error: Unrecognized command.
+    private: void SendAck(const std::string &_dstAddress,
+                          const int _code);
+
     /// \brief True when the lost person has been found.
     private: bool found = false;
 

@@ -18,6 +18,7 @@
 #ifndef __SWARM_BOO_FINDER_PLUGIN_HH__
 #define __SWARM_BOO_FINDER_PLUGIN_HH__
 
+#include <string>
 #include <gazebo/common/UpdateInfo.hh>
 #include <sdf/sdf.hh>
 #include <swarm/RobotPlugin.hh>
@@ -36,6 +37,19 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
+    /// \brief Callback executed when a new message is received.
+    /// \param[in] _srcAddress Source address of the message.
+    /// \param[in] _dstAddress Destination address of the message.
+    /// \param[in] _dstPort Destination port.
+    /// \param[in] _data Message payload.
+    private: void OnDataReceived(const std::string &_srcAddress,
+                                 const std::string &_dstAddress,
+                                 const uint32_t _dstPort,
+                                 const std::string &_data);
+
+    /// \brief Validate the ACK received.
+    private: void ValidateACK();
+
     /// \brief Number of server iterations executed.
     private: int iterations = -1;
 
@@ -48,6 +62,9 @@ namespace swarm
     /// time and the reported lost person messages to the BOO.
     /// This parameter is read from SDF.
     private: double maxDt = 5.0;
+
+    /// \brief Last ACK received from the BOO.
+    private: std::string ack = "";
   };
 }
 #endif
