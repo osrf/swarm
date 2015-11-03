@@ -30,6 +30,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -56,6 +57,16 @@ namespace swarm
   {
     /// \brief Map of detected objects.
     public: ObjPose_M objects;
+  };
+
+  /// \brief A class that stores information about a false positive.
+  class IGNITION_VISIBLE FalsePositiveData
+  {
+    /// \brief When will the last false positive period finish?
+    public: gazebo::common::Time enabledUntil;
+
+    /// \brief The name of model used in a false positive.
+    public: std::string falsePositiveModel;
   };
 
   /// \brief A Model plugin that is the base class for all agent plugins
@@ -596,6 +607,22 @@ namespace swarm
     // Documentation inherited.
     private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
+    /// \brief For the observed model we decide to create a false positive
+    /// based on distance a percentage of the time. If a false positive is
+    /// created, we also randomly choose a duration for it. In the future and
+    /// if we observe the same model '_model' and the false positive is still
+    /// active, we'll replace '_model' with the same false positive.
+    /// \param[in] _model Observed model.
+    /// \param[in] _p Position in the camera frame where the model was seen.
+    /// \param[in] _normalizedDist Distance at which the object is perceived
+    /// (normalized with camera frustum). The probability of creating a false
+    /// positive is proportional to the distance.
+    /// \param[in] _curTime Current simulation time.
+    private: void UpdateFalsePositives(const std::string &_model,
+                                       const ignition::math::Pose3d &_p,
+                                       const double _normalizedDist,
+                                       const gazebo::common::Time &_curTime);
+
     /// \def Callback_t
     /// \brief The callback specified by the user when new data is available.
     /// This callback contains two parameters: the source address of the agent
@@ -783,8 +810,19 @@ namespace swarm
     /// \brief Max random number used to compute a false positive
     private: double cameraFalsePositiveProbMax = 0.8;
 
+    /// \brief Minimum length of a false positive (secs).
+    private: double cameraFalsePositiveDurationMin = 0.03;
+
+    /// \brief Maximum length of a false positive (secs).
+    private: double cameraFalsePositiveDurationMax = 0.08;
+
     /// \brief Max position error in objects detected by the camera
     private: double cameraMaxPositionError = 5.0;
+
+    /// \brief The key is the real model perceived by the camera and the value
+    /// is an object that contains information about this false positive
+    /// (the duration and the model that will replace the real model observed).
+    public: std::map<std::string, FalsePositiveData> camFalsePositiveModels;
 
     /// \brief Array of all the models
     private: std::vector<std::string> modelNames;
