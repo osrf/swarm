@@ -22,6 +22,8 @@
 #ifndef __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 #define __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 
+#include <gazebo/common/Time.hh>
+#include <ignition/math/Vector3.hh>
 #include <swarm/LostPersonPlugin.hh>
 
 namespace swarm
@@ -44,8 +46,17 @@ namespace swarm
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
 
-    // Speed of the lost person
-    private: double speed = 0.0;
+    /// \brief Velocity scaling factor.
+    public: double velocityFactor = 1.0;
+
+    /// \brief Time between recomputing a new velocity vector.
+    public: gazebo::common::Time updatePeriod = 5.0;
+
+    /// \brief Time the of the last update.
+    public: gazebo::common::Time prevUpdate = 0.0;
+
+    /// \brief Velocity to apply.
+    public: ignition::math::Vector3d velocity;
   };
 }
 #endif

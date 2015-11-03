@@ -80,13 +80,10 @@
      </visual>
    </link>
 
-   <plugin name="random" filename="libRandomVelocityPlugin.so">
-     <link>link</link>
+   <plugin name="random" filename="libLostPersonControllerPlugin.so">
      <initial_velocity>0 0.2 0</initial_velocity>
      <velocity_factor>0.5</velocity_factor>
      <update_period>10</update_period>
-     <min_z>0</min_z>
-     <max_z>0</max_z>
      <%=search_area%>
    </plugin>
 </model>
