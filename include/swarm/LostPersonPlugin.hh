@@ -118,7 +118,6 @@ namespace swarm
     /// \param[in] _info Update information provided by the server.
     private: virtual void Loop(const gazebo::common::UpdateInfo &_info);
 
-
     /// \brief Pointer to the model;
     protected: gazebo::physics::ModelPtr model;
 
