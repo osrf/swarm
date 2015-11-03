@@ -26,6 +26,10 @@ GZ_REGISTER_MODEL_PLUGIN(LostPersonPlugin)
 
 //////////////////////////////////////////////////
 LostPersonPlugin::LostPersonPlugin()
+  : searchMinLatitude(0),
+    searchMaxLatitude(0),
+    searchMinLongitude(0),
+    searchMaxLongitude(0)
 {
 }
 
@@ -53,6 +57,9 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   }
   this->modelHeight2 = this->model->GetBoundingBox().GetZLength()*0.5;
 
+  // We assume that the physics step size will not change during simulation.
+  this->world = this->model->GetWorld();
+
   // Get the terrain, if it's present
   gazebo::physics::ModelPtr terrainModel =
     this->model->GetWorld()->GetModel("terrain");
@@ -72,6 +79,28 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
         (this->terrain->GetVertexCount().x-1),
         this->terrain->GetSize().y /
         (this->terrain->GetVertexCount().y-1));
+  }
+
+  // Get the search area size, which is a child of the plugin
+  sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
+  while (searchAreaSDF)
+  {
+    if (searchAreaSDF->HasElement("min_relative_latitude_deg") &&
+        searchAreaSDF->HasElement("max_relative_latitude_deg") &&
+        searchAreaSDF->HasElement("min_relative_longitude_deg") &&
+        searchAreaSDF->HasElement("max_relative_longitude_deg"))
+    {
+      this->searchMinLatitude =
+        searchAreaSDF->GetElement("min_relative_latitude_deg")->Get<double>();
+      this->searchMaxLatitude =
+        searchAreaSDF->GetElement("max_relative_latitude_deg")->Get<double>();
+      this->searchMinLongitude =
+        searchAreaSDF->GetElement("min_relative_longitude_deg")->Get<double>();
+      this->searchMaxLongitude =
+        searchAreaSDF->GetElement("max_relative_longitude_deg")->Get<double>();
+      break;
+    }
+    searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
   }
 
   this->AdjustPose();
@@ -322,4 +351,65 @@ void LostPersonPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
 
   // Height of the terrain
   _terrainPos = rayPt + intersection * rayDir;
+}
+
+//////////////////////////////////////////////////
+bool LostPersonPlugin::MapQuery(const double _lat, const double _lon,
+    double &_height, LostPersonPlugin::TerrainType &_type)
+{
+  // Check that the lat and lon is in the search area
+  if (_lat < this->searchMinLatitude  ||
+      _lat > this->searchMaxLatitude ||
+      _lon < this->searchMinLongitude ||
+      _lon > this->searchMaxLongitude)
+  {
+    return false;
+  }
+
+  // Get the location in the local coordinate frame
+  ignition::math::Vector3d local =
+    this->world->GetSphericalCoordinates()->LocalFromSpherical(
+        ignition::math::Vector3d(_lat, _lon, 0));
+
+  local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
+
+  ignition::math::Vector3d pos, norm;
+
+  // Reuse the terrain lookup function.
+  this->TerrainLookup(local, pos, norm);
+
+  // Add in the reference elevation.
+  _height = pos.Z() +
+    this->world->GetSphericalCoordinates()->GetElevationReference();
+  local.Z(pos.Z());
+
+  _type = this->TerrainAtPos(local);
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+LostPersonPlugin::TerrainType LostPersonPlugin::TerrainAtPos(
+    const ignition::math::Vector3d &_pos)
+{
+  LostPersonPlugin::TerrainType result = PLAIN;
+
+  for (auto const &mdl : this->world->GetModels())
+  {
+    if (mdl->GetBoundingBox().Contains(_pos))
+    {
+      if (mdl->GetName().find("tree") != std::string::npos)
+      {
+        result = FOREST;
+        break;
+      }
+      else if (mdl->GetName().find("building") != std::string::npos)
+      {
+        result = BUILDING;
+        break;
+      }
+    }
+  }
+
+  return result;
 }
