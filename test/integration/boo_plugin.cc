@@ -38,6 +38,9 @@ void BooFinderPlugin::Load(sdf::ElementPtr _sdf)
 {
   this->testCase = _sdf->Get<int>("test_case");
   this->maxDt = _sdf->Get<double>("max_dt");
+
+  // Bind on my local address and default port for receiving the BOO ACKs.
+  this->Bind(&BooFinderPlugin::OnDataReceived, this, this->Host());
 }
 
 //////////////////////////////////////////////////
@@ -56,12 +59,20 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     auto itersPerSecond = ceil(1.0 / w->GetPhysicsEngine()->GetMaxStepSize());
     int targetIters = itersPerSecond * this->maxDt + 1;
 
-    if (this->iterations != targetIters)
+    if (this->iterations == targetIters + 2)
+      this->ValidateACK();
+    else if (this->iterations != targetIters)
       return;
   }
-  // The rest of the tests send the message to the BOO at iterations=0.
+  else if (this->iterations == 4)
+  {
+    this->ValidateACK();
+  }
   else if (this->iterations != 2)
+  {
+    // The rest of the tests send the message to the BOO at iterations=0.
     return;
+  }
 
   switch (this->testCase)
   {
@@ -135,6 +146,87 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     default:
     {
       gzerr << "BooFinderPlugin::Update() Test [" << this->testCase << "] "
+            << "not expected." << std::endl;
+      FAIL();
+      break;
+    }
+  };
+}
+
+//////////////////////////////////////////////////
+void BooFinderPlugin::OnDataReceived(const std::string &_srcAddress,
+    const std::string &_dstAddress, const uint32_t _dstPort,
+    const std::string &_data)
+{
+  // ACK received from the BOO.
+  EXPECT_EQ(_srcAddress, this->kBoo);
+  EXPECT_EQ(_dstAddress, this->Host());
+  EXPECT_EQ(_dstPort, 4100u);
+
+  this->ack = _data;
+}
+
+//////////////////////////////////////////////////
+void BooFinderPlugin::ValidateACK()
+{
+  switch (this->testCase)
+  {
+    case 0:
+    {
+      // Valid unicast message.
+      // We shouldn't receive this message because the simulation should be
+      // paused.
+      FAIL();
+    }
+    case 1:
+    {
+      // Valid broadcast message.
+      // We shouldn't receive this message because the simulation should be
+      // paused.
+      FAIL();
+    }
+    case 9:
+    {
+      // Valid pos/time sent to the BOO
+      // with a time t older than the last entry stored.
+      EXPECT_EQ(this->ack, "ACK 0");
+      break;
+    }
+    case 2:
+      // Unsupported command.
+      EXPECT_EQ(this->ack, "ACK 8");
+      break;
+    case 3:
+      // Malformed message.
+      EXPECT_EQ(this->ack, "ACK 5");
+      break;
+    case 4:
+      // Robot was too far from the BOO. We shouldn't receive any ACK because
+      // the BOO shouldn't receive our request.
+      EXPECT_EQ(this->ack, "");
+      break;
+    case 5:
+      // Robot sent an incorrect pos to the BOO.
+      EXPECT_EQ(this->ack, "ACK 1");
+      break;
+    case 6:
+      // Robot sent a negatime time to the BOO.
+      EXPECT_EQ(this->ack, "ACK 6");
+      break;
+    case 7:
+      // Robot sent a time in the future to the BOO.
+      EXPECT_EQ(this->ack, "ACK 7");
+      break;
+    case 8:
+    {
+      // Robot sent a correct pos/time to the BOO but out of the time window.
+      EXPECT_FALSE(gazebo::physics::get_world()->IsPaused());
+      EXPECT_EQ(this->ack, "ACK 2");
+      break;
+    }
+    default:
+    {
+      gzerr << "OnDataReceived() Test [" << this->testCase << "] "
             << "not expected." << std::endl;
       FAIL();
       break;

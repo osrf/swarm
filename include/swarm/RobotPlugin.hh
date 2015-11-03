@@ -618,10 +618,10 @@ namespace swarm
     protected: const std::string kBoo       = "boo";
 
     /// \brief Default port.
-    protected: static const uint32_t kDefaultPort = 4100;
+    protected: static const uint32_t kDefaultPort = 4100u;
 
     /// \brief Base of communications port.
-    protected: static const uint32_t kBooPort     = 4200;
+    protected: static const uint32_t kBooPort     = 4200u;
 
     /// \brief Maximum transmission payload size (octets) for each message.
     protected: static const uint32_t kMtu = 1500;
