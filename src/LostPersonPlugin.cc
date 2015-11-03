@@ -82,10 +82,6 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   // Get the search area size, which is a child of the plugin
-  this->searchMinLatitude = 0.0;
-  this->searchMaxLatitude = 0.0;
-  this->searchMinLongitude = 0.0;
-  this->searchMaxLongitude = 0.0;
   sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
   while (searchAreaSDF)
   {

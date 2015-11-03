@@ -47,6 +47,9 @@ void LogicalCameraPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     case 1:
       this->Update1();
       break;
+    case 2:
+      this->Update2();
+      break;
   }
 }
 
@@ -70,10 +73,13 @@ void LogicalCameraPlugin::Update0()
   {
     // Make sure the lost person is not seen 100% of the time. This number,
     // and the number in the following test is tied to
-    // RobotPlugin::cameraFalseNegativeProbMin and
-    // RobotPlugin::cameraFalseNegativeProbMax.
-    EXPECT_LT(count, 950);
-    EXPECT_GT(count, 890);
+    // RobotPlugin::cameraFalseNegativeProbMin,
+    // RobotPlugin::cameraFalseNegativeProbMax,
+    // RobotPlugin::cameraFalsePositiveProbMin, cameraFalsePositiveProbMax,
+    // RobotPlugin::cameraFalsePositiveDurationMin and
+    // RobotPlugin::cameraFalsePositiveDurationMax.
+    EXPECT_LT(count, 900);
+    EXPECT_GT(count, 800);
   }
   ++iteration;
 }
@@ -101,9 +107,60 @@ void LogicalCameraPlugin::Update1()
   {
     // Make sure the lost person is seen some of the time. This number,
     // and the number in the following test are tied to
-    // RobotPlugin::cameraFalsePositiveProbMin and cameraFalsePositiveProbMax.
-    EXPECT_LT(count, 30);
-    EXPECT_GT(count, 2);
+    // RobotPlugin::cameraFalsePositiveProbMin, cameraFalsePositiveProbMax,
+    // RobotPlugin::cameraFalsePositiveDurationMin and
+    // RobotPlugin::cameraFalsePositiveDurationMax.
+    EXPECT_LT(count, 70);
+    EXPECT_GT(count, 30);
+  }
+  ++iteration;
+}
+
+/////////////////////////////////////////////////
+void LogicalCameraPlugin::Update2()
+{
+  if (this->Host() != "192.168.1.1")
+    return;
+
+  static int iteration = 0;
+  static int consecutives = 0;
+  static int total = 0;
+  static int counter = 0;
+
+  swarm::ImageData logImg;
+  EXPECT_TRUE(this->Image(logImg));
+
+  // Keep track of the number of times the lost_person is observed
+  if (logImg.objects.find("lost_person") != logImg.objects.end())
+  {
+    ++consecutives;
+  }
+  else
+  {
+    // I had a false positive in the previous iteration.
+    if (consecutives > 0)
+    {
+      total += consecutives;
+      ++counter;
+    }
+
+    consecutives = 0;
+  }
+
+  // We assume the test runs for 1000 iterations.
+  if (iteration == 999)
+  {
+    // We calculate the mean number of consecutive times that we saw the lost
+    // person.
+    int consecutiveMean = total / counter;
+
+    // Make sure the lost person is seen some of the time. This number,
+    // and the number in the following test are tied to
+    // RobotPlugin::cameraFalsePositiveProbMin, cameraFalsePositiveProbMax,
+    // RobotPlugin::cameraFalsePositiveDurationMin and
+    // RobotPlugin::cameraFalsePositiveDurationMax.
+    EXPECT_LE(consecutiveMean, 8);
+    EXPECT_GE(consecutiveMean, 2);
   }
   ++iteration;
 }
