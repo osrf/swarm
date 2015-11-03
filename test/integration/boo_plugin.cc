@@ -59,9 +59,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
     auto itersPerSecond = ceil(1.0 / w->GetPhysicsEngine()->GetMaxStepSize());
     int targetIters = itersPerSecond * this->maxDt + 1;
 
-    if (this->iterations == targetIters + 2)
-      this->ValidateACK();
-    else if (this->iterations != targetIters)
+    if (this->iterations != targetIters)
       return;
   }
   else if (this->iterations == 4)
@@ -70,7 +68,7 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   }
   else if (this->iterations != 2)
   {
-    // The rest of the tests send the message to the BOO at iterations=0.
+    // The rest of the tests send the message to the BOO at iterations=2.
     return;
   }
 
@@ -185,13 +183,6 @@ void BooFinderPlugin::ValidateACK()
       // paused.
       FAIL();
     }
-    case 9:
-    {
-      // Valid pos/time sent to the BOO
-      // with a time t older than the last entry stored.
-      EXPECT_EQ(this->ack, "ACK 0");
-      break;
-    }
     case 2:
       // Unsupported command.
       EXPECT_EQ(this->ack, "ACK 8");
@@ -217,13 +208,6 @@ void BooFinderPlugin::ValidateACK()
       // Robot sent a time in the future to the BOO.
       EXPECT_EQ(this->ack, "ACK 7");
       break;
-    case 8:
-    {
-      // Robot sent a correct pos/time to the BOO but out of the time window.
-      EXPECT_FALSE(gazebo::physics::get_world()->IsPaused());
-      EXPECT_EQ(this->ack, "ACK 2");
-      break;
-    }
     default:
     {
       gzerr << "OnDataReceived() Test [" << this->testCase << "] "

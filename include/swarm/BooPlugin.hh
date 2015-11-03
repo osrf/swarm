@@ -88,7 +88,7 @@ namespace swarm
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
 
     /// \brief Send an ACK message to the vehicle after processing a request.
-    /// The format of the message is: ACK <code>.
+    /// The format of the message is: ACK <code>
     /// \param[in] _dstAddress Destination address.
     /// \param[in] _code Reply code:
     ///   0. Found. The person has been found on the reported position.

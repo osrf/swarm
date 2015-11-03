@@ -18,6 +18,7 @@
 #ifndef __SWARM_BOO_FINDER_PLUGIN_HH__
 #define __SWARM_BOO_FINDER_PLUGIN_HH__
 
+#include <string>
 #include <gazebo/common/UpdateInfo.hh>
 #include <sdf/sdf.hh>
 #include <swarm/RobotPlugin.hh>
