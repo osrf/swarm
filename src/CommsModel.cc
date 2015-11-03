@@ -85,16 +85,33 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
 //////////////////////////////////////////////////
 void CommsModel::Update()
 {
+  auto t1 = std::chrono::steady_clock::now();
   // Decide if each member of the swarm enters into a comms outage.
   this->UpdateOutages();
+
+  auto t2 = std::chrono::steady_clock::now();
+  auto elapsed = t2 - t1;
+  // std::cout << "Outages: " << std::chrono::duration_cast<std::chrono::milliseconds>
+  //          (elapsed).count() << " ms" << std::endl;
 
   // Update the visibility state between vehicles.
   // Make sure that this happens after UpdateOutages().
   this->UpdateVisibility();
 
+  auto t3 = std::chrono::steady_clock::now();
+  elapsed = t3 - t2;
+  // std::cout << "Visibility: " << std::chrono::duration_cast<std::chrono::milliseconds>
+  //          (elapsed).count() << " ms" << std::endl;
+
   // Update the neighbors list of each member of the swarm.
   // Make sure that this happens after UpdateVisibility().
   this->UpdateNeighbors();
+
+  auto t4 = std::chrono::steady_clock::now();
+  elapsed = t4 - t3;
+  // std::cout << "Neighbors: " << std::chrono::duration_cast<std::chrono::milliseconds>
+  //          (elapsed).count() << " ms" << std::endl;
+
 }
 
 //////////////////////////////////////////////////

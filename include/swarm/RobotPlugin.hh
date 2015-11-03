@@ -30,6 +30,7 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -820,6 +821,12 @@ namespace swarm
 
     /// \brief Camera start yaw
     private: double cameraStartYaw = 0.0;
+
+    /// \brief For computing dt.
+    private: gazebo::common::Time lastSensorUpdateTime;
+
+    /// \brief Rate at which the sensors should update.
+    private: double sensorsUpdateRate = 20.0;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

@@ -28,6 +28,7 @@
 #include <string>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/common/UpdateInfo.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <sdf/sdf.hh>
@@ -120,6 +121,12 @@ namespace swarm
 
     /// \brief Random engine used to shuffle the messages.
     private: std::default_random_engine rndEngine;
+
+    /// \brief For computing dt.
+    private: gazebo::common::Time lastCommsUpdateTime;
+
+    /// \brief Rate at which the sensors should update.
+    private: double commsUpdateRate = 1.0;
   };
 }
 #endif

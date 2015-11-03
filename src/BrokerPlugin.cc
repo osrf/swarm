@@ -128,6 +128,21 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void BrokerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
+  auto curTime = this->world->GetSimTime();
+  auto dt = (curTime - this->lastCommsUpdateTime).Double();
+  if (dt < 0)
+  {
+    // Probably we had a reset.
+    this->lastCommsUpdateTime = curTime;
+    return;
+  }
+
+  // Update based on sensorsUpdateRate.
+  if (dt < (1.0 / this->commsUpdateRate))
+    return;
+
+  this->lastCommsUpdateTime = curTime;
+
   {
     std::lock_guard<std::mutex> lock(this->mutex);
 

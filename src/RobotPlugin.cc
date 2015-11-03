@@ -475,6 +475,21 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 //////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  auto curTime = this->world->GetSimTime();
+  auto dt = (curTime - this->lastSensorUpdateTime).Double();
+  if (dt < 0)
+  {
+    // Probably we had a reset.
+    this->lastSensorUpdateTime = curTime;
+    return;
+  }
+
+  // Update based on sensorsUpdateRate.
+  if (dt < (1.0 / this->sensorsUpdateRate))
+    return;
+
+  this->lastSensorUpdateTime = curTime;
+
   // Get current terrain type
   this->terrainType = this->TerrainAtPos(this->model->GetWorldPose().pos.Ign());
 
@@ -875,6 +890,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // Get starting camera pitch and yaw.
   this->CameraOrientation(this->cameraStartPitch, this->cameraStartYaw);
+
+  auto offset =
+    ignition::math::Rand::DblUniform(0, 1.0 / this->sensorsUpdateRate);
+  this->lastSensorUpdateTime = this->world->GetSimTime() - offset;
 }
 
 //////////////////////////////////////////////////
