@@ -103,6 +103,9 @@ namespace swarm
     /// \param[in] _sdf Pointer to the SDF element of the plugin.
     private: void LoadParameters(sdf::ElementPtr _sdf);
 
+    /// \brief ToDo.
+    private: void CacheVisibilityPairs();
+
     /// \brief Minimum free-space distance (m) between two nodes to be
     /// neighbors. Set to <0 for no limit.
     private: double neighborDistanceMin = -1.0;
@@ -177,6 +180,8 @@ namespace swarm
 
     /// \brief Visibility between all the robots.
     private: msgs::VisibilityMap visibilityMsg;
+
+    private: std::vector<std::pair<std::string, std::string>> visibilityPairs;
   };
 }  // namespace
 #endif
