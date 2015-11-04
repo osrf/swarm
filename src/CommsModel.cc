@@ -408,7 +408,7 @@ void CommsModel::UpdateVisibility()
     ++counter;
 
     auto poseA = (*swarm)[addressA]->model->GetWorldPose().Ign();
-    auto poseB = (*swarm)[addressA]->model->GetWorldPose().Ign();
+    auto poseB = (*swarm)[addressB]->model->GetWorldPose().Ign();
     std::vector<std::string> entities;
     this->LineOfSight(poseA, poseB, entities);
     this->visibility[keyA] = entities;
