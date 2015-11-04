@@ -181,18 +181,25 @@ namespace swarm
     /// \brief Visibility between all the robots.
     private: msgs::VisibilityMap visibilityMsg;
 
+    /// \brief Pairs of addresses used to update the visibility.
     private: std::vector<std::pair<std::string, std::string>> visibilityPairs;
 
-    private: unsigned int index = 0;
+    /// \brief Index used compute the next visibility pair.
+    private: unsigned int visibilityIndex = 0;
 
-    private: unsigned int updatesPerCycle;
+    /// \brief Number of visibility pairs computed per iteration.
+    private: unsigned int visibilityUpdatesPerCycle;
 
+    /// \brief Number of neighbor updates computed per iteration.
     private: unsigned int neighborUpdatesPerCycle;
 
+    /// Index used to compute the next neighbor update.
     private: unsigned int neighborIndex = 0;
 
+    /// Vector containing all the addresses of the swarm.
     private: std::vector<std::string> addresses;
 
+    /// Update rate of the comms model.
     private: double updateRate = 0.5;
   };
 }  // namespace

@@ -382,7 +382,7 @@ void CommsModel::CacheVisibilityPairs()
     }
   }
 
-  this->updatesPerCycle = this->visibilityPairs.size() /
+  this->visibilityUpdatesPerCycle = this->visibilityPairs.size() /
       ((1.0 / this->updateRate) /
        this->world->GetPhysicsEngine()->GetMaxStepSize());
 
@@ -397,14 +397,15 @@ void CommsModel::UpdateVisibility()
   unsigned int counter = 0;
 
   // All combinations between a pair of vehicles.
-  while (counter < this->updatesPerCycle)
+  while (counter < this->visibilityUpdatesPerCycle)
   {
-    auto const &keyA = this->visibilityPairs.at(this->index);
+    auto const &keyA = this->visibilityPairs.at(this->visibilityIndex);
     auto addressA = keyA.first;
     auto addressB = keyA.second;
     auto keyB = std::make_pair(addressB, addressA);
 
-    this->index = (this->index + 1) % this->visibilityPairs.size();
+    this->visibilityIndex =
+      (this->visibilityIndex + 1) % this->visibilityPairs.size();
     ++counter;
 
     auto poseA = (*swarm)[addressA]->model->GetWorldPose().Ign();
@@ -519,6 +520,10 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     {
       this->commsDataRateMax =
         commsModelElem->Get<double>("comms_data_rate_max");
+    }
+    if (commsModelElem->HasElement("update_rate"))
+    {
+      this->updateRate = commsModelElem->Get<double>("update_rate");
     }
   }
 }

@@ -159,7 +159,7 @@ void LogicalCameraPlugin::Update2()
     // RobotPlugin::cameraFalsePositiveProbMin, cameraFalsePositiveProbMax,
     // RobotPlugin::cameraFalsePositiveDurationMin and
     // RobotPlugin::cameraFalsePositiveDurationMax.
-    EXPECT_LE(consecutiveMean, 8);
+    EXPECT_LE(consecutiveMean, 10);
     EXPECT_GE(consecutiveMean, 2);
   }
   ++iteration;
