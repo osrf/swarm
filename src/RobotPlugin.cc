@@ -128,6 +128,8 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateSensors()
 {
+  gazebo::common::Time curTime = this->world->GetSimTime();
+
   if (this->gps)
   {
     this->observedLatitude = this->gps->Latitude().Degree();
@@ -205,19 +207,9 @@ void RobotPlugin::UpdateSensors()
       p.Pos().Y() += ignition::math::Rand::DblUniform(-posError, posError);
       p.Pos().Z() += ignition::math::Rand::DblUniform(-posError, posError);
 
-      // A percentage of the time we get a false positive for the lost person,
-      if (ignition::math::Rand::DblUniform(
-            this->cameraFalsePositiveProbMin,
-            this->cameraFalsePositiveProbMax) < distSquaredNormalized)
-      {
-        // Randomly choose a model name
-        this->img.objects[this->modelNames[
-          ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)]] = p;
-      }
-      else
-      {
-        this->img.objects[imgModel.name()] = p;
-      }
+      // Handle false positives.
+      this->UpdateFalsePositives(imgModel.name(), p, distSquaredNormalized,
+          curTime);
     }
   }
 }
@@ -1388,4 +1380,57 @@ void RobotPlugin::Reset()
 
   // Set camera starting pitch and yaw
   this->SetCameraOrientation(this->cameraStartPitch, this->cameraStartYaw);
+
+  // Clear information about false positives.
+  this->camFalsePositiveModels.clear();
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdateFalsePositives(const std::string &_model,
+    const ignition::math::Pose3d &_p, const double _normalizedDist,
+    const gazebo::common::Time &_curTime)
+{
+  // Check if we are currently on a false positive period for this model.
+  if (this->camFalsePositiveModels.find(_model) !=
+      this->camFalsePositiveModels.end())
+  {
+    auto &falsePositiveInfo = this->camFalsePositiveModels[_model];
+
+    // Check if the false positive should finish.
+    if (_curTime >= falsePositiveInfo.enabledUntil)
+    {
+      this->camFalsePositiveModels.erase(_model);
+      this->img.objects[_model] = _p;
+    }
+    else
+      this->img.objects[falsePositiveInfo.falsePositiveModel] = _p;
+  }
+  else
+  {
+    // A percentage of the time we get a false positive for the lost person.
+    if (ignition::math::Rand::DblUniform(
+          this->cameraFalsePositiveProbMin,
+          this->cameraFalsePositiveProbMax) < _normalizedDist)
+    {
+      // Randomly choose a model name.
+      auto cameraFalsePositiveModelName = this->modelNames[
+        ignition::math::Rand::IntUniform(0, this->modelNames.size()-1)];
+
+      FalsePositiveData fpData;
+
+      // Set the duration of the false positive.
+      fpData.enabledUntil = _curTime + ignition::math::Rand::DblUniform(
+          this->cameraFalsePositiveDurationMin,
+          this->cameraFalsePositiveDurationMax);
+
+      // Set the model that will replace the real observed model.
+      fpData.falsePositiveModel = cameraFalsePositiveModelName;
+
+      this->camFalsePositiveModels[_model] = fpData;
+
+      this->img.objects[cameraFalsePositiveModelName] = _p;
+    }
+    else
+      this->img.objects[_model] = _p;
+  }
 }

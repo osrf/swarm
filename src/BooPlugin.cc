@@ -171,6 +171,10 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   //
   // List of supported commands:
   // <FOUND> <x> <y> <z> <t> : Person found in [x,y,z] at time t.
+  //
+  // The BOO sends an ACK message with the result to the sender of the request.
+  // The destination port of is the default Swarm port.
+  // See also SendAck().
 
   // Split the string into a vector of parameters.
   std::vector<std::string> v;
@@ -182,6 +186,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   {
     gzerr << "BooPlugin::OnDataReceived() Unable to parse incoming message ["
           << _data << "]" << std::endl;
+    this->SendAck(_srcAddress, 3);
     return;
   }
 
@@ -194,6 +199,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       gzerr << "BooPlugin::OnDataReceived() Unable to parse a FOUND message ["
             << _data << "]" << std::endl << "Make sure that you're sending the"
             << " message in the proper format: FOUND <x> <y> <z>" << std::endl;
+      this->SendAck(_srcAddress, 4);
       return;
     }
 
@@ -212,6 +218,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       gzerr << "BooPlugin::OnDataReceived() Unable to parse the FOUND arguments"
             << " [" << v.at(1) << "," << v.at(2) << "," << v.at(3) << ","
             << v.at(4) << "]" << std::endl;
+      this->SendAck(_srcAddress, 5);
       return;
     }
 
@@ -220,6 +227,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
     {
       gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
             << " negative. Your request will be ignored" << std::endl;
+      this->SendAck(_srcAddress, 6);
       return;
     }
 
@@ -230,6 +238,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
             << " in the future. We're at [" << now << "]. Your request will be"
             << " ignored" << std::endl;
+      this->SendAck(_srcAddress, 7);
       return;
     }
 
@@ -240,6 +249,7 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
             << " too old. It should be no older than "
             << this->maxDt.Double() << " secs. We're at [" << now
             << "]. Your request will be ignored" << std::endl;
+      this->SendAck(_srcAddress, 2);
       return;
     }
 
@@ -262,16 +272,22 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
             << "the lost person at time [" << t << "]" << std::endl;
 
+      this->SendAck(_srcAddress, 0);
+
       // Pause the simulation to make the lost person detection obvious.
       gazebo::physics::get_world()->SetPaused(true);
     }
     else
+    {
       gzerr << "Sorry, the reported position seems incorrect" << std::endl;
+      this->SendAck(_srcAddress, 1);
+    }
   }
   else
   {
     gzerr << "BooPlugin::OnDataReceived() Unrecognized command [" << v.at(0)
           << "]" << std::endl;
+    this->SendAck(_srcAddress, 8);
   }
 }
 
@@ -285,4 +301,12 @@ void BooPlugin::Reset()
   auto personPosInGrid = this->PosToGrid(personPos);
   this->lostPersonBuffer[gazebo::common::Time::Zero] = personPosInGrid;
   this->lastPersonPosInGrid = personPosInGrid;
+}
+
+/////////////////////////////////////////////////
+void BooPlugin::SendAck(const std::string &_dstAddress, const int _code)
+{
+  // Format of the response: ACK <code>
+  std::string data = "ACK " + std::to_string(_code);
+  this->SendTo(data, _dstAddress);
 }

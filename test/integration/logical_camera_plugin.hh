@@ -47,6 +47,9 @@ namespace swarm
     /// \brief Update for test case 1
     private: void Update1();
 
+    /// \brief Update for test case 2
+    private: void Update2();
+
     /// \brief Pointer to the world
     private: gazebo::physics::WorldPtr world;
 
