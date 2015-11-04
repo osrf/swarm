@@ -121,12 +121,6 @@ namespace swarm
 
     /// \brief Random engine used to shuffle the messages.
     private: std::default_random_engine rndEngine;
-
-    /// \brief For computing dt.
-    private: gazebo::common::Time lastCommsUpdateTime;
-
-    /// \brief Rate at which the sensors should update.
-    private: double commsUpdateRate = 1.0;
   };
 }
 #endif

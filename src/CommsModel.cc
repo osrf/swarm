@@ -73,12 +73,14 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     this->world->GetPhysicsEngine()->CreateShape("ray",
       gazebo::physics::CollisionPtr()));
 
+  this->CacheVisibilityPairs();
+
   // Initialize visibility.
   for (auto const &robotA : (*this->swarm))
     for (auto const &robotB : (*this->swarm))
     {
       this->visibility[
-        std::make_pair(robotA.second->address, robotB.second->address)] = {};
+        std::make_pair(robotA.second->address, robotB.second->address)] = {""};
     }
 }
 
@@ -191,9 +193,17 @@ void CommsModel::UpdateNeighbors()
 {
   this->visibilityMsg.Clear();
 
+  unsigned int counter = 0;
+
   // Update the list of neighbors for each robot.
-  for (auto const &robot : (*this->swarm))
-    this->UpdateNeighborList(robot.first);
+  while (counter < this->neighborUpdatesPerCycle)
+  {
+    auto const &address = this->addresses.at(this->neighborIndex);
+    this->UpdateNeighborList(address);
+
+    this->neighborIndex = (this->neighborIndex + 1) % this->addresses.size();
+    ++counter;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -345,58 +355,68 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
 }
 
 //////////////////////////////////////////////////
-void CommsModel::CacheVisibilityMap()
+void CommsModel::CacheVisibilityPairs()
 {
   for (auto const &robotA : (*this->swarm))
   {
     auto addressA = robotA.second->address;
+    this->addresses.push_back(addressA);
     for (auto const &robotB : (*this->swarm))
     {
       auto addressB = robotB.second->address;
+      std::pair<std::string, std::string> aPair(addressA, addressB);
+      std::pair<std::string, std::string> aPairInverse(addressB, addressA);
 
+      // Do not include this case.
+      if (addressA == addressB)
+        continue;
+
+      // Check if we already have the symmetric pair stored.
+      if (std::find(this->visibilityPairs.begin(), this->visibilityPairs.end(),
+            aPairInverse) != this->visibilityPairs.end())
+      {
+        continue;
+      }
+
+      this->visibilityPairs.push_back(aPair);
     }
   }
+
+  this->updatesPerCycle = this->visibilityPairs.size() /
+      ((1.0 / this->updateRate) /
+       this->world->GetPhysicsEngine()->GetMaxStepSize());
+
+  this->neighborUpdatesPerCycle = this->swarm->size() /
+      ((1.0 / this->updateRate) /
+       this->world->GetPhysicsEngine()->GetMaxStepSize());
 }
 
 //////////////////////////////////////////////////
 void CommsModel::UpdateVisibility()
 {
-  this->visibility.clear();
+  unsigned int counter = 0;
 
   // All combinations between a pair of vehicles.
-  for (auto const &robotA : (*this->swarm))
+  while (counter < this->updatesPerCycle)
   {
-    auto addressA = robotA.second->address;
-    for (auto const &robotB : (*this->swarm))
-    {
-      auto addressB = robotB.second->address;
-      auto keyA = std::make_pair(addressA, addressB);
-      auto keyB = std::make_pair(addressB, addressA);
+    auto const &keyA = this->visibilityPairs.at(this->index);
+    auto addressA = keyA.first;
+    auto addressB = keyA.second;
+    auto keyB = std::make_pair(addressB, addressA);
 
-      // There's always line of sight between a vehicle and itself.
-      if (addressA == addressB)
-      {
-        // The empty string represents line of sight between vehicles.
-        this->visibility[keyA] = {""};
-        continue;
-      }
+    this->index = (this->index + 1) % this->visibilityPairs.size();
+    ++counter;
 
-      // Check if we already have the symmetric case.
-      if (this->visibility.find(keyB) != this->visibility.end())
-      {
-        auto v = this->visibility[keyB];
-        std::reverse(v.begin(), v.end());
-        this->visibility[keyA] = v;
-      }
-      else
-      {
-        auto poseA = robotA.second->model->GetWorldPose().Ign();
-        auto poseB = robotB.second->model->GetWorldPose().Ign();
-        std::vector<std::string> entities;
-        this->LineOfSight(poseA, poseB, entities);
-        this->visibility[keyA] = entities;
-      }
-    }
+    auto poseA = (*swarm)[addressA]->model->GetWorldPose().Ign();
+    auto poseB = (*swarm)[addressA]->model->GetWorldPose().Ign();
+    std::vector<std::string> entities;
+    this->LineOfSight(poseA, poseB, entities);
+    this->visibility[keyA] = entities;
+
+    // Update the symmetric case.
+    auto v = this->visibility[keyA];
+    std::reverse(v.begin(), v.end());
+    this->visibility[keyB] = v;
   }
 }
 

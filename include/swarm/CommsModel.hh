@@ -182,6 +182,18 @@ namespace swarm
     private: msgs::VisibilityMap visibilityMsg;
 
     private: std::vector<std::pair<std::string, std::string>> visibilityPairs;
+
+    private: unsigned int index = 0;
+
+    private: unsigned int updatesPerCycle;
+
+    private: unsigned int neighborUpdatesPerCycle;
+
+    private: unsigned int neighborIndex = 0;
+
+    private: std::vector<std::string> addresses;
+
+    private: double updateRate = 0.5;
   };
 }  // namespace
 #endif
