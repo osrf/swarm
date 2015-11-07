@@ -25,6 +25,7 @@
 #include <gazebo/common/Event.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/sensors/sensors.hh>
 #include <ignition/math/Vector2.hh>
 #include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
@@ -35,11 +36,17 @@ namespace swarm
   ///
   /// This plugin exposes the following functionality to the derived plugins:
   ///
+  /// * Configuration.
   ///     - Load()    This method will allow the agent to read SDF parameters
   ///                 from the model.
   ///
+  /// * Lost person control.
   ///     - Update()  This method is called every iteration, and acts as
   ///                 the main loop.
+  ///
+  ///  * Sensors and world information.
+  ///     - Pose() Get the lost person's current pose.
+  ///     - MapQuery() Query the map for height and terrain type info.
   class IGNITION_VISIBLE LostPersonPlugin : public gazebo::ModelPlugin
   {
     /// \brief The types of terrain.
@@ -87,6 +94,16 @@ namespace swarm
     protected: bool MapQuery(const double _lat, const double _lon,
                              double &_height, TerrainType &_type);
 
+    /// \brief Get the lost person's current pose.
+    ///
+    /// \param[out] _latitude Lost person latitude will be written here.
+    /// \param[out] _longitude Lost person longitude will be written here.
+    /// \param[out] _altitude Lost person altitude will be written here.
+    /// \return True if the call was successful.
+    protected: bool Pose(double &_latitude,
+                         double &_longitude,
+                         double &_altitude) const;
+
     /// \brief Get terrain information at the specified location.
     /// \param[in] _pos Reference position.
     /// \param[out] _terrainPos The 3d point on the terrain.
@@ -118,6 +135,9 @@ namespace swarm
     /// \param[in] _info Update information provided by the server.
     private: virtual void Loop(const gazebo::common::UpdateInfo &_info);
 
+    /// \brief Update and store sensor information.
+    private: void UpdateSensors();
+
     /// \brief Pointer to the model;
     protected: gazebo::physics::ModelPtr model;
 
@@ -143,6 +163,18 @@ namespace swarm
     /// \brief Min/max lat/long of search area.
     private: double searchMinLatitude, searchMaxLatitude,
                     searchMinLongitude, searchMaxLongitude;
+
+    /// \brief Pointer to GPS sensor.
+    private: gazebo::sensors::GpsSensorPtr gps;
+
+    /// \brief Lost person's latitude.
+    private: double latitude;
+
+    /// \brief Lost person's longitude.
+    private: double longitude;
+
+    /// \brief Lost person's altitude.
+    private: double altitude;
   };
 }
 #endif
