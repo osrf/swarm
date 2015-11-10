@@ -103,7 +103,9 @@ namespace swarm
     /// \param[in] _sdf Pointer to the SDF element of the plugin.
     private: void LoadParameters(sdf::ElementPtr _sdf);
 
-    /// \brief ToDo.
+    /// \brief Populate a vector with the pairs of addresses that will be
+    /// checked in UpdateVisibility() each iteration. Note that the vector will
+    /// contain all combinations of two different elements (not permutations).
     private: void CacheVisibilityPairs();
 
     /// \brief Minimum free-space distance (m) between two nodes to be
