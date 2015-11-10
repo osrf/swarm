@@ -52,6 +52,10 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   // Add code here that should be updated every iteration.
 
+  // Uncomment this block to get your current position on the map.
+  // double latitude, longitude, altitude;
+  // this->Pose(latitude, longitude, altitude);
+
   // Change direction when enough time has elapsed
   if (_info.simTime - this->prevUpdate > this->updatePeriod)
   {

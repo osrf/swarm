@@ -103,6 +103,19 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
     searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
   }
 
+  // Get the gps sensor
+  if (_sdf->HasElement("gps"))
+  {
+    std::cout << "Sensor found" << std::endl;
+    this->gps =
+      boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+          _sdf->Get<std::string>("gps")));
+  }
+
+  if (!this->gps)
+    gzwarn << "No gps sensor found on lost person" << std::endl;
+
   this->AdjustPose();
 
   this->Load(_sdf);
@@ -120,6 +133,8 @@ void LostPersonPlugin::Update(const gazebo::common::UpdateInfo &/*_info*/)
 //////////////////////////////////////////////////
 void LostPersonPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
+  this->UpdateSensors();
+
   this->Update(_info);
 
   this->AdjustPose();
@@ -388,6 +403,24 @@ bool LostPersonPlugin::MapQuery(const double _lat, const double _lon,
   return true;
 }
 
+//////////////////////////////////////////////////
+bool LostPersonPlugin::Pose(double &_latitude, double &_longitude,
+    double &_altitude) const
+{
+  if (!this->gps)
+  {
+    gzerr << "LostPersonPlugin::Pose() No GPS sensor available" << std::endl;
+    _latitude = _longitude = _altitude = 0.0;
+    return false;
+  }
+
+  _latitude = this->latitude;
+  _longitude = this->longitude;
+  _altitude = this->altitude;
+
+  return true;
+}
+
 /////////////////////////////////////////////////
 LostPersonPlugin::TerrainType LostPersonPlugin::TerrainAtPos(
     const ignition::math::Vector3d &_pos)
@@ -412,4 +445,15 @@ LostPersonPlugin::TerrainType LostPersonPlugin::TerrainAtPos(
   }
 
   return result;
+}
+
+//////////////////////////////////////////////////
+void LostPersonPlugin::UpdateSensors()
+{
+  if (this->gps)
+  {
+    this->latitude = this->gps->Latitude().Degree();
+    this->longitude = this->gps->Longitude().Degree();
+    this->altitude = this->gps->GetAltitude();
+  }
 }

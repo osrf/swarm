@@ -2,6 +2,9 @@
 <model name="lost_person">
   <pose><%=$lost_person_x%> <%=$lost_person_y%> 0.5 0 0 0</pose>
     <link name="link">
+      <sensor name="gps" type="gps">
+        <always_on>1</always_on>
+      </sensor>
       <kinematic>true</kinematic>
       <collision name="collision">
         <geometry>
@@ -84,6 +87,7 @@
      <initial_velocity>0 0.2 0</initial_velocity>
      <velocity_factor>0.5</velocity_factor>
      <update_period>10</update_period>
+     <gps>link::gps</gps>
      <%=search_area%>
    </plugin>
 </model>
