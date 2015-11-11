@@ -8,6 +8,11 @@ include_directories(${SWARM_INCLUDE_DIRS} ${GAZEBO_PROTO_INCLUDE_DIRS})
 link_directories(${SWARM_LIBRARY_DIRS})
 
 #################################################
+# Generate the terrain test plugin.
+add_library(TerrainTestPlugin SHARED TerrainTestPlugin.cc)
+target_link_libraries(TerrainTestPlugin ${SWARM_LIBRARIES})
+
+#################################################
 # Generate the team's plugin for controlling a robot.
 add_library(TeamControllerPlugin SHARED TeamControllerPlugin.cc)
 target_link_libraries(TeamControllerPlugin ${SWARM_LIBRARIES})
@@ -23,3 +28,4 @@ target_link_libraries(LostPersonControllerPlugin ${SWARM_LIBRARIES})
 include(GNUInstallDirs)
 install(TARGETS TeamControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
 install(TARGETS LostPersonControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
+install(TARGETS TerrainTestPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
