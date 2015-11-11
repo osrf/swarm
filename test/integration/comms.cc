@@ -145,7 +145,7 @@ TEST_F(CommsTest, HalfMsgsDrop)
 /// \brief Check temporary outages.
 TEST_F(CommsTest, TemporaryOutage)
 {
-  ignition::math::Rand::Seed(13456);
+  ignition::math::Rand::Seed(13461);
   Load("comms_08.world", true);
 
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");

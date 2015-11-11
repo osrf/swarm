@@ -859,6 +859,12 @@ namespace swarm
     /// \brief Camera start yaw
     private: double cameraStartYaw = 0.0;
 
+    /// \brief For computing dt.
+    private: gazebo::common::Time lastSensorUpdateTime;
+
+    /// \brief Rate at which the sensors should update.
+    private: double sensorsUpdateRate = 20.0;
+
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
   };

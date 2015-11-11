@@ -129,6 +129,19 @@ bool RobotPlugin::SetAngularVelocity(const double _x, const double _y,
 void RobotPlugin::UpdateSensors()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();
+  auto dt = (curTime - this->lastSensorUpdateTime).Double();
+  if (dt < 0)
+  {
+    // Probably we had a reset.
+    this->lastSensorUpdateTime = curTime;
+    return;
+  }
+
+  // Update based on sensorsUpdateRate.
+  if (dt < (1.0 / this->sensorsUpdateRate))
+    return;
+
+  this->lastSensorUpdateTime = curTime;
 
   if (this->gps)
   {
@@ -807,6 +820,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     this->rotorDocked = false;
   }
 
+  if (_sdf->HasElement("sensor_update_rate"))
+    sensorsUpdateRate = _sdf->Get<double>("sensor_update_rate");
+
   this->AdjustPose();
 
   // Register this plugin in the broker.
@@ -867,6 +883,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // Get starting camera pitch and yaw.
   this->CameraOrientation(this->cameraStartPitch, this->cameraStartYaw);
+
+  auto offset =
+    ignition::math::Rand::DblUniform(0, 1.0 / this->sensorsUpdateRate);
+  this->lastSensorUpdateTime = this->world->GetSimTime() - offset;
 }
 
 //////////////////////////////////////////////////

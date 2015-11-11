@@ -117,8 +117,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       {
         // The ideal number should be 151:
         // 50% of the 302 messages sent from the other robot.
-        // Using 13458 as seed, we received 142.
-        expectedNumMsgs = 142;
+        // Using 13458 as seed, we received 150.
+        expectedNumMsgs = 150;
         break;
       }
       // Temporary outage.
@@ -133,24 +133,24 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
       // Permanent outage.
       case 9:
       {
-        // Robot with address 192.168.2.1 enters into an outage at iteration 94.
+        // Robot with address 192.168.2.1 enters into an outage at iteration 26.
         // Two extra messages are sent on iteration 0, otherwise each iteration
-        // sends three message (uni, multi, broad).
-        expectedNumMsgs = 278;
+        // sends three messages (uni, multi, broad).
+        expectedNumMsgs = 74;
         break;
       }
       // Temporary outage + drops.
       case 10:
       {
-        // Robot with address 192.168.2.1 enters into an outage at iteration 47
+        // Robot with address 192.168.2.1 enters into an outage at iteration 12
         // with a duration of 20 iterations.
         // This is a total of 20 * 3 = 60 missing messages.
-        // 9 packages were dropped targeted to 192.168.2.2 .
+        // 13 packages were dropped targeted to 192.168.2.2 .
         // From the ideal case in which we should receive 302 messages,
-        // we missed 60 + 9 = 69.
-        // The expected number of messages is: 302 - 69 = 233.
+        // we missed 60 + 13 = 73.
+        // The expected number of messages is: 302 - 73 = 229.
         expectedNumMsgs = this->numUnicastSent + this->numBroadcastSent +
-          this->numMulticastSent - 69;
+          this->numMulticastSent - 73;
         break;
       }
       // Low max data rate to drop half of the messages due to a busy channel.
