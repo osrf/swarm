@@ -1,0 +1,12 @@
+#!/usr/bin/gnuplot
+
+reset
+
+set terminal png
+set output 'swarm_comms_datarate.png'
+set xlabel "time (seconds)"
+set ylabel "Data rate (mbps)"
+set title "Overall data rate"
+set datafile separator ","
+
+plot 'swarm.csv' using 1:($11/1000000) title 'Data rate' with lines

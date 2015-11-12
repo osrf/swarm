@@ -1,0 +1,15 @@
+#!/usr/bin/gnuplot
+
+reset
+
+set terminal png
+set output 'swarm_msgs_sent.png'
+set xlabel "time (seconds)"
+set ylabel "Number of messages"
+set title "Messages sent"
+set datafile separator ","
+
+plot 'swarm.csv' using 1:2 title 'All message types' with lines,\
+     'swarm.csv' using 1:4 title 'Unicasts messages' with lines,\
+     'swarm.csv' using 1:5 title 'Broadcast messages' with lines,\
+     'swarm.csv' using 1:6 title 'Multicast messages' with lines,\

@@ -1,0 +1,12 @@
+#!/usr/bin/gnuplot
+
+reset
+
+set terminal png
+set output 'swarm_comms_neighbors.png'
+set xlabel "time (seconds)"
+set ylabel "Average number of neighbors per robot"
+set title "Neighbors per robot"
+set datafile separator ","
+
+plot 'swarm.csv' using 1:12 title 'Average number of neighbors per robot' with lines

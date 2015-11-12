@@ -106,7 +106,6 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   // Get the gps sensor
   if (_sdf->HasElement("gps"))
   {
-    std::cout << "Sensor found" << std::endl;
     this->gps =
       boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
         gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
