@@ -18,7 +18,6 @@
 #include "TerrainTestPlugin.hh"
 
 using namespace swarm;
-using namespace std;
 
 GZ_REGISTER_MODEL_PLUGIN(TerrainTestPlugin)
 
@@ -42,26 +41,28 @@ void TerrainTestPlugin::Load(sdf::ElementPtr _sdf)
   double elevation;
   swarm::RobotPlugin::TerrainType terrainType;
 
-  ofstream elevationFile("elevation.csv");
-  ofstream terrainFile("terrain.csv");
+  std::ofstream elevationFile("elevation.csv");
+  std::ofstream terrainFile("terrain.csv");
 
   elevationFile << ", ";
   terrainFile << ", ";
 
   for (double lon = minLon; lon < maxLon; lon += stepLon)
   {
-    elevationFile << to_string(lon) << ((lon + stepLon < maxLon) ? ", " : "\n");
-    terrainFile   << to_string(lon) << ((lon + stepLon < maxLon) ? ", " : "\n");
+    elevationFile << std::to_string(lon)
+      << ((lon + stepLon < maxLon) ? ", " : "\n");
+    terrainFile   << std::to_string(lon)
+      << ((lon + stepLon < maxLon) ? ", " : "\n");
   }
 
   for (double lat = minLat; lat < maxLat; lat += stepLat)
   {
-    elevationFile << to_string(lat) << ", ";
-    terrainFile << to_string(lat) << ", ";
+    elevationFile << std::to_string(lat) << ", ";
+    terrainFile << std::to_string(lat) << ", ";
 
     for (double lon = minLon; lon < maxLon; lon += stepLon)
     {
-      MapQuery(lat, lon, elevation, terrainType);
+      this->MapQuery(lat, lon, elevation, terrainType);
       elevationFile << elevation << ((lon + stepLon < maxLon) ? ", " : "\n");
       terrainFile   << terrainType << ((lon + stepLon < maxLon) ? ", " : "\n");
     }
