@@ -132,7 +132,7 @@ namespace swarm
     /// This constant expresses the size of each cell (m). We update the cell
     /// in which the lost person is located every cycle. Each reported position
     /// is discretized to a cell too. We consider success when both cells match.
-    private: double cellSize = 1;
+    private: double cellSize = 10;
 
     /// \brief Maximum time difference allowed (seconds) between the current
     /// time and the reported lost person messages to the BOO.
