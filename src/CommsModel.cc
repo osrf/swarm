@@ -389,6 +389,17 @@ void CommsModel::CacheVisibilityPairs()
   this->neighborUpdatesPerCycle = this->swarm->size() /
       ((1.0 / this->updateRate) /
        this->world->GetPhysicsEngine()->GetMaxStepSize());
+
+
+  if (this->visibilityPairs.size() > 0)
+  {
+    // Make sure that we update at least one element in each update.
+    this->visibilityUpdatesPerCycle = std::max(1u,
+        this->visibilityUpdatesPerCycle);
+
+    this->neighborUpdatesPerCycle = std::max(1u,
+        this->neighborUpdatesPerCycle);
+  }
 }
 
 //////////////////////////////////////////////////
