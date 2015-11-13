@@ -478,6 +478,14 @@ bool RobotPlugin::Dock(const std::string &_vehicle)
 }
 
 //////////////////////////////////////////////////
+bool RobotPlugin::IsDocked() const {
+  if (this->type != ROTOR)
+    return false;
+
+  return this->rotorDocked;
+}
+
+//////////////////////////////////////////////////
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
   // Get current terrain type
