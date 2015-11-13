@@ -390,7 +390,6 @@ void CommsModel::CacheVisibilityPairs()
       ((1.0 / this->updateRate) /
        this->world->GetPhysicsEngine()->GetMaxStepSize());
 
-
   if (this->visibilityPairs.size() > 0)
   {
     // Make sure that we update at least one element in each update.
