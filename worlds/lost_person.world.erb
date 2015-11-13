@@ -6,6 +6,9 @@
     <model name="lost_person">
       <pose>0 0 0.5 0 0 0</pose>
       <link name="link">
+        <sensor name="gps" type="gps">
+          <always_on>1</always_on>
+        </sensor>
         <kinematic>true</kinematic>
         <collision name="collision">
           <geometry>
@@ -85,13 +88,14 @@
       </link>
 
       <plugin name="lostperson" filename="libLostPersonControllerPlugin.so">
-        <speed>1.0</speed>
+        <initial_velocity>0 0.2 0</initial_velocity>
         <swarm_search_area>
           <min_relative_latitude_deg>-0.01</min_relative_latitude_deg>
           <max_relative_latitude_deg>0.01</max_relative_latitude_deg>
           <min_relative_longitude_deg>-0.01</min_relative_longitude_deg>
           <max_relative_longitude_deg>0.01</max_relative_longitude_deg>
         </swarm_search_area>
+        <gps>link::gps</gps>
       </plugin>
     </model>
 
