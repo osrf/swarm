@@ -39,7 +39,10 @@ TeamControllerPlugin::TeamControllerPlugin()
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
-  // Subscribe to receive unicast and broadcast messages
+  // Bind to received the ACKs from the BOO.
+  this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host());
+
+  // Bind to receive unicast and broadcast messages.
   this->Bind(&TeamControllerPlugin::OnDataReceived, this, this->Host(),
     this->kBooPort);
 }
@@ -134,6 +137,13 @@ void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
     const std::string &_dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
+  // ACK from the BOO.
+  if (_srcAddress == "boo")
+  {
+    // You can process the ACK message here.
+    return;
+  }
+
   // Totally dumb mesh network strategy: relay everything you hear that you
   // haven't previously relayed.
   auto alreadySent = false;
