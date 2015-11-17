@@ -68,19 +68,23 @@ message Message
 enum CommsStatus
 {
   /// \brief Robots are visible.
-  VISIBLE   = 1;
+  VISIBLE    = 1;
   /// \brief Communication succeed.
-  DELIVERED = 2;
-  /// \brief Communication failed due to a comms outage.
-  OUTAGE    = 3;
+  DELIVERED  = 2;
+  /// \brief Communication failed due to a comms outage in source robot.
+  OUTAGE     = 3;
   /// \brief Communication failed due to an obstacle between the robots.
-  OBSTACLE  = 4;
+  OBSTACLE   = 4;
   /// \brief Communication failed due to the robots are out of range.
-  DISTANCE  = 5;
+  DISTANCE   = 5;
   /// \brief Communication failed due to a random drop.
-  DROPPED   = 6;
+  DROPPED    = 6;
   /// \brief Communication failed due to maximum data rate reached.
-  DATARATE  = 7;
+  DATARATE   = 7;
+  /// \brief Communication failed due to a comms outage in destination robot.
+  OUTAGE_DST  = 8;
+  /// \brief Communication failed due to a comms outage in both robots.
+  OUTAGE_BOTH = 9;
 }
 
 message NeighborEntry
@@ -160,4 +164,7 @@ message LogEntry
 
   /// \brief Visibility among the robots.
   optional VisibilityMap visibility   = 6;
+
+  /// \brief Gazebo model name.
+  optional string model_name          = 7;
 }
