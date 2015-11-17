@@ -1,0 +1,397 @@
+/*
+ * Copyright (C) 2015 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+#ifdef _WIN32
+  // Ensure that Winsock2.h is included before Windows.h, which can get
+  // pulled in by anybody (e.g., Boost).
+  #include <Winsock2.h>
+#endif
+
+#include <boost/program_options.hpp>
+
+#include "gazebo/gazebo_config.h"
+#include "gazebo/physics/physics.hh"
+#include "gazebo/msgs/msgs.hh"
+#include "gazebo/transport/transport.hh"
+#include "swarm/GazeboVisualizePlugin.hh"
+
+using namespace gazebo;
+namespace po = boost::program_options;
+
+// Register this plugin with the simulator
+GZ_REGISTER_SYSTEM_PLUGIN(GazeboVisualizePlugin)
+
+/////////////////////////////////////////////
+GazeboVisualizePlugin::~GazeboVisualizePlugin()
+{
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::Load(int /*_argc*/, char ** /*_argv*/)
+{
+  std::cout << "GazeboVisualizePlugin::Load\n";
+/*  po::options_description v_desc("Options");
+  v_desc.add_options()
+    ("propshop-save", po::value<std::string>(),
+     "Path to save image files into.")
+    ("propshop-model", po::value<std::string>(), "Model to spawn.");
+
+  po::options_description desc("Options");
+  desc.add(v_desc);
+
+  po::variables_map vm;
+  try
+  {
+    po::store(po::command_line_parser(_argc, _argv).options(
+          desc).allow_unregistered().run(), vm);
+    po::notify(vm);
+  } catch(boost::exception &_e)
+  {
+    std::cerr << "Error. Invalid arguments\n";
+    return;
+  }
+
+  // Get the directory in which to save the images.
+  if (vm.count("propshop-save"))
+  {
+    this->savePath = boost::filesystem::path(
+        vm["propshop-save"].as<std::string>());
+    if (!boost::filesystem::exists(this->savePath))
+      boost::filesystem::create_directories(this->savePath);
+  }
+  else
+    this->savePath = boost::filesystem::temp_directory_path();
+
+  std::string modelFile;
+
+  if (vm.count("propshop-model"))
+    modelFile = vm["propshop-model"].as<std::string>();
+  else
+    return;
+
+  std::ifstream ifs(modelFile.c_str());
+  if (!ifs)
+  {
+    std::cerr << "Error: Unable to open file[" << modelFile << "]\n";
+    return;
+  }
+
+  this->sdf.reset(new sdf::SDF());
+  if (!sdf::init(this->sdf))
+  {
+    std::cerr << "ERROR: SDF parsing the xml failed" << std::endl;
+    return;
+  }
+
+  if (!sdf::readFile(modelFile, this->sdf))
+  {
+    std::cerr << "Error: SDF parsing the xml failed\n";
+    return;
+  }
+
+  sdf::ElementPtr modelElem = this->sdf->Root()->GetElement("model");
+  this->modelName = modelElem->Get<std::string>("name");
+  */
+  std::string logFile = "/home/nkoenig/Downloads/swarm.log";
+  this->parser.Load(logFile);
+
+  swarm::msgs::LogHeader header;
+  if (!this->parser.Header(header))
+  {
+    std::cerr << "Error parsing header from [" << logFile << "]" << std::endl;
+  }
+  else
+  {
+    std::cout << "Swarm Version:  " << header.swarm_version() << std::endl;
+    std::cout << "Gazebo Version: " << header.gazebo_version() << std::endl;
+    std::cout << "Random Seed:    " << header.seed() << std::endl;
+    std::cout << std::endl;
+  }
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::Init()
+{
+  this->worldCreatedConn = event::Events::ConnectWorldCreated(
+        boost::bind(&GazeboVisualizePlugin::OnWorldCreated, this));
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::OnWorldCreated()
+{
+  this->updateConn = event::Events::ConnectWorldUpdateBegin(
+      std::bind(&GazeboVisualizePlugin::Update, this));
+
+  this->world = physics::get_world();
+
+  // Create our node for communication
+  this->node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+  this->node->Init();
+
+  // Publish to a Gazebo topic
+#if GAZEBO_MAJOR_VERSION >= 7
+  this->markerPub = this->node->Advertise<gazebo::msgs::Marker>("~/marker");
+#endif
+
+  this->markerPub->WaitForConnection();
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::VisualizeMessages(swarm::msgs::LogEntry &_logEntry)
+{
+#if GAZEBO_MAJOR_VERSION >= 7
+  // The namespace of the markers generated in this function.
+  std::string markerNS = "messages";
+
+  // Clear visualis in the namespace
+  gazebo::msgs::Marker clearMsg;
+  clearMsg.set_ns(markerNS);
+  clearMsg.set_action(gazebo::msgs::Marker::DELETE_ALL);
+  this->markerPub->Publish(clearMsg);
+
+  int msgIndex = 0;
+
+  // Construct map of messages
+  if (_logEntry.has_incoming_msgs())
+  {
+    // Process each message received by the broker
+    for (int msg = 0; msg < _logEntry.incoming_msgs().message_size(); ++msg)
+    {
+      // Get the source address
+      std::string src = _logEntry.incoming_msgs().message(msg).src_address();
+
+      // Make sure the source address has a dot (the address should be an IP
+      // address).
+      if (src.find('.') == std::string::npos)
+        continue;
+
+      // Get the physics model
+      std::string srcId = src.substr(src.rfind('.')+1);
+      physics::ModelPtr model = this->world->GetModel("ground_" + srcId);
+      if (!model)
+        continue;
+
+      // Create a marker message
+      ignition::math::Vector3d srcPos = model->GetWorldPose().pos.Ign();
+      gazebo::msgs::Marker markerMsg;
+      markerMsg.set_ns(markerNS);
+      markerMsg.set_id(msgIndex);
+      markerMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+      markerMsg.set_type(gazebo::msgs::Marker::LINE_LIST);
+      markerMsg.clear_point();
+      markerMsg.mutable_material()->mutable_script()->set_name("Gazebo/Red");
+
+      // Construct the list of destination addresses
+      std::list<std::string> dst;
+      for (int n = 0;
+          n < _logEntry.incoming_msgs().message(msg).neighbor_size(); ++n)
+      {
+        std::string dest =
+          _logEntry.incoming_msgs().message(msg).neighbor(n).dst();
+        if (dest.find('.') == std::string::npos)
+          continue;
+
+        std::string destId = dest.substr(dest.rfind('.') + 1);
+        physics::ModelPtr mdl = this->world->GetModel("ground_" + destId);
+        if (!mdl)
+          continue;
+
+        ignition::math::Vector3d destPos = mdl->GetWorldPose().pos.Ign();
+
+        // Only draw lines for messages that were delivered.
+        if (_logEntry.incoming_msgs().message(msg).neighbor(n).status() ==
+            swarm::msgs::CommsStatus::DELIVERED)
+        {
+          gazebo::msgs::Set(markerMsg.add_point(), srcPos);
+          gazebo::msgs::Set(markerMsg.add_point(), destPos);
+        }
+      }
+      this->markerPub->Publish(markerMsg);
+      ++msgIndex;
+    }
+  }
+#endif
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::VisualizeNeighbors(swarm::msgs::LogEntry &_logEntry)
+{
+#if GAZEBO_MAJOR_VERSION >= 7
+  // The namespace of the markers generated in this function.
+  std::string markerNS = "neighbors";
+
+  // Clear visualis in the namespace
+  gazebo::msgs::Marker clearMsg;
+  clearMsg.set_ns(markerNS);
+  clearMsg.set_action(gazebo::msgs::Marker::DELETE_ALL);
+  this->markerPub->Publish(clearMsg);
+
+  std::list< std::list<std::string> > circles;
+
+  // Construct set of visibility circles
+  if (_logEntry.has_visibility())
+  {
+    for (int row = 0; row < _logEntry.visibility().row_size(); ++row)
+    {
+      std::string source = _logEntry.visibility().row(row).src();
+      std::list<std::string> vehicles;
+      vehicles.push_back(source);
+      for (int v = 0; v < _logEntry.visibility().row(row).entry_size(); ++v)
+      {
+        std::string dst = _logEntry.visibility().row(row).entry(v).dst();
+        if (source != dst &&
+            _logEntry.visibility().row(row).entry(v).status() ==
+            swarm::msgs::CommsStatus::VISIBLE)
+        {
+          vehicles.push_back(dst);
+        }
+        else if (_logEntry.visibility().row(row).entry(v).status() ==
+            swarm::msgs::CommsStatus::OUTAGE)
+        {
+          // std::cout << "In outage. src[" << source << "] d[" << dst << "]\n";
+        }
+      }
+      circles.push_back(vehicles);
+    }
+  }
+
+  int index = 0;
+  for (auto c : circles)
+  {
+    std::vector<ignition::math::Vector3d> positions;
+    ignition::math::Vector3d sum;
+    for (auto v : c)
+    {
+      if (v.find('.') == std::string::npos)
+        continue;
+
+      std::string vId = v.substr(v.rfind('.')+1);
+      physics::ModelPtr model = this->world->GetModel("ground_" + vId);
+      if (model)
+      {
+        positions.push_back(model->GetWorldPose().pos.Ign());
+        sum += model->GetWorldPose().pos.Ign();
+      }
+    }
+
+    ignition::math::Vector3d center = sum;
+    if (!positions.empty())
+      center /= positions.size();
+
+    double radius = 0;
+    for (auto const &p : positions)
+    {
+      if (p.Distance(center) > radius)
+        radius = p.Distance(center);
+    }
+
+    if (ignition::math::equal(radius, 0.0))
+      radius = 2.0;
+
+    gazebo::msgs::Marker markerMsg;
+    markerMsg.set_ns(markerNS);
+    markerMsg.set_id(index);
+    markerMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+    markerMsg.set_type(gazebo::msgs::Marker::LINE_LIST);
+    markerMsg.clear_point();
+    gazebo::msgs::Set(markerMsg.mutable_pose(),
+        ignition::math::Pose3d(center, ignition::math::Quaterniond::Identity));
+    markerMsg.mutable_material()->mutable_script()->set_name(
+        "Gazebo/Blue");
+
+    for (double t = 0; t <= 2*M_PI; t+= 0.01)
+    {
+      gazebo::msgs::Set(markerMsg.add_point(),
+          ignition::math::Vector3d(radius * cos(t), radius * sin(t), 20.0));
+    }
+    gazebo::msgs::Set(markerMsg.add_point(),
+          ignition::math::Vector3d(radius * cos(2*M_PI), radius * sin(2*M_PI), 20.0));
+
+    this->markerPub->Publish(markerMsg);
+
+    ++index;
+  }
+
+  /*if (this->circleCount > index)
+  {
+    for (int i = index; i < this->circleCount; ++i)
+    {
+      gazebo::msgs::Marker markerMsg;
+      markerMsg.set_ns("neighbors");
+      markerMsg.set_id(i);
+      markerMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+      markerMsg.set_type(gazebo::msgs::Marker::TRIANGLE_FAN);
+      gazebo::msgs::Set(markerMsg.mutable_pose(),
+        ignition::math::Pose3d(0, 0, -100, 0, 0, 0));
+
+      this->markerPub->Publish(markerMsg);
+    }
+  }
+  this->circleCount = index;
+  */
+#endif
+}
+
+/////////////////////////////////////////////
+void GazeboVisualizePlugin::Update()
+{
+  static bool first = true;
+
+  swarm::msgs::LogEntry logEntry;
+  do
+  {
+    this->parser.Next(logEntry);
+  } while (logEntry.id() != "broker");
+
+  this->VisualizeMessages(logEntry);
+  this->VisualizeNeighbors(logEntry);
+
+  if (first)
+  {
+    this->CreateLostPersonMarker();
+    first = false;
+  }
+}
+
+/////////////////////////////////////////////////
+void GazeboVisualizePlugin::CreateLostPersonMarker()
+{
+#if GAZEBO_MAJOR_VERSION >= 7
+  gazebo::msgs::Marker markerMsg;
+  markerMsg.set_ns("lost_person");
+  markerMsg.set_id(0);
+  markerMsg.set_parent("lost_person::link::visual");
+  markerMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+  markerMsg.set_type(gazebo::msgs::Marker::CYLINDER);
+  markerMsg.mutable_material()->mutable_script()->set_name(
+      "Gazebo/BlueLaser");
+  gazebo::msgs::Set(markerMsg.mutable_scale(),
+      ignition::math::Vector3d(10, 10, 50));
+  gazebo::msgs::Set(markerMsg.mutable_pose(),
+      ignition::math::Pose3d(0, 0, 50, 0, 0, 0));
+
+  this->markerPub->Publish(markerMsg);
+
+  markerMsg.set_id(1);
+  markerMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+  markerMsg.set_type(gazebo::msgs::Marker::LINE_LIST);
+  gazebo::msgs::Set(markerMsg.add_point(), ignition::math::Vector3d::Zero);
+  gazebo::msgs::Set(markerMsg.add_point(),
+      ignition::math::Vector3d(0, 0, -25));
+
+  this->markerPub->Publish(markerMsg);
+#endif
+}
