@@ -121,8 +121,10 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
   if (this->swarm->empty())
     gzerr << "BrokerPlugin::ReadSwarmFromSDF: No members found" << std::endl;
   else
+  {
     gzmsg << "BrokerPlugin::ReadSwarmFromSDF: " << this->swarm->size()
           << " swarm members found" << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////

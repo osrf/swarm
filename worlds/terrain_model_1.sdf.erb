@@ -51,13 +51,13 @@
 <% for y in 0..1 %>
   <% for x in 0..8 %>
     <model name="building_group1_<%=y*8 + x%>">
-    <pose><%=0 - x * 170%> <%=1535 + 400*y%> 452 0 0 0</pose>
+    <pose><%=0 - x * 170%> <%=1535 + 400*y%> 425 0 0 0</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">
           <geometry>
             <box>
-              <size>150 350 50</size>
+              <size>150 350 80</size>
             </box>
           </geometry>
           <material>
@@ -69,7 +69,7 @@
         <collision name="collision">
           <geometry>
             <box>
-              <size>150 350 50</size>
+              <size>150 350 80</size>
             </box>
           </geometry>
         </collision>

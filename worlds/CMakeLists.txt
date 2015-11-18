@@ -14,6 +14,7 @@ set (other_erb_files
   rotor_vehicle.sdf.erb
   terrain_camp_roberts.sdf.erb
   terrain_model_1.sdf.erb
+  terrain_test_model.sdf.erb
   template.world.erb
   vegetation_01.sdf.erb
   vegetation_camp_roberts_low.sdf.erb
@@ -31,6 +32,8 @@ set (world_erb_files
   lost_person.world.erb
   rotor_simple_36.world.erb
   swarm_empty.world.erb
+  terrain_test.world.erb
+  terrain_test_roberts.world.erb
 )
 
 set (master_erb_file master.erb)
