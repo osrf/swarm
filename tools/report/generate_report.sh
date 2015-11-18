@@ -1,29 +1,161 @@
-#!/bin/bash
+#!/bin/sh
 
+# Uncomment for debugging.
+# set -x
+
+# define usage function
+usage()
+{
+  echo "Usage: $0 <log_file> <output_dir>\n"
+  echo "Parameters:"
+  echo "  <log_file>: Path to the swarm.log file"
+  echo "  <output_dir>: Path the directory where the report will be generated\n"
+  echo "Example:"
+  echo "  $0 /home/caguero/.swarm/log/2015-11-17T14:31:11.570567/swarm.log /tmp/log1"
+  exit 1
+}
+
+# Create the latex template for the report.
+# The first argument is the full path where the report will be created.
+latex_template()
+{
+  cat << EOF > $1
+  \documentclass{article}
+
+  \usepackage{graphicx} % Required for the inclusion of images
+  \usepackage{amsmath} % Required for some math elements
+  \usepackage{subfigure}
+  \usepackage{geometry}
+    \geometry{
+    left=20mm,
+    right=20mm,
+    top=20mm,
+  }
+
+  \setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+  \renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number (e.g. section 6)
+
+  \input{swarm_summary}
+
+  \title{Swarm experiment report} % Title
+
+  \author{\textsc{Open Source Robotics Foundation}} % Author name
+
+  \date{\today} % Date for the report
+
+  \begin{document}
+
+  \maketitle % Insert the title, author and date
+
+  \section*{Configuration}
+
+  \begin{tabular}{ll}
+  Team                           & \swarmTeamName\\\\
+  Duration                       & \swarmDuration\\\\
+  Success                        & \swarmSuccess\\\\
+  Number of ground vehicles      & \swarmNumGoundVehicles\\\\
+  Number of fixed wing vehicles  & \swarmNumGoundVehicles\\\\
+  Number of rotor craft vehicles & \swarmNumRotorVehicles\\\\
+  Terrain name                   & \swarmTerrainName\\\\
+  Search area                    & \swarmSearchArea\\\\
+  \end{tabular}
+
+
+  \section*{Communications}
+
+  \begin{tabular}{ll}
+  Number of messages sent               & \swarmNumMsgsSent\\\\
+  Number of unicast messages sent       & \swarmNumUnicastSent\\\\
+  Number of broadcast messages sent     & \swarmNumBroadcastSent\\\\
+  Number of multicast messages sent     & \swarmNumMulticastSent\\\\
+  Average message publication frequency & \swarmFreqMsgsSent\\\\
+  Average percentage message drop       & \swarmAvgMsgsDrop\\\\
+  Average data rate per robot           & \swarmAvgDataRateRobot\\\\
+  Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
+  \end{tabular}
+
+  \begin{figure}[ht]
+  \centering
+  \subfigure{
+      \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_msgs_sent}
+      \label{fig:subfig5}
+  }
+  \subfigure{
+      \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_drops}
+      \label{fig:subfig6}
+  }
+  \subfigure{
+      \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_datarate}
+      \label{fig:subfig7}
+  }
+  \subfigure{
+      \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_neighbors}
+      \label{fig:subfig8}
+  }
+  %\caption[Optional caption for list of figures 5-8]{General Caption of subfigures 5-8}
+  \label{fig:subfigureExample2}
+  \end{figure}
+
+
+  \end{document}
+EOF
+}
+
+# Sanity check: Make sure that the arguments are correct.
+if [ $# -ne 2 ]; then
+  usage
+fi
+
+TMPDIR=$(mktemp -dt)
+INPUT=$1
+OUTPUT_DIR=$2
+OUTPUT_CSV_FILE=$OUTPUT_DIR/swarm.csv
+OUTPUT_ENV_FILE=$OUTPUT_DIR/swarm_summary.tex
+
+# Sanity check: Make sure that the log file exists.
+if [ ! -f $INPUT ]; then
+  echo "Cannot find [$INPUT] Swarm log file"
+  exit 1
+fi
+
+# Create the output directory if needed.
+mkdir -p $OUTPUT_DIR
+
+# Color constants.
 RED='\033[1;31m'
 GREEN='\033[1;32m'
 NC='\033[0m' # No Color
 
-# Generate a CSV file and the swarm_environment.tex
-if [ -f swarm.csv ]; then
-  echo 'Generating CSV and configuration file.....'${GREEN}'ALREADY EXISTING'${NC}
-else
-  echo 'Generating CSV and configuration file.....'
-  ~/workspace/swarm/tools/swarmlog_to_csv_comms.py swarm.log > swarm.csv
+# Step 1: Generate a CSV file and the swarm_environment.tex
+if [ ! -f $OUTPUT_CSV_FILE -o ! -f $OUTPUT_ENV_FILE ]; then
+  echo -n 'Generating CSV and summary file.....'
+  swarmlog_to_csv_comms.py $INPUT $OUTPUT_ENV_FILE > $OUTPUT_CSV_FILE
   if [ $? -eq 0 ]; then
     echo ${GREEN}OK${NC}
   else
     echo ${RED}FAIL${NC}
   fi
+elif [ $INPUT -nt $OUTPUT_CSV_FILE ]; then
+  echo -n 'Generating CSV and summary file.....'
+  swarmlog_to_csv_comms.py $INPUT $OUTPUT_ENV_FILE > $OUTPUT_CSV_FILE
+  if [ $? -eq 0 ]; then
+    echo ${GREEN}Updated${NC}
+  else
+    echo ${RED}FAIL${NC}
+  fi
+else
+  echo 'Generating CSV and summary file.....'${GREEN}'Already existing'${NC}
 fi
 
-# Generate images
-echo 'Generating images'
+cp $OUTPUT_CSV_FILE $TMPDIR
 
+# Step 2: Generate images
+echo 'Generating images'
 for script in comms_msgs_sent.gplot comms_drops.gplot comms_datarate.gplot comms_neighbors.gplot
 do
   echo -n '\t Executing gnuplot script ['${script}'].....'
-  ./${script}
+  output_dir=$TMPDIR logfile=$OUTPUT_CSV_FILE ${script}
   if [ $? -eq 0 ]; then
     echo ${GREEN}OK${NC}
   else
@@ -31,11 +163,18 @@ do
   fi
 done
 
-# Generate the PDF report.
+# Step 3: Generate the PDF report.
+cp $OUTPUT_ENV_FILE $TMPDIR
+cd $TMPDIR
 echo -n 'Generating PDF.....'
+# Create the tex template.
+latex_template $TMPDIR/report.tex
 pdflatex report > /dev/null
 if [ $? -eq 0 ]; then
   echo ${GREEN}OK${NC}
+  cp report.pdf $OUTPUT_DIR
 else
   echo ${RED}FAIL${NC}
 fi
+cd - >/dev/null
+rm -rf $TMPDIR

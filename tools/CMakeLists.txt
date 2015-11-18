@@ -1,5 +1,7 @@
 include_directories(${CMAKE_BINARY_DIR}/)
 
+add_subdirectory(report)
+
 #################################################
 # Generate a tool for introspecting Swarm log files.
 add_executable(swarmlog swarmlog.cc)

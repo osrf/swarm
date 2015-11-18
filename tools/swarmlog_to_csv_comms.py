@@ -42,8 +42,35 @@ class LogReader:
             if type(msg) == log_entry_pb2.LogEntry:
                 func(msg)
 
+# Global variables.
+total_msgs_sent = 0
+total_msgs_unicast = 0
+total_msgs_broadcast = 0
+total_msgs_multicast = 0
+total_msgs_sent_freq = 0
+counter_msgs_sent_freq = 0.0
+total_drop_ratio = 0
+counter_drop_ratio = 0.0
+total_data_rate = 0
+counter_data_rate = 0.0
+total_neighbors = 0
+counter_total_neighbors = 0.0
+
 # An example of processing a single log entry
 def process_msg(entry):
+    global total_msgs_sent
+    global total_msgs_unicast
+    global total_msgs_broadcast
+    global total_msgs_multicast
+    global total_msgs_sent_freq
+    global counter_msgs_sent_freq
+    global total_drop_ratio
+    global counter_drop_ratio
+    global total_data_rate
+    global counter_data_rate
+    global total_neighbors
+    global counter_total_neighbors
+
     # Check for the 'incoming_msgs' field, which tells us about what happened to
     # messages that were sent
     if entry.HasField('incoming_msgs') and entry.HasField('time') and entry.HasField('visibility'):
@@ -97,11 +124,64 @@ def process_msg(entry):
         print('%f,%d,%f,%d,%d,%d,%d,%d,%f,%d,%f,%f'%
           (time, num_msgs_sent, freq_msgs_sent, num_unicast_sent, num_broadcast_sent, num_multicast_sent, num_recipients, num_msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors))
 
+        # Update global variables.
+        total_msgs_sent += num_msgs_sent
+        total_msgs_unicast += num_unicast_sent
+        total_msgs_broadcast += num_broadcast_sent
+        total_msgs_multicast += num_multicast_sent
+        total_msgs_sent_freq += freq_msgs_sent
+        counter_msgs_sent_freq += 1
+        total_drop_ratio += drop_ratio
+        counter_drop_ratio += 1
+        total_data_rate += data_rate
+        counter_data_rate += 1
+        total_neighbors += avg_num_neighbors
+        counter_total_neighbors += 1
+
+def create_swarm_environment(fullpath_file):
+    global total_msgs_sent
+    global total_msgs_unicast
+    global total_msgs_broadcast
+    global total_msgs_multicast
+    global total_msgs_sent_freq
+    global counter_msgs_sent_freq
+    global total_drop_ratio
+    global counter_drop_ratio
+    global total_data_rate
+    global counter_data_rate
+    global total_neighbors
+    global counter_total_neighbors
+
+    avg_msgs_sent_freq = total_msgs_sent_freq / counter_msgs_sent_freq
+    avg_drop_ratio = total_drop_ratio / counter_drop_ratio
+    avg_data_rate = total_data_rate / counter_data_rate
+    avg_neighbors = total_neighbors / counter_total_neighbors
+
+    fd = open(fullpath_file, "wb")
+    fd.write('\\newcommand{\swarmTeamName}{Unknown}\n')
+    fd.write('\\newcommand{\swarmDuration}{Unknown}\n')
+    fd.write('\\newcommand{\swarmSuccess}{Unknown}\n')
+    fd.write('\\newcommand{\swarmNumGoundVehicles}{Unknown}\n')
+    fd.write('\\newcommand{\swarmNumFixedVehicles}{Unknown}\n')
+    fd.write('\\newcommand{\swarmNumRotorVehicles}{Unknown}\n')
+    fd.write('\\newcommand{\swarmTerrainName}{Unknown}\n')
+    fd.write('\\newcommand{\swarmSearchArea}{Unknown}\n')
+    fd.write('\\newcommand{\swarmNumMsgsSent}{' + str(total_msgs_sent) + '}\n')
+    fd.write('\\newcommand{\swarmNumUnicastSent}{' + str(total_msgs_unicast) + '}\n')
+    fd.write('\\newcommand{\swarmNumBroadcastSent}{' + str(total_msgs_broadcast) + '}\n')
+    fd.write('\\newcommand{\swarmNumMulticastSent}{' + str(total_msgs_multicast) + '}\n')
+    fd.write('\\newcommand{\swarmFreqMsgsSent}{' + str(avg_msgs_sent_freq) + '}\n')
+    fd.write('\\newcommand{\swarmAvgMsgsDrop}{' + str(avg_drop_ratio) + '}\n')
+    fd.write('\\newcommand{\swarmAvgDataRateRobot}{' + str(avg_data_rate) + '}\n')
+    fd.write('\\newcommand{\swarmAvgNeighborsRobot}{' + str(avg_neighbors) + '}\n')
+    fd.close()
+
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print('Specify a file name to read from')
         sys.exit(1)
     fname = sys.argv[1]
     reader = LogReader(fname)
     print('# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors')
     reader.apply(process_msg)
+    create_swarm_environment(sys.argv[2])

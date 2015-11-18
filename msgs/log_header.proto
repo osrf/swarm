@@ -7,11 +7,29 @@ package swarm.msgs;
 message LogHeader
 {
   /// \brief Swarm version used during logging.
-  required string swarm_version = 1;
+  required string swarm_version       = 1;
 
   /// \brief Gazebo version used during logging.
-  required string gazebo_version = 2;
+  required string gazebo_version      = 2;
 
   /// \brief Seed used during logging.
-  required uint32 seed           = 3;
+  required uint32 seed                = 3;
+
+  /// \brief Name of the team running the experiments.
+  optional string teamname            = 4;
+
+  /// \brief Number of ground vehicles.
+  optional uint32 num_ground_vehicles = 5;
+
+  /// \brief Number of fixed wing vehicles.
+  optional uint32 num_fixed_vehicles  = 6;
+
+  /// \brief Number of rotorcrafts vehicles.
+  optional uint32 num_rotor_vehicles  = 7;
+
+  /// \brief Name of the terrain.
+  optional string terrain_name        = 8;
+
+  /// \brief Search area (E.g.: 2 x 2 km).
+  optional string search_area         = 9;
 }
