@@ -6,4 +6,3 @@ install (PROGRAMS swarm_comms_neighbors.gplot DESTINATION ${BIN_INSTALL_DIR})
 
 # Install the script for generating reports.
 install (PROGRAMS swarm_generate_report DESTINATION ${BIN_INSTALL_DIR})
-
