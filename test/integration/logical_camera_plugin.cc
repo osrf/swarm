@@ -111,7 +111,7 @@ void LogicalCameraPlugin::Update1()
     // RobotPlugin::cameraFalsePositiveDurationMin and
     // RobotPlugin::cameraFalsePositiveDurationMax.
     EXPECT_LT(count, 70);
-    EXPECT_GE(count, 25);
+    EXPECT_GT(count, 30);
   }
   ++iteration;
 }
@@ -125,6 +125,7 @@ void LogicalCameraPlugin::Update2()
   static int iteration = 0;
   static int consecutives = 0;
   static int total = 0;
+  // Set to 1 to prevent divide by zero.
   static int counter = 1;
 
   swarm::ImageData logImg;

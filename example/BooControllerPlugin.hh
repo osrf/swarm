@@ -28,7 +28,7 @@
 
 namespace swarm
 {
-  /// \brief Class that shows a potential agent controller using the Swarm API
+  /// \brief Class that shows a potential BOO controller using the Swarm API
   class BooControllerPlugin : public swarm::BooPlugin
   {
     /// \brief Class constructor.
@@ -55,12 +55,6 @@ namespace swarm
 
     /// \brief Handle simulation reset
     protected: virtual void Reset();
-
-    /// \brief Total number of messages to be sent by this agent.
-    private: int numMessageToSend;
-
-    /// \brief Current number of messages sent.
-    private: int msgsSent;
   };
 }
 #endif
