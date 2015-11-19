@@ -233,10 +233,22 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     visibilityEntry->set_dst(other->address);
     visibilityEntry->set_status(msgs::CommsStatus::VISIBLE);
 
-    // If I am on outage, my only neighbor is myself.
-    if (swarmMember->onOutage || other->onOutage)
+    // Both robots are in an outage.
+    if (swarmMember->onOutage && other->onOutage)
+    {
+      visibilityEntry->set_status(msgs::CommsStatus::OUTAGE_BOTH);
+      continue;
+    }
+    // I'm in an outage.
+    else if (swarmMember->onOutage)
     {
       visibilityEntry->set_status(msgs::CommsStatus::OUTAGE);
+      continue;
+    }
+    // The other robot is in an outage.
+    else if (other->onOutage)
+    {
+      visibilityEntry->set_status(msgs::CommsStatus::OUTAGE_DST);
       continue;
     }
 
