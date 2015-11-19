@@ -58,6 +58,10 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
+      double h;
+      TerrainType t;
+      this->MapQuery(0, 0, h, t);
+
   // Launch rotor vehicles after 5 seconds of simulation time.
   if (_info.simTime > gazebo::common::Time(5, 0))
   {
@@ -72,7 +76,9 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     std::string dstAddress;
 
     if (this->Host() == "192.168.3.1")
+    {
       dstAddress = "192.168.3.2";
+    }
     else
       dstAddress = "192.168.3.1";
 
