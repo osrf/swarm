@@ -230,8 +230,11 @@ void RobotPlugin::UpdateSensors()
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateLinearVelocity()
 {
-  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked) ||
+      this->type == BOO)
+  {
     return;
+  }
 
   auto myPose = this->model->GetWorldPose().Ign();
 
@@ -290,8 +293,11 @@ void RobotPlugin::UpdateLinearVelocity()
 //////////////////////////////////////////////////
 void RobotPlugin::UpdateAngularVelocity()
 {
-  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked))
+  if (this->capacity <= 0 || (this->type == ROTOR && this->rotorDocked) ||
+      this->type == BOO)
+  {
     return;
+  }
 
   switch (this->type)
   {
@@ -516,7 +522,7 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 //////////////////////////////////////////////////
 void RobotPlugin::AdjustPose()
 {
-  if (!this->terrain || !this->model)
+  if (!this->terrain || !this->model || this->type == BOO)
     return;
 
   // Get the pose of the vehicle
@@ -669,6 +675,8 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
       this->type = ROTOR;
     else if (vehicleType == "fixed_wing")
       this->type = FIXED_WING;
+    else if (vehicleType == "boo")
+      this->type = BOO;
     else
       gzerr << "Unknown vehicle type[" << vehicleType <<"], using ground.\n";
   }
