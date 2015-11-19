@@ -138,7 +138,7 @@ def process_msg(entry):
         total_neighbors += avg_num_neighbors
         counter_total_neighbors += 1
 
-def create_swarm_environment(fullpath_file):
+def create_swarm_summary_report(fullpath_file):
     global total_msgs_sent
     global total_msgs_unicast
     global total_msgs_broadcast
@@ -178,10 +178,13 @@ def create_swarm_environment(fullpath_file):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('Specify a file name to read from')
+        print('Usage: swarmlog_to_csv_comms.py <log_file> <summary_file>')
+        print('Parameters:')
+        print('  <log_file> Swarm log file name to read from')
+        print('  <summary_file> Full path to the summary file that will be generated')
         sys.exit(1)
     fname = sys.argv[1]
     reader = LogReader(fname)
     print('# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors')
     reader.apply(process_msg)
-    create_swarm_environment(sys.argv[2])
+    create_swarm_summary_report(sys.argv[2])
