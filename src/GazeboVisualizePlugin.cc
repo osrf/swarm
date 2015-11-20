@@ -792,15 +792,12 @@ GazeboVisualizePlugin::TerrainType GazeboVisualizePlugin::TerrainAtPos(
   {
     if (mdl->GetBoundingBox().Contains(_pos))
     {
+      // The bounding box of a model is aligned to the global axis, and can
+      // lead to incorrect results.
+      // If a point is in the bounding box, then we use a ray-cast to see
+      // if the point is actually within the model.
       gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
           gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
-      std::cout << "\n";
-      std::cout << "Mdl[" << mdl->GetName() << "]\n";
-
-      if (rayModel)
-        std::cout << "Ray Model[" << rayModel->GetName() << "]\n";
-
-      std::cout << "\n";
 
       if (rayModel->GetName().find("tree") != std::string::npos)
       {
