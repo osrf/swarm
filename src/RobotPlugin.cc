@@ -1269,6 +1269,9 @@ void RobotPlugin::OnLog(msgs::LogEntry &_logEntry) const
   actions->set_allocated_angvel(targetVang);
 
   _logEntry.set_allocated_actions(actions);
+
+  // Fill the Gazebo model name.
+  _logEntry.set_model_name(this->model->GetName());
 }
 
 /////////////////////////////////////////////////
