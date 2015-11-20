@@ -49,9 +49,9 @@ namespace swarm
     /// \param[in] _dstPort Destination port.
     /// \param[in] _data Message payload.
     protected: virtual void OnData(const std::string &_srcAddress,
-                           const std::string &_dstAddress,
-                           const uint32_t _dstPort,
-                           const std::string &_data);
+                                   const std::string &_dstAddress,
+                                   const uint32_t _dstPort,
+                                   const std::string &_data);
 
     /// \brief Handle simulation reset
     protected: virtual void Reset();
