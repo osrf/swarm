@@ -89,6 +89,7 @@ void BooPlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf)
   this->lostPersonBuffer[gazebo::common::Time::Zero] = personPosInGrid;
   this->lastPersonPosInGrid = personPosInGrid;
 
+  std::cout << "Kboo[" << this->kBoo << "] KBooPort[" << this->kBooPort << "]\n";
   // Bind on my BOO address and default BOO port.
   this->Bind(&BooPlugin::OnDataReceived, this, this->kBoo, this->kBooPort);
 
@@ -181,6 +182,8 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   std::string data = _data;
   boost::trim_if(data, boost::is_any_of("\t "));
   boost::split(v, data, boost::is_any_of("\t "), boost::token_compress_on);
+
+  std::cout << "Boo received message[" << v.at(0) << "]\n";
 
   if (!v.empty() && v.at(0) == "FOUND")
   {
