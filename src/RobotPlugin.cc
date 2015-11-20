@@ -522,7 +522,7 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 //////////////////////////////////////////////////
 void RobotPlugin::AdjustPose()
 {
-  if (!this->terrain || !this->model || this->type == BOO)
+  if (!this->terrain || !this->model)
     return;
 
   // Get the pose of the vehicle
