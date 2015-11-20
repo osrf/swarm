@@ -52,7 +52,7 @@ void BooControllerPlugin::OnData(const std::string &_srcAddress,
   // New data received from a vehicle.
 
   // The default behavior is to send and ack.
-  gzerr << "BooPlugin::OnDataReceived() Unable to parse incoming message ["
+  gzerr << "BooPlugin::OnData() Unable to parse incoming message ["
         << _data << "]" << std::endl;
   this->SendAck(_srcAddress, 3);
 }

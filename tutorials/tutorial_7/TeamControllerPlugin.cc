@@ -71,7 +71,8 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
               successMsg << "FOUND " << personInWorld.Pos() << " " <<
                 _info.simTime.Double();
               std::cout << "[" << this->Host() <<
-                "] I found the lost person.  Sending: " << successMsg.str() <<
+                "] I found the lost person.  Sending: " << successMsg.str()
+                << " To: " << this->kBroadcast << ":" << this->kBooPort <<
                 std::endl;
               this->SendTo(successMsg.str(), this->kBroadcast, this->kBooPort);
               // Remember this message for later, to avoid relaying it.
