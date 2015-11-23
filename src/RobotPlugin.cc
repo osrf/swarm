@@ -1353,12 +1353,22 @@ RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
   {
     if (mdl->GetBoundingBox().Contains(_pos))
     {
-      if (mdl->GetName().find("tree") != std::string::npos)
+      // The bounding box of a model is aligned to the global axis, and can
+      // lead to incorrect results.
+      // If a point is in the bounding box, then we use a ray-cast to see
+      // if the point is actually within the model.
+      gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
+          gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
+
+      // Just in case rayModel is null
+      const gazebo::physics::ModelPtr m = rayModel != NULL ? rayModel : mdl;
+
+      if (m->GetName().find("tree") != std::string::npos)
       {
         result = FOREST;
         break;
       }
-      else if (mdl->GetName().find("building") != std::string::npos)
+      else if (m->GetName().find("building") != std::string::npos)
       {
         result = BUILDING;
         break;
