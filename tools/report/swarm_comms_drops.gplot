@@ -1,0 +1,15 @@
+#!/usr/bin/gnuplot
+
+reset
+
+output_dir="`echo $output_dir`"
+logfile="`echo $logfile`"
+
+set terminal png
+set output output_dir.'/swarm_comms_drops.png'
+set xlabel "time (seconds)"
+set ylabel "Percentage of drops"
+set title "Messages dropped"
+set datafile separator ","
+
+plot logfile using 1:9 title 'Message drops' with lines

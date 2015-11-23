@@ -125,7 +125,8 @@ void LogicalCameraPlugin::Update2()
   static int iteration = 0;
   static int consecutives = 0;
   static int total = 0;
-  static int counter = 0;
+  // Set to 1 to prevent divide by zero.
+  static int counter = 1;
 
   swarm::ImageData logImg;
   EXPECT_TRUE(this->Image(logImg));

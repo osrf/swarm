@@ -163,7 +163,7 @@ ignition::math::Vector3i BooPlugin::PosToGrid(ignition::math::Vector3d _pos)
 
 //////////////////////////////////////////////////
 void BooPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
+    const std::string &_dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // Check if a robot found the lost person.
@@ -182,17 +182,9 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
   boost::trim_if(data, boost::is_any_of("\t "));
   boost::split(v, data, boost::is_any_of("\t "), boost::token_compress_on);
 
-  if (v.empty())
+  if (!v.empty() && v.at(0) == "FOUND")
   {
-    gzerr << "BooPlugin::OnDataReceived() Unable to parse incoming message ["
-          << _data << "]" << std::endl;
-    this->SendAck(_srcAddress, 3);
-    return;
-  }
-
-  auto cmd = v.at(0);
-  if (cmd == "FOUND")
-  {
+    auto cmd = v.at(0);
     // Sanity check.
     if (v.size() != 5)
     {
@@ -222,73 +214,93 @@ void BooPlugin::OnDataReceived(const std::string &_srcAddress,
       return;
     }
 
-    // Sanity check: Time t cannot be negative.
-    if (t < gazebo::common::Time::Zero)
-    {
-      gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
-            << " negative. Your request will be ignored" << std::endl;
-      this->SendAck(_srcAddress, 6);
-      return;
-    }
-
-    // Sanity check: Time t cannot be greater than the current time.
-    auto now = gazebo::physics::get_world()->GetSimTime();
-    if (t > now)
-    {
-      gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
-            << " in the future. We're at [" << now << "]. Your request will be"
-            << " ignored" << std::endl;
-      this->SendAck(_srcAddress, 7);
-      return;
-    }
-
-    // Sanity check: Time t cannot be older than current time - maxDt.
-    if (t < (now - this->maxDt))
-    {
-      gzerr << "BooPlugin::OnDataReceived() The reported time [" << t << "] is"
-            << " too old. It should be no older than "
-            << this->maxDt.Double() << " secs. We're at [" << now
-            << "]. Your request will be ignored" << std::endl;
-      this->SendAck(_srcAddress, 2);
-      return;
-    }
-
-    // Validate the result.
-    auto reportedPosInGrid = this->PosToGrid(reportedPos);
-    ignition::math::Vector3i realPosInGrid;
-
-    {
-      std::lock_guard<std::mutex> lock(this->mutex);
-      auto nextRealEntry = this->lostPersonBuffer.upper_bound(t);
-      GZ_ASSERT(nextRealEntry != this->lostPersonBuffer.begin(),
-                "Unexpected iterator");
-      --nextRealEntry;
-      realPosInGrid = nextRealEntry->second;
-    }
-
-    if (reportedPosInGrid == realPosInGrid)
-    {
-      this->found = true;
-      gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
-            << "the lost person at time [" << t << "]" << std::endl;
-
-      this->SendAck(_srcAddress, 0);
-
-      // Pause the simulation to make the lost person detection obvious.
-      gazebo::physics::get_world()->SetPaused(true);
-    }
-    else
-    {
-      gzerr << "Sorry, the reported position seems incorrect" << std::endl;
-      this->SendAck(_srcAddress, 1);
-    }
+    this->FoundHelper(reportedPos, t, _srcAddress);
   }
   else
   {
-    gzerr << "BooPlugin::OnDataReceived() Unrecognized command [" << v.at(0)
-          << "]" << std::endl;
-    this->SendAck(_srcAddress, 8);
+    this->OnData(_srcAddress, _dstAddress, _dstPort, _data);
   }
+}
+
+/////////////////////////////////////////////////
+bool BooPlugin::Found(const ignition::math::Vector3d &_pos, const double _time)
+{
+  return this->FoundHelper(_pos, gazebo::common::Time(_time));
+}
+
+/////////////////////////////////////////////////
+bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
+    const gazebo::common::Time &_time, const std::string &_srcAddress)
+{
+  this->found = false;
+
+  // Sanity check: Time _time cannot be negative.
+  if (_time < gazebo::common::Time::Zero)
+  {
+    gzerr << "BooPlugin::Found() The reported time [" << _time << "] is"
+      << " negative. Lost person is not found." << std::endl;
+    if (!_srcAddress.empty())
+      this->SendAck(_srcAddress, 6);
+    return false;
+  }
+
+  // Sanity check: Time _time cannot be greater than the current time.
+  auto now = gazebo::physics::get_world()->GetSimTime();
+  if (_time > now)
+  {
+    gzerr << "The reported time [" << _time << "] is"
+      << " in the future. We're at [" << now << "]. Lost person is not found"
+      << std::endl;
+    if (!_srcAddress.empty())
+      this->SendAck(_srcAddress, 7);
+    return false;
+  }
+
+  // Sanity check: Time _ttime cannot be older than current time - maxDt.
+  if (_time < (now - this->maxDt))
+  {
+    gzerr << "The reported time [" << _time << "] is"
+      << " too old. It should be no older than "
+      << this->maxDt.Double() << " secs. We're at [" << now
+      << "]. Lost person is not found" << std::endl;
+    if (!_srcAddress.empty())
+      this->SendAck(_srcAddress, 2);
+    return false;
+  }
+
+  // Validate the result.
+  auto reportedPosInGrid = this->PosToGrid(_pos);
+  ignition::math::Vector3i realPosInGrid;
+
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    auto nextRealEntry = this->lostPersonBuffer.upper_bound(_time);
+    GZ_ASSERT(nextRealEntry != this->lostPersonBuffer.begin(),
+        "Unexpected iterator");
+    --nextRealEntry;
+    realPosInGrid = nextRealEntry->second;
+  }
+
+  if (reportedPosInGrid == realPosInGrid)
+  {
+    this->found = true;
+    gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
+          << "the lost person at time [" << _time << "]" << std::endl;
+
+    if (!_srcAddress.empty())
+      this->SendAck(_srcAddress, 0);
+
+    // Pause the simulation to make the lost person detection obvious.
+    gazebo::physics::get_world()->SetPaused(true);
+  }
+  else
+  {
+    gzerr << "Sorry, the reported position seems incorrect" << std::endl;
+    if (!_srcAddress.empty())
+      this->SendAck(_srcAddress, 1);
+  }
+
+  return this->found;
 }
 
 /////////////////////////////////////////////////
@@ -309,4 +321,15 @@ void BooPlugin::SendAck(const std::string &_dstAddress, const int _code)
   // Format of the response: ACK <code>
   std::string data = "ACK " + std::to_string(_code);
   this->SendTo(data, _dstAddress);
+}
+
+//////////////////////////////////////////////////
+void BooPlugin::OnData(const std::string &_srcAddress,
+    const std::string & /*_dstAddress*/, const uint32_t /*_dstPort*/,
+    const std::string &_data)
+{
+  // The default behavior is to send and ack.
+  gzerr << "BooPlugin::OnDataReceived() Unable to parse incoming message ["
+        << _data << "]" << std::endl;
+  this->SendAck(_srcAddress, 3);
 }

@@ -185,7 +185,7 @@ void BooFinderPlugin::ValidateACK()
     }
     case 2:
       // Unsupported command.
-      EXPECT_EQ(this->ack, "ACK 8");
+      EXPECT_EQ(this->ack, "ACK 3");
       break;
     case 3:
       // Malformed message.

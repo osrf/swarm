@@ -77,11 +77,25 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
 
   // Initialize visibility.
   for (auto const &robotA : (*this->swarm))
+  {
+    auto addressA = robotA.second->address;
+    auto row = this->visibilityMsg.add_row();
+    row->set_src(addressA);
+
     for (auto const &robotB : (*this->swarm))
     {
+      auto addressB = robotB.second->address;
       this->visibility[
-        std::make_pair(robotA.second->address, robotB.second->address)] = {""};
+        std::make_pair(addressA, addressB)] = {""};
+
+      // Create a new visibility entry for logging with a VISIBLE status.
+      auto visibilityEntry = row->add_entry();
+      visibilityEntry->set_dst(addressB);
+      visibilityEntry->set_status(msgs::CommsStatus::VISIBLE);
+
+      this->visibilityMsgStatus[addressA][addressB] = visibilityEntry;
     }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -191,8 +205,6 @@ void CommsModel::UpdateOutages()
 //////////////////////////////////////////////////
 void CommsModel::UpdateNeighbors()
 {
-  this->visibilityMsg.Clear();
-
   unsigned int counter = 0;
 
   // Update the list of neighbors for each robot.
@@ -212,10 +224,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
   GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
             "_address not found in the swarm.");
 
-  // Used for logging.
-  auto row = this->visibilityMsg.add_row();
-  row->set_src(_address);
-
   auto swarmMember = (*this->swarm)[_address];
   auto myPose = swarmMember->model->GetWorldPose().Ign();
 
@@ -228,15 +236,26 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     // Where is the other node?
     auto other = member.second;
 
-    // Create a new visibility entry for logging with a VISIBLE status.
-    auto visibilityEntry = row->add_entry();
-    visibilityEntry->set_dst(other->address);
+    // Update this visibility entry with a VISIBLE status.
+    auto visibilityEntry = this->visibilityMsgStatus[_address][other->address];
     visibilityEntry->set_status(msgs::CommsStatus::VISIBLE);
 
-    // If I am on outage, my only neighbor is myself.
-    if (swarmMember->onOutage || other->onOutage)
+    // Both robots are in an outage.
+    if (swarmMember->onOutage && other->onOutage)
+    {
+      visibilityEntry->set_status(msgs::CommsStatus::OUTAGE_BOTH);
+      continue;
+    }
+    // I'm in an outage.
+    else if (swarmMember->onOutage)
     {
       visibilityEntry->set_status(msgs::CommsStatus::OUTAGE);
+      continue;
+    }
+    // The other robot is in an outage.
+    else if (other->onOutage)
+    {
+      visibilityEntry->set_status(msgs::CommsStatus::OUTAGE_DST);
       continue;
     }
 

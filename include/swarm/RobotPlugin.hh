@@ -147,7 +147,10 @@ namespace swarm
               ROTOR = 1,
 
               /// \brief A fixed wing aerial vehicle.
-              FIXED_WING = 2
+              FIXED_WING = 2,
+
+              /// \brief The base of operations.
+              BOO = 3
             };
 
     /// \brief The types of terrain.
