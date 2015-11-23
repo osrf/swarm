@@ -62,15 +62,61 @@ namespace swarm
     /// \brief Class destructor.
     public: virtual ~BooPlugin();
 
+    /// \brief Callback executed when a new message is received, and the
+    /// message is not a FOUND message.
+    /// \param[in] _srcAddress Source address of the message.
+    /// \param[in] _dstAddress Destination address of the message.
+    /// \param[in] _dstPort Destination port.
+    /// \param[in] _data Message payload.
+    public: virtual void OnData(const std::string &_srcAddress,
+                                const std::string &_dstAddress,
+                                const uint32_t _dstPort,
+                                const std::string &_data);
+
+    /// \brief Call this function to indicate that the lost person was found
+    /// at a particular location and time.
+    /// \param[in] _pos Position of the lost person.
+    /// \param[in] _time Time associated with the _pos.
+    /// \return True if the location and time are correct.
+    public: bool Found(const ignition::math::Vector3d &_pos,
+                       const double _time);
+
+    /// \brief Send an ACK message to the vehicle after processing a request.
+    /// The format of the message is: ACK <code>
+    /// \param[in] _dstAddress Destination address.
+    /// \param[in] _code Reply code:
+    ///   0. Found. The person has been found on the reported position.
+    ///   1. Not found. Incorrect position.
+    ///   2. Not found. The reported time is too old.
+    ///   3. Error: Unable to parse request.
+    ///   4. Error: Incorrect number of arguments in request.
+    ///   5. Error: Parsing arguments.
+    ///   6. Error: Negative time reported.
+    ///   7. Error: Future time reported.
+    ///   8. Error: Unrecognized command.
+    protected: void SendAck(const std::string &_dstAddress,
+                            const int _code);
+
+    /// \brief Handle reset
+    protected: virtual void Reset();
+
+    /// \brief Function that indicates the lost person was found
+    /// at a particular location and time.
+    /// \param[in] _pos Position of the lost person.
+    /// \param[in] _time Time associated with the _pos.
+    /// \param[in] _srcAddress Address which should receive acknowledgments.
+    /// This is used by the OnDataReceived function.
+    /// \return True if the location and time are correct.
+    private: bool FoundHelper(const ignition::math::Vector3d &_pos,
+                              const gazebo::common::Time &_time,
+                              const std::string &_srcAddress="");
+
     /// \brief Callback executed at the end of each world update.
     private: virtual void OnUpdateEnd();
 
     // Documentation inherited.
     private: virtual void Load(gazebo::physics::ModelPtr _model,
                                sdf::ElementPtr _sdf);
-
-    /// \brief Handle reset
-    private: virtual void Reset();
 
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
@@ -86,22 +132,6 @@ namespace swarm
     /// \param[in] _pos Position in world coordinates.
     /// \return The coordinates of a cell in the 3D grid.
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
-
-    /// \brief Send an ACK message to the vehicle after processing a request.
-    /// The format of the message is: ACK <code>
-    /// \param[in] _dstAddress Destination address.
-    /// \param[in] _code Reply code:
-    ///   0. Found. The person has been found on the reported position.
-    ///   1. Not found. Incorrect position.
-    ///   2. Not found. The reported time is too old.
-    ///   3. Error: Unable to parse request.
-    ///   4. Error: Incorrect number of arguments in request.
-    ///   5. Error: Parsing arguments.
-    ///   6. Error: Negative time reported.
-    ///   7. Error: Future time reported.
-    ///   8. Error: Unrecognized command.
-    private: void SendAck(const std::string &_dstAddress,
-                          const int _code);
 
     /// \brief True when the lost person has been found.
     private: bool found = false;
