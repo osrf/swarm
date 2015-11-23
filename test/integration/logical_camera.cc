@@ -31,7 +31,7 @@ class LogicalCameraTest : public gazebo::ServerFixture
       SWARM_PROJECT_TEST_SOURCE_PATH);
   }
 };
-/*
+
 /////////////////////////////////////////////////
 TEST_F(LogicalCameraTest, FalseNegative)
 {
@@ -55,7 +55,7 @@ TEST_F(LogicalCameraTest, FalsePositive)
   // Step the world so that the test library experiences update events.
   world->Step(1000);
 }
-*/
+
 /////////////////////////////////////////////////
 TEST_F(LogicalCameraTest, FalsePositiveDuration)
 {
