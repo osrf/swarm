@@ -36,10 +36,6 @@ GZ_REGISTER_MODEL_PLUGIN(RobotPlugin)
 //////////////////////////////////////////////////
 RobotPlugin::RobotPlugin()
   : type(GROUND),
-    searchMinLatitude(0),
-    searchMaxLatitude(0),
-    searchMinLongitude(0),
-    searchMaxLongitude(0),
     modelHeight2(0),
     observedLatitude(0),
     observedLongitude(0),
@@ -413,17 +409,18 @@ bool RobotPlugin::Image(ImageData &_img) const
   return true;
 }
 
+
+
 //////////////////////////////////////////////////
 void RobotPlugin::SearchArea(double &_minLatitude,
                              double &_maxLatitude,
                              double &_minLongitude,
                              double &_maxLongitude)
 {
-  _minLatitude = this->searchMinLatitude;
-  _maxLatitude = this->searchMaxLatitude;
-  _minLongitude = this->searchMinLongitude;
-  _maxLongitude = this->searchMaxLongitude;
+  this->common.SearchArea(_minLatitude, _maxLatitude,
+                          _minLongitude, _maxLongitude);
 }
+
 
 //////////////////////////////////////////////////
 std::string RobotPlugin::Host() const
@@ -755,32 +752,14 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   }
 
   // Get the search area size, which is a child of the plugin
-  this->searchMinLatitude = 0.0;
-  this->searchMaxLatitude = 0.0;
-  this->searchMinLongitude = 0.0;
-  this->searchMaxLongitude = 0.0;
-  bool foundSwarmSearchArea = false;
-  sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
-  while (searchAreaSDF)
-  {
-    if (searchAreaSDF->HasElement("min_relative_latitude_deg") &&
-        searchAreaSDF->HasElement("max_relative_latitude_deg") &&
-        searchAreaSDF->HasElement("min_relative_longitude_deg") &&
-        searchAreaSDF->HasElement("max_relative_longitude_deg"))
-    {
-      this->searchMinLatitude =
-        searchAreaSDF->GetElement("min_relative_latitude_deg")->Get<double>();
-      this->searchMaxLatitude =
-        searchAreaSDF->GetElement("max_relative_latitude_deg")->Get<double>();
-      this->searchMinLongitude =
-        searchAreaSDF->GetElement("min_relative_longitude_deg")->Get<double>();
-      this->searchMaxLongitude =
-        searchAreaSDF->GetElement("max_relative_longitude_deg")->Get<double>();
-      foundSwarmSearchArea = true;
-      break;
-    }
-    searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
-  }
+  this->common.SetSearchMinLatitude(0.0);
+  this->common.SetSearchMaxLatitude(0.0);
+  this->common.SetSearchMinLongitude(0.0);
+  this->common.SetSearchMaxLongitude(0.0);
+
+  // Load the search area
+  bool foundSwarmSearchArea =
+    this->common.LoadSearchArea(_sdf->GetElement("swarm_search_area"));
 
   sdf::ElementPtr modelSDF = _sdf->GetParent();
 
@@ -789,27 +768,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   sdf::ElementPtr worldSDF = modelSDF->GetParent();
   sdf::ElementPtr sphericalCoordsSDF =
     worldSDF->GetElement("spherical_coordinates");
-  bool foundSphericalCoords = false;
-  while (sphericalCoordsSDF)
-  {
-    if (sphericalCoordsSDF->HasElement("latitude_deg") &&
-        sphericalCoordsSDF->HasElement("longitude_deg"))
-    {
-      // Offset the search borders by the origin.
-      this->searchMinLatitude +=
-        sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
-      this->searchMaxLatitude +=
-        sphericalCoordsSDF->GetElement("latitude_deg")->Get<double>();
-      this->searchMinLongitude +=
-        sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
-      this->searchMaxLongitude +=
-        sphericalCoordsSDF->GetElement("longitude_deg")->Get<double>();
-      foundSphericalCoords = true;
-      break;
-    }
-    sphericalCoordsSDF =
-      sphericalCoordsSDF->GetNextElement("spherical_coordinates");
-  }
+
+  bool foundSphericalCoords =
+    this->common.LoadSphericalCoordinates(
+      worldSDF->GetElement("spherical_coordinates"));
 
   if (!foundSwarmSearchArea || !foundSphericalCoords)
   {
@@ -1313,10 +1275,10 @@ bool RobotPlugin::MapQuery(const double _lat, const double _lon,
     double &_height, TerrainType &_type)
 {
   // Check that the lat and lon is in the search area
-  if (_lat < this->searchMinLatitude  ||
-      _lat > this->searchMaxLatitude ||
-      _lon < this->searchMinLongitude ||
-      _lon > this->searchMaxLongitude)
+  if (_lat < this->common.SearchMinLatitude()  ||
+      _lat > this->common.SearchMaxLatitude() ||
+      _lon < this->common.SearchMinLongitude() ||
+      _lon > this->common.SearchMaxLongitude())
   {
     return false;
   }

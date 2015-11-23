@@ -30,6 +30,8 @@
 #include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
 
+#include "swarm/Common.hh"
+
 namespace swarm
 {
   /// \brief A model plugin that is the base class for the lost person plugin.
@@ -141,6 +143,10 @@ namespace swarm
     /// \brief Pointer to the model;
     protected: gazebo::physics::ModelPtr model;
 
+    /// \brief Common attributes and functions that are used by multiple
+    /// plugins
+    protected: Common common;
+
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;
 
@@ -159,10 +165,6 @@ namespace swarm
 
     /// \brief Pointer to the world.
     private: gazebo::physics::WorldPtr world;
-
-    /// \brief Min/max lat/long of search area.
-    private: double searchMinLatitude, searchMaxLatitude,
-                    searchMinLongitude, searchMaxLongitude;
 
     /// \brief Pointer to GPS sensor.
     private: gazebo::sensors::GpsSensorPtr gps;
