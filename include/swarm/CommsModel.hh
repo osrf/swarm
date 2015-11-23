@@ -183,6 +183,13 @@ namespace swarm
     /// \brief Visibility between all the robots.
     private: msgs::VisibilityMap visibilityMsg;
 
+    /// \brief Data structure that allows us to index using a pair of addresses.
+    /// The returned value is a pointer to the visibilityMsgStatus used for
+    /// logging.
+    private: std::map<std::string,
+               std::map<std::string, swarm::msgs::NeighborEntry*>>
+                 visibilityMsgStatus;
+
     /// \brief Pairs of addresses used to update the visibility.
     private: std::vector<std::pair<std::string, std::string>> visibilityPairs;
 
