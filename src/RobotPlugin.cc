@@ -336,6 +336,7 @@ void RobotPlugin::UpdateAngularVelocity()
           yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
           rollRate = ignition::math::clamp(this->targetAngVel[0],
               -IGN_DTOR(5), IGN_DTOR(5));
+          printf("Yaw[%f] Roll[%f]\n", yawRate, rollRate);
         }
 
         this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
@@ -840,6 +841,14 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     sensorsUpdateRate = _sdf->Get<double>("sensor_update_rate");
 
   this->AdjustPose();
+
+  // Start the fixed wing vehicles 10 meters off the ground
+  if (this->Type() == FIXED_WING)
+  {
+    gazebo::math::Pose p = this->model->GetWorldPose();
+    p.pos.z += 10;
+    this->model->SetWorldPose(p);
+  }
 
   // Register this plugin in the broker.
   this->broker->Register(this->Host(), this);
