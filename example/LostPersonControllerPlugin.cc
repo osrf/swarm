@@ -53,13 +53,24 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   // Add code here that should be updated every iteration.
 
   // Uncomment this block to get your current position on the map.
-  // double latitude, longitude, altitude;
-  // this->Pose(latitude, longitude, altitude);
+  double latitude, longitude, altitude;
+  this->Pose(latitude, longitude, altitude);
+
+  if (latitude >= this->common.SearchMaxLatitude() ||
+      latitude <= this->common.SearchMinLatitude())
+  {
+    this->velocity.Y() *= -1;
+  }
+
+  if (longitude >= this->common.SearchMaxLongitude() ||
+      longitude <= this->common.SearchMinLongitude())
+  {
+    this->velocity.X() *= -1;
+  }
 
   // Change direction when enough time has elapsed
   if (_info.simTime - this->prevUpdate > this->updatePeriod)
   {
-
     // Get a random velocity value.
     this->velocity.Set(
         ignition::math::Rand::DblUniform(-1, 1),

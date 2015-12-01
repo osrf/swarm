@@ -26,10 +26,6 @@ GZ_REGISTER_MODEL_PLUGIN(LostPersonPlugin)
 
 //////////////////////////////////////////////////
 LostPersonPlugin::LostPersonPlugin()
-  : searchMinLatitude(0),
-    searchMaxLatitude(0),
-    searchMinLongitude(0),
-    searchMaxLongitude(0)
 {
 }
 
@@ -81,26 +77,20 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
         (this->terrain->GetVertexCount().y-1));
   }
 
-  // Get the search area size, which is a child of the plugin
-  sdf::ElementPtr searchAreaSDF = _sdf->GetElement("swarm_search_area");
-  while (searchAreaSDF)
+  this->common.LoadSearchArea(_sdf->GetElement("swarm_search_area"));
+
+  sdf::ElementPtr modelSDF = _sdf->GetParent();
+
+  // We have the search area size.  Now get the origin, which is in
+  // spherical_coordinates, a child of the world.
+  sdf::ElementPtr worldSDF = modelSDF->GetParent();
+  sdf::ElementPtr sphericalCoordsSDF =
+    worldSDF->GetElement("spherical_coordinates");
+
+  if (!this->common.LoadSphericalCoordinates(
+        worldSDF->GetElement("spherical_coordinates")))
   {
-    if (searchAreaSDF->HasElement("min_relative_latitude_deg") &&
-        searchAreaSDF->HasElement("max_relative_latitude_deg") &&
-        searchAreaSDF->HasElement("min_relative_longitude_deg") &&
-        searchAreaSDF->HasElement("max_relative_longitude_deg"))
-    {
-      this->searchMinLatitude =
-        searchAreaSDF->GetElement("min_relative_latitude_deg")->Get<double>();
-      this->searchMaxLatitude =
-        searchAreaSDF->GetElement("max_relative_latitude_deg")->Get<double>();
-      this->searchMinLongitude =
-        searchAreaSDF->GetElement("min_relative_longitude_deg")->Get<double>();
-      this->searchMaxLongitude =
-        searchAreaSDF->GetElement("max_relative_longitude_deg")->Get<double>();
-      break;
-    }
-    searchAreaSDF = searchAreaSDF->GetNextElement("swarm_search_area");
+    gzerr << "Unable to laod spherical coordinates\n";
   }
 
   // Get the gps sensor
@@ -372,10 +362,10 @@ bool LostPersonPlugin::MapQuery(const double _lat, const double _lon,
     double &_height, LostPersonPlugin::TerrainType &_type)
 {
   // Check that the lat and lon is in the search area
-  if (_lat < this->searchMinLatitude  ||
-      _lat > this->searchMaxLatitude ||
-      _lon < this->searchMinLongitude ||
-      _lon > this->searchMaxLongitude)
+  if (_lat < this->common.SearchMinLatitude()  ||
+      _lat > this->common.SearchMaxLatitude() ||
+      _lon < this->common.SearchMinLongitude() ||
+      _lon > this->common.SearchMaxLongitude())
   {
     return false;
   }
