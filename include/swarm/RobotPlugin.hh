@@ -43,6 +43,7 @@
 
 #include "msgs/datagram.pb.h"
 #include "msgs/log_entry.pb.h"
+#include "swarm/Common.hh"
 #include "swarm/Broker.hh"
 #include "swarm/Logger.hh"
 
@@ -716,10 +717,6 @@ namespace swarm
     /// \brief Pointer to LogicalCamera sensor
     private: gazebo::sensors::LogicalCameraSensorPtr camera;
 
-    /// \brief Min/max lat/long of search area.
-    private: double searchMinLatitude, searchMaxLatitude,
-                    searchMinLongitude, searchMaxLongitude;
-
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;
 
@@ -867,6 +864,10 @@ namespace swarm
 
     /// \brief Rate at which the sensors should update.
     private: double sensorsUpdateRate = 20.0;
+
+    /// \brief Common attributes and functions that are used by multiple
+    /// plugins
+    private: Common common;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

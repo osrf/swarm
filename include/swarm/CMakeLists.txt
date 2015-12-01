@@ -4,6 +4,7 @@ set (headers
   BooPlugin.hh
   Broker.hh
   BrokerPlugin.hh
+  Common.hh
   CommsModel.hh
   Helpers.hh
   Logger.hh
