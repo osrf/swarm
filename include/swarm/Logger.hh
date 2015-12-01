@@ -22,7 +22,10 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <sdf/sdf.hh>
+
 #include "msgs/log_entry.pb.h"
+#include "msgs/log_header.pb.h"
 #include "swarm/Helpers.hh"
 
 #ifndef __SWARM_LOGGER_HH__
@@ -97,13 +100,18 @@ namespace swarm
     public: bool Unregister(const std::string &_id);
 
     /// \brief Create the log file
-    private: void CreateLogFile();
+    /// \param[in] _sdf SDF element containing the optional <log_info> section.
+    public: void CreateLogFile(sdf::ElementPtr _sdf);
 
     /// \brief Constructor.
     private: Logger();
 
     /// \brief Destructor.
     private: virtual ~Logger() = default;
+
+    /// \brief Fill the message with the header.
+    /// \param[in] _sdf SDF element containing the optional <log_info> section.
+    private: void FillHeader(sdf::ElementPtr _sdf);
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
@@ -121,6 +129,9 @@ namespace swarm
 
     /// \brief Whether the logging is enabled or not.
     private: bool enabled = false;
+
+    /// \brief The log header.
+    private: msgs::LogHeader header;
   };
 }  // namespace
 #endif

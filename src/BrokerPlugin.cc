@@ -68,6 +68,8 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
   this->maxDataRatePerCycle = this->commsModel->MaxDataRate() *
       this->world->GetPhysicsEngine()->GetMaxStepSize();
 
+  this->logger->CreateLogFile(_sdf);
+
   // Register in the logger.
   this->logger->Register("broker", this);
 
@@ -306,4 +308,7 @@ void BrokerPlugin::Reset()
 
   // Recreate the comms model
   this->commsModel.reset(new CommsModel(this->swarm, this->world, this->sdf));
+
+  // Create a new log file.
+  this->logger->CreateLogFile(this->sdf);
 }

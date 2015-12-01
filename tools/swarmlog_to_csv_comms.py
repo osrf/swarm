@@ -138,7 +138,7 @@ def process_msg(entry):
         total_neighbors += avg_num_neighbors
         counter_total_neighbors += 1
 
-def create_swarm_summary_report(fullpath_file):
+def create_swarm_summary_report(log_reader, fullpath_file):
     global total_msgs_sent
     global total_msgs_unicast
     global total_msgs_broadcast
@@ -158,14 +158,52 @@ def create_swarm_summary_report(fullpath_file):
     avg_neighbors = total_neighbors / counter_total_neighbors
 
     fd = open(fullpath_file, "wb")
-    fd.write('\\newcommand{\swarmTeamName}{Unknown}\n')
     fd.write('\\newcommand{\swarmDuration}{Unknown}\n')
     fd.write('\\newcommand{\swarmSuccess}{Unknown}\n')
-    fd.write('\\newcommand{\swarmNumGoundVehicles}{Unknown}\n')
-    fd.write('\\newcommand{\swarmNumFixedVehicles}{Unknown}\n')
-    fd.write('\\newcommand{\swarmNumRotorVehicles}{Unknown}\n')
-    fd.write('\\newcommand{\swarmTerrainName}{Unknown}\n')
-    fd.write('\\newcommand{\swarmSearchArea}{Unknown}\n')
+    team_name = 'Unknown'
+    num_ground = 'Unknown'
+    num_fixed = 'Unknown'
+    num_rotor = 'Unknown'
+    terrain_name = 'Unknown'
+    vegetation_name = 'Unknown'
+    search_area = 'Unknown'
+
+    if log_reader.header and log_reader.header.team_name:
+        team_name = log_reader.header.team_name
+        # Escape '_' to make latex happy.
+        team_name = team_name.replace('_', '\_')
+    fd.write('\\newcommand{\swarmTeamName}{' + team_name + '}\n')
+
+    if log_reader.header and log_reader.header.num_ground_vehicles:
+        num_ground = log_reader.header.num_ground_vehicles
+    fd.write('\\newcommand{\swarmNumGroundVehicles}{' + str(num_ground) + '}\n')
+
+    if log_reader.header and log_reader.header.num_fixed_vehicles:
+        num_fixed = log_reader.header.num_fixed_vehicles
+    fd.write('\\newcommand{\swarmNumFixedVehicles}{' + str(num_fixed) + '}\n')
+
+    if log_reader.header and log_reader.header.num_rotor_vehicles:
+        num_rotor = log_reader.header.num_rotor_vehicles
+    fd.write('\\newcommand{\swarmNumRotorVehicles}{' + str(num_rotor) + '}\n')
+
+    if log_reader.header and log_reader.header.terrain_name:
+        terrain_name = log_reader.header.terrain_name
+        # Escape '_' to make latex happy.
+        terrain_name = terrain_name.replace('_', '\_')
+    fd.write('\\newcommand{\swarmTerrainName}{' + terrain_name + '}\n')
+
+    if log_reader.header and log_reader.header.vegetation_name:
+        vegetation_name = log_reader.header.vegetation_name
+        # Escape '_' to make latex happy.
+        vegetation_name = vegetation_name.replace('_', '\_')
+    fd.write('\\newcommand{\swarmVegetationName}{' + vegetation_name + '}\n')
+
+    if log_reader.header and log_reader.header.search_area:
+        search_area = log_reader.header.search_area
+        # Escape '_' to make latex happy.
+        search_area = search_area.replace('_', '\_')
+    fd.write('\\newcommand{\swarmSearchArea}{' + search_area + '}\n')
+
     fd.write('\\newcommand{\swarmNumMsgsSent}{' + str(total_msgs_sent) + '}\n')
     fd.write('\\newcommand{\swarmNumUnicastSent}{' + str(total_msgs_unicast) + '}\n')
     fd.write('\\newcommand{\swarmNumBroadcastSent}{' + str(total_msgs_broadcast) + '}\n')
@@ -187,4 +225,4 @@ if __name__ == '__main__':
     reader = LogReader(fname)
     print('# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors')
     reader.apply(process_msg)
-    create_swarm_summary_report(sys.argv[2])
+    create_swarm_summary_report(reader, sys.argv[2])
