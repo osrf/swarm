@@ -64,8 +64,10 @@ latex_template()
   \section*{Completion}
 
   \begin{tabular}{ll}
-  Duration                       & \swarmDuration\\\\
-  Success                        & \swarmSuccess\\\\
+  Success                        & \swarmSucceed\\\\
+  Number of incorrect reports    & \swarmWrongBooReports\\\\
+  Duration                       & \swarmDuration ~seconds\\\\
+  Score                          & \swarmScore\\\\
   \end{tabular}
 
 
@@ -76,9 +78,9 @@ latex_template()
   Number of unicast messages sent       & \swarmNumUnicastSent\\\\
   Number of broadcast messages sent     & \swarmNumBroadcastSent\\\\
   Number of multicast messages sent     & \swarmNumMulticastSent\\\\
-  Average message publication frequency & \swarmFreqMsgsSent\\\\
-  Average percentage message drop       & \swarmAvgMsgsDrop\\\\
-  Average data rate per robot           & \swarmAvgDataRateRobot\\\\
+  Average message publication frequency & \swarmFreqMsgsSent ~messages per second\\\\
+  Average percentage message drop       & \swarmAvgMsgsDrop ~\%\\\\
+  Average data rate per robot           & \swarmAvgDataRateRobot ~mbps\\\\
   Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
   \end{tabular}
 

@@ -55,6 +55,9 @@ total_data_rate = 0
 counter_data_rate = 0.0
 total_neighbors = 0
 counter_total_neighbors = 0.0
+wrong_boo_reports = 0
+succeed = False
+duration = 0.0
 
 # An example of processing a single log entry
 def process_msg(entry):
@@ -70,6 +73,9 @@ def process_msg(entry):
     global counter_data_rate
     global total_neighbors
     global counter_total_neighbors
+    global wrong_boo_reports
+    global succeed
+    global duration
 
     # Check for the 'incoming_msgs' field, which tells us about what happened to
     # messages that were sent
@@ -138,6 +144,15 @@ def process_msg(entry):
         total_neighbors += avg_num_neighbors
         counter_total_neighbors += 1
 
+    for boo_report in entry.boo_report:
+        if boo_report.succeed:
+            succeed = True
+        else:
+            wrong_boo_reports += 1
+
+    if not succeed:
+        duration = entry.time
+
 def create_swarm_summary_report(log_reader, fullpath_file):
     global total_msgs_sent
     global total_msgs_unicast
@@ -151,15 +166,18 @@ def create_swarm_summary_report(log_reader, fullpath_file):
     global counter_data_rate
     global total_neighbors
     global counter_total_neighbors
+    global wrong_boo_reports
+    global succeed
+    global duration
 
     avg_msgs_sent_freq = total_msgs_sent_freq / counter_msgs_sent_freq
-    avg_drop_ratio = total_drop_ratio / counter_drop_ratio
-    avg_data_rate = total_data_rate / counter_data_rate
+    avg_drop_ratio = 100.0 * total_drop_ratio / counter_drop_ratio
+    # mbps.
+    avg_data_rate = 0.000001 * total_data_rate / counter_data_rate
     avg_neighbors = total_neighbors / counter_total_neighbors
 
     fd = open(fullpath_file, "wb")
-    fd.write('\\newcommand{\swarmDuration}{Unknown}\n')
-    fd.write('\\newcommand{\swarmSuccess}{Unknown}\n')
+
     team_name = 'Unknown'
     num_ground = 'Unknown'
     num_fixed = 'Unknown'
@@ -168,42 +186,68 @@ def create_swarm_summary_report(log_reader, fullpath_file):
     vegetation_name = 'Unknown'
     search_area = 'Unknown'
 
-    if log_reader.header and log_reader.header.team_name:
+    # Environment.
+    if log_reader.header and log_reader.header.HasField("team_name"):
         team_name = log_reader.header.team_name
         # Escape '_' to make latex happy.
         team_name = team_name.replace('_', '\_')
     fd.write('\\newcommand{\swarmTeamName}{' + team_name + '}\n')
 
-    if log_reader.header and log_reader.header.num_ground_vehicles:
+    if log_reader.header and log_reader.header.HasField("num_ground_vehicles"):
         num_ground = log_reader.header.num_ground_vehicles
     fd.write('\\newcommand{\swarmNumGroundVehicles}{' + str(num_ground) + '}\n')
 
-    if log_reader.header and log_reader.header.num_fixed_vehicles:
+    if log_reader.header and log_reader.header.HasField("num_fixed_vehicles"):
         num_fixed = log_reader.header.num_fixed_vehicles
     fd.write('\\newcommand{\swarmNumFixedVehicles}{' + str(num_fixed) + '}\n')
 
-    if log_reader.header and log_reader.header.num_rotor_vehicles:
+    if log_reader.header and log_reader.header.HasField("num_rotor_vehicles"):
         num_rotor = log_reader.header.num_rotor_vehicles
     fd.write('\\newcommand{\swarmNumRotorVehicles}{' + str(num_rotor) + '}\n')
 
-    if log_reader.header and log_reader.header.terrain_name:
+    if log_reader.header and log_reader.header.HasField("terrain_name"):
         terrain_name = log_reader.header.terrain_name
         # Escape '_' to make latex happy.
         terrain_name = terrain_name.replace('_', '\_')
     fd.write('\\newcommand{\swarmTerrainName}{' + terrain_name + '}\n')
 
-    if log_reader.header and log_reader.header.vegetation_name:
+    if log_reader.header and log_reader.header.HasField("vegetation_name"):
         vegetation_name = log_reader.header.vegetation_name
         # Escape '_' to make latex happy.
         vegetation_name = vegetation_name.replace('_', '\_')
     fd.write('\\newcommand{\swarmVegetationName}{' + vegetation_name + '}\n')
 
-    if log_reader.header and log_reader.header.search_area:
+    if log_reader.header and log_reader.header.HasField("search_area"):
         search_area = log_reader.header.search_area
         # Escape '_' to make latex happy.
         search_area = search_area.replace('_', '\_')
     fd.write('\\newcommand{\swarmSearchArea}{' + search_area + '}\n')
 
+    # Completion.
+    total_score = 0.0
+    max_duration = 7200
+    max_wrong_reports = 20
+    if succeed:
+        total_score = score(duration, max_duration, wrong_boo_reports, max_wrong_reports)
+        fd.write('\\newcommand{\swarmSucceed}{Yes}\n')
+    else:
+        fd.write('\\newcommand{\swarmSucceed}{No}\n')
+    fd.write('\\newcommand{\swarmWrongBooReports}{' + str(wrong_boo_reports) + '}\n')
+    fd.write('\\newcommand{\swarmDuration}{' + str(duration) + '}\n')
+
+    if log_reader.header.HasField("max_time_allowed"):
+        max_duration = log_reader.header.max_time_allowed
+    else:
+        print 'Warning: <max_time_allowed> not present in log file.'
+
+    if log_reader.header.HasField("max_wrong_reports"):
+        max_wrong_reports = log_reader.header.max_wrong_reports
+    else:
+        print 'Warning: <max_wrong_reports> not present in log file.'
+
+    fd.write('\\newcommand{\swarmScore}{' + str(total_score) + '}\n')
+
+    # Comms summary.
     fd.write('\\newcommand{\swarmNumMsgsSent}{' + str(total_msgs_sent) + '}\n')
     fd.write('\\newcommand{\swarmNumUnicastSent}{' + str(total_msgs_unicast) + '}\n')
     fd.write('\\newcommand{\swarmNumBroadcastSent}{' + str(total_msgs_broadcast) + '}\n')
@@ -213,6 +257,17 @@ def create_swarm_summary_report(log_reader, fullpath_file):
     fd.write('\\newcommand{\swarmAvgDataRateRobot}{' + str(avg_data_rate) + '}\n')
     fd.write('\\newcommand{\swarmAvgNeighborsRobot}{' + str(avg_neighbors) + '}\n')
     fd.close()
+
+def score(duration, max_duration, wrong_reports, max_wrong_reports):
+    # Duration
+    A = 0.8
+    a = A * (1.0 - min(1.0, duration / max_duration))
+
+    # Wrong reports.
+    B = 0.2
+    b = B * (1.0 - min(1.0, wrong_reports / max_wrong_reports))
+
+    return a + b;
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

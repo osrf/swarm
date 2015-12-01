@@ -62,6 +62,10 @@ def default()
   $comms_outage_duration_min = 1.0
   $comms_outage_duration_max = 2.0
   $comms_data_rate_max = 54000000
+
+  # Scoring
+  $max_time_allowed = 1200.0
+  $max_wrong_reports = 20
 end
 
 # complete.world
@@ -117,6 +121,8 @@ def final_01_10_low()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+
+  $max_time_allowed = 2400.0
 end
 
 # final_01_10_medium.world
@@ -136,6 +142,8 @@ def final_01_10_medium()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+
+  $max_time_allowed = 2400.0
 end
 
 # final_01_10_high.world
@@ -155,6 +163,8 @@ def final_01_10_high()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+
+  $max_time_allowed = 2400.0
 end
 
 # final_01_25_low.world
@@ -174,6 +184,8 @@ def final_01_25_low()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+
+  $max_time_allowed = 7200.0
 end
 
 # final_01_25_medium.world
@@ -193,6 +205,8 @@ def final_01_25_medium()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+
+  $max_time_allowed = 7200.0
 end
 
 # final_01_25_high.world
@@ -212,6 +226,8 @@ def final_01_25_high()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+
+  $max_time_allowed = 7200.0
 end
 
 # How to a new world file:
