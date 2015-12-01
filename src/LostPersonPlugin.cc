@@ -90,7 +90,7 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   if (!this->common.LoadSphericalCoordinates(
         worldSDF->GetElement("spherical_coordinates")))
   {
-    gzerr << "Unable to laod spherical coordinates\n";
+    gzerr << "Unable to load spherical coordinates\n";
   }
 
   // Get the gps sensor
