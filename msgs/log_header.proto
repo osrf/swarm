@@ -35,4 +35,10 @@ message LogHeader
 
   /// \brief Team name.
   optional string team_name           = 10;
+
+  /// \brief Maximum time allowed (seconds)
+  optional double max_time_allowed    = 11;
+
+  /// \brief Maximum number of incorrect lost person reports.
+  optional uint32 max_wrong_reports   = 12;
 }

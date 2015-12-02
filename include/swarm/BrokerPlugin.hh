@@ -36,7 +36,6 @@
 #include "swarm/CommsModel.hh"
 #include "swarm/Logger.hh"
 #include "swarm/SwarmTypes.hh"
-#include "msgs/datagram.pb.h"
 #include "msgs/log_entry.pb.h"
 
 namespace swarm

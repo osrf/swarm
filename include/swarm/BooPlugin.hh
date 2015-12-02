@@ -31,6 +31,8 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <ignition/math/Vector3.hh>
 #include <sdf/sdf.hh>
+#include "msgs/log_entry.pb.h"
+#include "swarm/Logger.hh"
 #include "swarm/RobotPlugin.hh"
 #include "swarm/SwarmTypes.hh"
 
@@ -54,7 +56,7 @@ namespace swarm
   /// position of the lost person. If the person is found, a message of type
   /// PersonFound is published in the topic /swarm/found and the simulation is
   /// paused.
-  class BooPlugin : public swarm::RobotPlugin
+  class BooPlugin : public RobotPlugin
   {
     /// \brief Class constructor.
     public: BooPlugin();
@@ -133,6 +135,9 @@ namespace swarm
     /// \return The coordinates of a cell in the 3D grid.
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
 
+    // Documentation inherited.
+    private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
+
     /// \brief True when the lost person has been found.
     private: bool found = false;
 
@@ -167,6 +172,12 @@ namespace swarm
     /// \brief Maximum time difference allowed (seconds) between the current
     /// time and the reported lost person messages to the BOO.
     private: gazebo::common::Time maxDt = 1000.0;
+
+    /// \brief Logger instance.
+    private: Logger *logger = Logger::Instance();
+
+    /// \brief Last report received
+    private: mutable std::vector<msgs::BooReport> lastReports;
   };
 }
 #endif

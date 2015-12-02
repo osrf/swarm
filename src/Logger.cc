@@ -222,6 +222,16 @@ void Logger::FillHeader(sdf::ElementPtr _sdf)
       this->header.set_search_area(
         logElem->Get<std::string>("search_area"));
     }
+    if (logElem->HasElement("max_time_allowed"))
+    {
+      this->header.set_max_time_allowed(
+        logElem->Get<double>("max_time_allowed"));
+    }
+    if (logElem->HasElement("max_wrong_reports"))
+    {
+      this->header.set_max_wrong_reports(
+        logElem->Get<int>("max_wrong_reports"));
+    }
   }
 
   // Did the user set SWARM_TEAMNAME?

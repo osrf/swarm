@@ -268,6 +268,13 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     return false;
   }
 
+  // Register the FOUND message for logging.
+  msgs::BooReport msg;
+  msg.set_time_seen(_time.Double());
+  msg.mutable_pos_seen()->set_x(_pos.X());
+  msg.mutable_pos_seen()->set_y(_pos.Y());
+  msg.mutable_pos_seen()->set_z(_pos.Z());
+
   // Validate the result.
   auto reportedPosInGrid = this->PosToGrid(_pos);
   ignition::math::Vector3i realPosInGrid;
@@ -299,6 +306,9 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     if (!_srcAddress.empty())
       this->SendAck(_srcAddress, 1);
   }
+
+  msg.set_succeed(this->found);
+  this->lastReports.push_back(msg);
 
   return this->found;
 }
@@ -332,4 +342,18 @@ void BooPlugin::OnData(const std::string &_srcAddress,
   gzerr << "BooPlugin::OnDataReceived() Unable to parse incoming message ["
         << _data << "]" << std::endl;
   this->SendAck(_srcAddress, 3);
+}
+
+//////////////////////////////////////////////////
+void BooPlugin::OnLog(msgs::LogEntry &_logEntry) const
+{
+  if (!this->lastReports.empty())
+  {
+    for (const auto &msg : this->lastReports)
+    {
+      msgs::BooReport *report = _logEntry.add_boo_report();
+      report->CopyFrom(msg);
+    }
+    this->lastReports.clear();
+  }
 }
