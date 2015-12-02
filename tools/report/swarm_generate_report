@@ -52,13 +52,20 @@ latex_template()
 
   \begin{tabular}{ll}
   Team                           & \swarmTeamName\\\\
-  Duration                       & \swarmDuration\\\\
-  Success                        & \swarmSuccess\\\\
-  Number of ground vehicles      & \swarmNumGoundVehicles\\\\
-  Number of fixed wing vehicles  & \swarmNumGoundVehicles\\\\
+  Number of ground vehicles      & \swarmNumGroundVehicles\\\\
+  Number of fixed wing vehicles  & \swarmNumFixedVehicles\\\\
   Number of rotor craft vehicles & \swarmNumRotorVehicles\\\\
   Terrain name                   & \swarmTerrainName\\\\
+  Vegetation name                & \swarmVegetationName\\\\
   Search area                    & \swarmSearchArea\\\\
+  \end{tabular}
+
+
+  \section*{Completion}
+
+  \begin{tabular}{ll}
+  Duration                       & \swarmDuration\\\\
+  Success                        & \swarmSuccess\\\\
   \end{tabular}
 
 
