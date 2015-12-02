@@ -89,5 +89,10 @@ endforeach()
 add_custom_target(erb_master_generation ALL DEPENDS ${world_files})
 
 # Install all the world files
-install(FILES ${world_files}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}.${gazebo_VERSION_MINOR}/worlds)
+if (${gazebo_VERSION_MAJOR} GREATER 6)
+  install(FILES ${world_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}/worlds)
+elseif()
+  install(FILES ${world_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}.${gazebo_VERSION_MINOR}/worlds)
+endif()
