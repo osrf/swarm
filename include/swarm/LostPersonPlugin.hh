@@ -105,12 +105,6 @@ namespace swarm
     private: virtual void Load(gazebo::physics::ModelPtr _model,
                                sdf::ElementPtr _sdf);
 
-    /// \brief Helper function to get a terrain type at a position in
-    /// Gazebo's world coordinate frame.
-    /// \param[in] _pos Position to query.
-    /// \return Type of terrain at the location.
-    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
-
     /// \brief Update the plugin.
     ///
     /// \param[in] _info Update information provided by the server.
