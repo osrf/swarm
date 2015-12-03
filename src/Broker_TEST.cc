@@ -18,12 +18,13 @@
 #include "gtest/gtest.h"
 #include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"
+#include "swarm/RobotPlugin.hh"
 
 using namespace swarm;
 
 //////////////////////////////////////////////////
 /// \brief A sample broker client class.
-class Client : public swarm::BrokerClient
+class Client : public RobotPlugin
 {
   /// \brief Constructor.
   /// \param[in] _id The client ID.

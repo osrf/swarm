@@ -65,6 +65,8 @@ TEST(LoggerTest, Log)
   LogClient client2("#2");
   EXPECT_TRUE(logger2->Register(client2.id, &client2));
 
+  logger->CreateLogFile(nullptr);
+
   // Generate some log data.
   msgs::LogEntry logEntry;
   logger->Update(1.0);

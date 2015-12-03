@@ -80,7 +80,6 @@ bool RobotPlugin::SendTo(const std::string &_data,
   msg.set_data(_data);
 
   // The neighbors list will be included in the broker.
-
   this->broker->Push(msg);
 
   return true;
@@ -318,25 +317,55 @@ void RobotPlugin::UpdateAngularVelocity()
       }
     case RobotPlugin::FIXED_WING:
       {
+        // assumes the controller is using SetAngularVelocity to set Euler
+        // velocities in form[roll, pitch, yaw], NOT fixed-body rates)
+        double rollRate = this->targetAngVel[0];
+        double pitchRate = this->targetAngVel[1];
         double yawRate = 0.0;
-        double rollRate = 0.0;
 
         // Current orientation as Euler angles
         ignition::math::Vector3d rpy = this->observedOrient.Euler();
+
+        // Current pose
+        ignition::math::Pose3d pose = this->model->GetWorldPose().Ign();
+
+        // don't allow pitch or roll larger than 40 degrees, enforce by
+        // clamping rate (this is not clamping the angles -- it is zeroing the
+        // rates!)
+        if (rpy.X() > IGN_DTOR(40))
+        {
+          rollRate = ignition::math::clamp(rollRate, -IGN_DTOR(5), 0.0);
+        }
+        else if (rpy.X() < IGN_DTOR(-40))
+        {
+          rollRate = ignition::math::clamp(rollRate, 0.0, IGN_DTOR(5));
+        }
+
+        if (rpy.Y() > IGN_DTOR(40))
+        {
+          pitchRate = ignition::math::clamp(pitchRate, -IGN_DTOR(5), 0.0);
+        }
+        else if (rpy.Y() < IGN_DTOR(-40))
+        {
+          pitchRate = ignition::math::clamp(pitchRate, 0.0, IGN_DTOR(5));
+        }
 
         // Make sure we don't divide by zero. The vehicle should also
         // be moving before it can bank.
         if (!ignition::math::equal(this->linearVelocityNoNoise.X(), 0.0))
         {
+          // yaw rate in inertial frame is tied to roll angle and speed
+          // (this relationship results from total lift resolved into upward
+          // force and centripetal force)
           yawRate = (-9.81 * tan(rpy.X())) / this->linearVelocityNoNoise.X();
-          yawRate = ignition::math::clamp(yawRate, -IGN_DTOR(10), IGN_DTOR(10));
-          rollRate = ignition::math::clamp(this->targetAngVel[0],
-              -IGN_DTOR(5), IGN_DTOR(5));
         }
 
-        this->model->SetAngularVel(ignition::math::Vector3d(rollRate,
-              ignition::math::clamp(this->targetAngVel[1],
-                -this->fixedMaxAngularVel, this->fixedMaxAngularVel), yawRate));
+        // do integration outside gazebo (assuming constant stepsize)
+        double dt = this->world->GetPhysicsEngine()->GetMaxStepSize();
+        ignition::math::Vector3d dRot(rollRate, pitchRate, yawRate);
+        pose.Rot() = ignition::math::Quaterniond(rpy + dRot * dt);
+        this->model->SetWorldPose(pose);
+
         break;
       }
   };
@@ -803,6 +832,12 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     sensorsUpdateRate = _sdf->Get<double>("sensor_update_rate");
 
   this->AdjustPose();
+  if (this->type == FIXED_WING)
+  {
+    gazebo::math::Pose pose = this->model->GetWorldPose();
+    pose.pos.z += 10;
+    this->model->SetWorldPose(pose);
+  }
 
   // Register this plugin in the broker.
   this->broker->Register(this->Host(), this);
@@ -866,6 +901,16 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   auto offset =
     ignition::math::Rand::DblUniform(0, 1.0 / this->sensorsUpdateRate);
   this->lastSensorUpdateTime = this->world->GetSimTime() - offset;
+
+  // Cache forest and building bounding boxes
+  for (auto const &mdl : this->world->GetModels())
+  {
+    if (mdl->GetName().find("tree") != std::string::npos ||
+        mdl->GetName().find("building") != std::string::npos)
+    {
+      this->boundingBoxes.push_back(mdl->GetBoundingBox().Ign());
+    }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -874,16 +919,17 @@ void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
   const std::string topic = _msg.dst_address() + ":" +
       std::to_string(_msg.dst_port());
 
-  if (this->callbacks.find(topic) == this->callbacks.end())
+  std::map<std::string, Callback_t>::const_iterator iter =
+    this->callbacks.find(topic);
+  if (iter == this->callbacks.end())
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::OnMsgReceived(): "
           << "Address [" << topic << "] not found" << std::endl;
     return;
   }
 
-  auto const &userCallback = this->callbacks.at(topic);
-  userCallback(_msg.src_address(), _msg.dst_address(),
-               _msg.dst_port(), _msg.data());
+  iter->second(_msg.src_address(), _msg.dst_address(),
+              _msg.dst_port(), _msg.data());
 }
 
 //////////////////////////////////////////////////
