@@ -866,6 +866,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     ignition::math::Rand::DblUniform(0, 1.0 / this->sensorsUpdateRate);
   this->lastSensorUpdateTime = this->world->GetSimTime() - offset;
 
+  // Cache forest and building bounding boxes
   for (auto const &mdl : this->world->GetModels())
   {
     if (mdl->GetName().find("tree") != std::string::npos ||
