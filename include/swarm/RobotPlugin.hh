@@ -869,6 +869,9 @@ namespace swarm
     /// plugins
     private: Common common;
 
+    /// \brief Store the forest and building bounding boxes.
+    private: std::vector<ignition::math::Box> boundingBoxes;
+
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
   };
