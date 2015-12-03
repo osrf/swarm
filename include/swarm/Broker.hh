@@ -51,7 +51,6 @@ namespace swarm
   /// messages already stored in the queue.
   class IGNITION_VISIBLE Broker
   {
-
     /// \brief Broker is a singleton. This method gets the Broker instance
     /// shared between all the clients.
     /// \return Pointer to the current Broker instance.
