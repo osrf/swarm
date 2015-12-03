@@ -68,7 +68,7 @@ target_link_libraries(${PROJECT_LIB_BOO_NAME}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_BOO_NAME})
 
-# Create the libLostPersonPlugin.so library.
+# Create the libSwarmLostPersonPlugin.so library.
 ign_add_library(${PROJECT_LIB_LOST_PERSON_NAME} ${lost_person_plugin_sources})
 target_link_libraries(${PROJECT_LIB_LOST_PERSON_NAME}
                       ${PROTOBUF_LIBRARY}

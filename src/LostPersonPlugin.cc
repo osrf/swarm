@@ -142,7 +142,7 @@ void LostPersonPlugin::AdjustPose()
 
   ignition::math::Vector3d norm;
   ignition::math::Vector3d terrainPos;
-  this->TerrainLookup(pose.Pos(), terrainPos, norm);
+  this->common.TerrainLookup(pose.Pos(), terrainPos, norm);
 
   ignition::math::Vector3d euler = pose.Rot().Euler();
 
@@ -175,6 +175,24 @@ bool LostPersonPlugin::MapQuery(const double _lat, const double _lon,
     double &_height, TerrainType &_type)
 {
   return this->common.MapQuery(_lat, _lon, _height, _type);
+}
+
+//////////////////////////////////////////////////
+bool LostPersonPlugin::Pose(double &_latitude, double &_longitude,
+    double &_altitude) const
+{
+  if (!this->gps)
+  {
+    gzerr << "LostPersonPlugin::Pose() No GPS sensor available" << std::endl;
+    _latitude = _longitude = _altitude = 0.0;
+    return false;
+  }
+
+  _latitude = this->latitude;
+  _longitude = this->longitude;
+  _altitude = this->altitude;
+
+  return true;
 }
 
 //////////////////////////////////////////////////

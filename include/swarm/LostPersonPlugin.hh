@@ -93,14 +93,6 @@ namespace swarm
                          double &_longitude,
                          double &_altitude) const;
 
-    /// \brief Get terrain information at the specified location.
-    /// \param[in] _pos Reference position.
-    /// \param[out] _terrainPos The 3d point on the terrain.
-    /// \param[out] _norm Normal to the terrain.
-    private: void TerrainLookup(const ignition::math::Vector3d &_pos,
-                                ignition::math::Vector3d &_terrainPos,
-                                ignition::math::Vector3d &_norm) const;
-
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.
     private: void AdjustPose();
