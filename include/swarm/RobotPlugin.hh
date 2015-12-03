@@ -135,8 +135,7 @@ namespace swarm
   ///     - Name() Get the name of the vehicle.
   ///     - SearchArea() Get the GPS coordinates of the search area.
   class IGNITION_VISIBLE RobotPlugin
-    : public gazebo::ModelPlugin, public swarm::Loggable,
-      public swarm::BrokerClient
+    : public gazebo::ModelPlugin, public swarm::Loggable
   {
     /// \brief The type of vehicle.
     public: enum VehicleType
@@ -573,7 +572,7 @@ namespace swarm
     /// user's callback.
     ///
     /// \param[in] _msg New message received.
-    private: virtual void OnMsgReceived(const msgs::Datagram &_msg) const;
+    private: void OnMsgReceived(const msgs::Datagram &_msg) const;
 
     /// \brief Callback executed each time that a neighbor update is received.
     /// The messages are coming from the broker. The broker decides which are
@@ -871,6 +870,10 @@ namespace swarm
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;
+
+    /// \brief BrokerPlugin needs access to some of the private member
+    /// functions.
+    friend class BrokerPlugin;
   };
 }
 #endif
