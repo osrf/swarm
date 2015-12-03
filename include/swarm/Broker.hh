@@ -30,20 +30,7 @@
 
 namespace swarm
 {
-  /// \brief Interface that classes should implement for using the broker.
-  /// These methods will be automatically executed in the client for delivering
-  /// new messages or new neighbors updates.
-  class IGNITION_VISIBLE BrokerClient
-  {
-    /// \brief Executed when a new message is delivered to the client.
-    /// \param[in] _msg New message.
-    public: virtual void OnMsgReceived(const msgs::Datagram &_msg) const = 0;
-
-    /// \brief Executed when a new neighbor update is received in the client.
-    /// \param[in] _msg List of neighbors.
-    public: virtual void OnNeighborsReceived(
-      const std::vector<std::string> &_msg) = 0;
-  };
+  class RobotPlugin;
 
   /// \brief Stores information about a client broker.
   class IGNITION_VISIBLE BrokerClientInfo
@@ -52,14 +39,19 @@ namespace swarm
     public: std::string address;
 
     /// \brief Pointer to the client.
-    public: const BrokerClient* handler;
+    public: const RobotPlugin *handler;
   };
+
+  /// \def EndPoints_M
+  /// \brief Map of endpoints
+  using EndPoints_M = std::map<std::string, std::vector<BrokerClientInfo>>;
 
   /// \brief Store messages, and exposes an API for registering new clients,
   /// bind to a particular address, push new messages or get the list of
   /// messages already stored in the queue.
   class IGNITION_VISIBLE Broker
   {
+
     /// \brief Broker is a singleton. This method gets the Broker instance
     /// shared between all the clients.
     /// \return Pointer to the current Broker instance.
@@ -69,12 +61,12 @@ namespace swarm
     /// address. An endpoint is constructed as an address followed by ':',
     /// followed by the port. E.g.: "192.168.1.5:8000" is a valid endpoint.
     /// \param[in] _clientAddress Address of the broker client.
-    /// \param[in] _client Pointer to the broker client.
+    /// \param[in] _client Pointer to the robot plugin.
     /// \param[in] _endpoint End point requested to bind.
     /// \return True if the operation succeed or false otherwise (if the client
     /// was already bound to the same endpoint).
     public: bool Bind(const std::string &_clientAddress,
-                      const BrokerClient *_client,
+                      const RobotPlugin *_client,
                       const std::string &_endpoint);
 
     /// \brief Queue a new message.
@@ -83,24 +75,23 @@ namespace swarm
 
     /// \brief Register a new client for message handling.
     /// \param[in] _id Unique ID of the client.
-    /// \param[in] _client Pointer to the client.
+    /// \param[in] _client Pointer to the robot plugin.
     /// \return True if the operation succeed of false otherwise (if the same
     /// id was already registered).
     public: bool Register(const std::string &_id,
-                          BrokerClient *_client);
+                          RobotPlugin *_client);
 
     /// \brief Get the list of registered clients.
     /// \return Map of registered clients. The key is the client ID and the
     /// value is a pointer to the client.
-    public: const std::map<std::string, BrokerClient*> &Clients() const;
+    public: const std::map<std::string, RobotPlugin*> &Clients() const;
 
     /// \brief Get the list of endpoints bound.
     /// \return Map of endpoints. The key is the endpoint and the value is a
     /// vector containing the information of all the clients bound to this
     /// endpoint.
     /// \sa BrokerClientInfo.
-    public: const std::map<std::string, std::vector<BrokerClientInfo>>
-      &EndPoints() const;
+    public: const EndPoints_M &EndPoints() const;
 
     /// \brief Get the current message queue.
     /// \return Reference to the queue of messages.
@@ -126,11 +117,11 @@ namespace swarm
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
-    protected: std::map<std::string, BrokerClient*> clients;
+    protected: std::map<std::string, RobotPlugin*> clients;
 
     /// \brief List of bound endpoints. The key is an endpoint and the
     /// value is the vector of clients bounded on that endpoint.
-    protected: std::map<std::string, std::vector<BrokerClientInfo>> endpoints;
+    protected: EndPoints_M endpoints;
   };
 }  // namespace
 #endif

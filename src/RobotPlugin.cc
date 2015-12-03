@@ -80,7 +80,6 @@ bool RobotPlugin::SendTo(const std::string &_data,
   msg.set_data(_data);
 
   // The neighbors list will be included in the broker.
-
   this->broker->Push(msg);
 
   return true;
@@ -873,16 +872,17 @@ void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
   const std::string topic = _msg.dst_address() + ":" +
       std::to_string(_msg.dst_port());
 
-  if (this->callbacks.find(topic) == this->callbacks.end())
+  std::map<std::string, Callback_t>::const_iterator iter =
+    this->callbacks.find(topic);
+  if (iter == this->callbacks.end())
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::OnMsgReceived(): "
           << "Address [" << topic << "] not found" << std::endl;
     return;
   }
 
-  auto const &userCallback = this->callbacks.at(topic);
-  userCallback(_msg.src_address(), _msg.dst_address(),
-               _msg.dst_port(), _msg.data());
+  iter->second(_msg.src_address(), _msg.dst_address(),
+              _msg.dst_port(), _msg.data());
 }
 
 //////////////////////////////////////////////////
