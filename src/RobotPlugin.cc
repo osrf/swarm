@@ -248,7 +248,7 @@ void RobotPlugin::UpdateLinearVelocity()
             this->targetLinVel * ignition::math::Vector3d::UnitX);
 
         maxLinearVel = this->groundMaxLinearVel -
-          (this->terrainType != RobotPlugin::PLAIN ?
+          (this->terrainType != TerrainType::PLAIN ?
           this->groundMaxLinearVel * 0.50 : 0);
 
         break;
@@ -259,7 +259,7 @@ void RobotPlugin::UpdateLinearVelocity()
         linearVel = myPose.Rot().RotateVector(this->targetLinVel);
 
         maxLinearVel = this->rotorMaxLinearVel -
-          (this->terrainType != RobotPlugin::PLAIN ?
+          (this->terrainType != TerrainType::PLAIN ?
           this->rotorMaxLinearVel * 0.25 : 0);
 
         break;
@@ -271,7 +271,7 @@ void RobotPlugin::UpdateLinearVelocity()
             this->targetLinVel * ignition::math::Vector3d::UnitX);
 
         maxLinearVel = this->fixedMaxLinearVel -
-          (this->terrainType != RobotPlugin::PLAIN ?
+          (this->terrainType != TerrainType::PLAIN ?
           this->fixedMaxLinearVel * 0.75 : 0);
 
         break;
@@ -421,6 +421,12 @@ void RobotPlugin::SearchArea(double &_minLatitude,
                           _minLongitude, _maxLongitude);
 }
 
+//////////////////////////////////////////////////
+bool RobotPlugin::MapQuery(const double _lat, const double _lon,
+    double &_height, TerrainType &_type)
+{
+  return this->common.MapQuery(_lat, _lon, _height, _type);
+}
 
 //////////////////////////////////////////////////
 std::string RobotPlugin::Host() const
@@ -492,7 +498,8 @@ bool RobotPlugin::IsDocked() const {
 void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 {
   // Get current terrain type
-  this->terrainType = this->TerrainAtPos(this->model->GetWorldPose().pos.Ign());
+  this->terrainType = this->common.TerrainAtPos(
+      this->model->GetWorldPose().pos.Ign());
 
   // Update the state of the battery
   this->UpdateBattery();
@@ -519,7 +526,7 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
 //////////////////////////////////////////////////
 void RobotPlugin::AdjustPose()
 {
-  if (!this->terrain || !this->model)
+  if (!this->common.Terrain() || !this->model)
     return;
 
   // Get the pose of the vehicle
@@ -527,15 +534,17 @@ void RobotPlugin::AdjustPose()
 
   // Constrain X position to the terrain boundaries
   pose.Pos().X(ignition::math::clamp(pose.Pos().X(),
-        -this->terrainSize.X() * 0.5, this->terrainSize.X() * 0.5));
+        -this->common.TerrainSize().X() * 0.5,
+         this->common.TerrainSize().X() * 0.5));
 
   // Constrain Y position to the terrain boundaries
   pose.Pos().Y(ignition::math::clamp(pose.Pos().Y(),
-        -this->terrainSize.Y() * 0.5, this->terrainSize.Y() * 0.5));
+        -this->common.TerrainSize().Y() * 0.5,
+         this->common.TerrainSize().Y() * 0.5));
 
   ignition::math::Vector3d norm;
   ignition::math::Vector3d terrainPos;
-  this->TerrainLookup(pose.Pos(), terrainPos, norm);
+  this->common.TerrainLookup(pose.Pos(), terrainPos, norm);
 
   // Constrain each type of robot
   switch (this->Type())
@@ -617,6 +626,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // We assume that the physics step size will not change during simulation.
   this->world = this->model->GetWorld();
+  this->common.SetWorld(this->world);
 
   // We assume the BOO is named "boo".
   this->boo = this->world->GetModel("boo");
@@ -633,18 +643,9 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Load some info about the terrain.
   if (terrainModel)
   {
-    this->terrain =
-      boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
-          terrainModel->GetLink()->GetCollision("collision")->GetShape());
-
-    // Get the size of the terrain
-    this->terrainSize = this->terrain->GetSize().Ign();
-
-    // Set the terrain scaling.
-    this->terrainScaling.Set(this->terrain->GetSize().x /
-        (this->terrain->GetVertexCount().x-1),
-        this->terrain->GetSize().y /
-        (this->terrain->GetVertexCount().y-1));
+    this->common.SetTerrain(
+        boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
+          terrainModel->GetLink()->GetCollision("collision")->GetShape()));
   }
 
 
@@ -904,186 +905,6 @@ std::string RobotPlugin::Name() const
   return this->model->GetName();
 }
 
-//////////////////////////////////////////////////
-void RobotPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
-    ignition::math::Vector3d &_terrainPos,
-    ignition::math::Vector3d &_norm) const
-{
-  // The robot position in the coordinate frame of the terrain
-  ignition::math::Vector3d robotPos(
-      (this->terrainSize.X() * 0.5 + _pos.X()) / this->terrainScaling.X(),
-      (this->terrainSize.Y() * 0.5 - _pos.Y()) / this->terrainScaling.Y(), 0);
-
-  // Three vertices that define the triangle on which the vehicle rests
-  // The first vertex is closest point on the terrain
-  ignition::math::Vector3d v1(std::round(robotPos.X()),
-      std::round(robotPos.Y()), 0);
-  ignition::math::Vector3d v2 = v1;
-  ignition::math::Vector3d v3 = v1;
-
-  // The second and third vertices are chosen based on how OGRE layouts
-  // the triangle strip.
-  if (static_cast<int>(v1.X()) == static_cast<int>(std::ceil(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      v2.Y(v1.Y()-1);
-      v3.X(v1.X()-1);
-    }
-    else
-    {
-      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v3 = b;
-        v2.X(v1.X()-1);
-        v2.Y(v1.Y()-1);
-      }
-      else
-      {
-        v2 = c;
-        v3.X(v1.X()-1);
-        v3.Y(v1.Y()-1);
-      }
-    }
-  }
-  else if (static_cast<int>(v1.X()) ==
-      static_cast<int>(std::floor(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2 = b;
-        v3.X(v1.X()+1);
-        v3.Y(v1.Y()-1);
-      }
-      else
-      {
-        v3 = c;
-        v2.X(v1.X()+1);
-        v2.Y(v1.Y()-1);
-      }
-    }
-    else
-    {
-      v2.X(v1.X()+1);
-      v3.Y(v1.Y()-1);
-    }
-  }
-  else if (static_cast<int>(v1.X()) ==
-      static_cast<int>(std::floor(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::floor(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2.X(v1.X()+1);
-        v2.Y(v1.Y()+1);
-        v3 = b;
-      }
-      else
-      {
-        v2 = c;
-        v3.X(v1.X()+1);
-        v3.Y(v1.Y()+1);
-      }
-    }
-    else
-    {
-      v2.Y(v1.Y()+1);
-      v3.X(v1.X()+1);
-    }
-  }
-  else
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      v2.X() -= 1;
-      v3.Y() += 1;
-    }
-    else
-    {
-      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2 = b;
-        v3.X(v1.X()-1);
-        v3.Y(v1.Y()+1);
-      }
-      else
-      {
-        v2.X(v1.X()-1);
-        v2.Y(v1.Y()+1);
-        v3 = c;
-      }
-    }
-  }
-
-  // Get the height at each vertex
-  v1.Z(this->terrain->GetHeight(v1.X(), v1.Y()));
-  v2.Z(this->terrain->GetHeight(v2.X(), v2.Y()));
-  v3.Z(this->terrain->GetHeight(v3.X(), v3.Y()));
-
-  // Display a marker that highlights the vertices currently used to
-  // compute the vehicles height. This is debug code that is very useful
-  // but it requires a version of gazebo with visual markers.
-  //
-  // gazebo::msgs::Marker markerMsg;
-  // markerMsg.set_layer("default");
-  // markerMsg.set_id(0);
-  // markerMsg.set_action(gazebo::msgs::Marker::MODIFY);
-  // markerMsg.set_type(gazebo::msgs::Marker::LINE_STRIP);
-
-
-  // v1a.Z() += 0.1;
-  // v2a.Z() += 0.1;
-  // v3a.Z() += 0.1;
-  // gazebo::msgs::Set(markerMsg.add_point(), v1a);
-  // gazebo::msgs::Set(markerMsg.add_point(), v2a);
-  // gazebo::msgs::Set(markerMsg.add_point(), v3a);
-  // if (this->markerPub)
-  //   this->markerPub->Publish(markerMsg);
-  // END DEBUG CODE
-
-  ignition::math::Vector3d v1a = v1;
-  ignition::math::Vector3d v2a = v2;
-  ignition::math::Vector3d v3a = v3;
-  v1a.X(v1a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v1a.Y(this->terrainSize.Y()*0.5 - v1a.Y()*this->terrainScaling.Y());
-
-  v2a.X(v2a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v2a.Y(this->terrainSize.Y()*0.5 - v2a.Y()*this->terrainScaling.Y());
-
-  v3a.X(v3a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v3a.Y(this->terrainSize.Y()*0.5 - v3a.Y()*this->terrainScaling.Y());
-
-  _norm = ignition::math::Vector3d::Normal(v1a, v2a, v3a);
-
-  // Triangle normal
-  ignition::math::Vector3d norm = ignition::math::Vector3d::Normal(v1, v2, v3);
-
-  // Ray direction to intersect with triangle
-  ignition::math::Vector3d rayDir(0, 0, -1);
-
-  // Ray start point
-  ignition::math::Vector3d rayPt(robotPos.X(), robotPos.Y(), 1000);
-
-  // Distance from ray start to triangle intersection
-  double intersection = -norm.Dot(rayPt - v1) / norm.Dot(rayDir);
-
-  // Height of the terrain
-  _terrainPos = rayPt + intersection * rayDir;
-}
 
 /////////////////////////////////////////////////
 void RobotPlugin::UpdateBattery()
@@ -1270,79 +1091,8 @@ ignition::math::Vector2d RobotPlugin::LostPersonDir() const
   return this->lostPersonInitDir;
 }
 
-//////////////////////////////////////////////////
-bool RobotPlugin::MapQuery(const double _lat, const double _lon,
-    double &_height, TerrainType &_type)
-{
-  // Check that the lat and lon is in the search area
-  if (_lat < this->common.SearchMinLatitude()  ||
-      _lat > this->common.SearchMaxLatitude() ||
-      _lon < this->common.SearchMinLongitude() ||
-      _lon > this->common.SearchMaxLongitude())
-  {
-    return false;
-  }
-
-  // Get the location in the local coordinate frame
-  ignition::math::Vector3d local =
-    this->world->GetSphericalCoordinates()->LocalFromSpherical(
-        ignition::math::Vector3d(_lat, _lon, 0));
-
-  local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
-
-  ignition::math::Vector3d pos, norm;
-
-  // Reuse the terrain lookup function.
-  this->TerrainLookup(local, pos, norm);
-
-  // Add in the reference elevation.
-  _height = pos.Z() +
-    this->world->GetSphericalCoordinates()->GetElevationReference();
-  local.Z(pos.Z());
-
-  _type = this->TerrainAtPos(local);
-
-  return true;
-}
-
 /////////////////////////////////////////////////
-RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
-    const ignition::math::Vector3d &_pos)
-{
-  TerrainType result = PLAIN;
-
-  for (auto const &mdl : this->world->GetModels())
-  {
-    if (mdl->GetBoundingBox().Contains(_pos))
-    {
-      // The bounding box of a model is aligned to the global axis, and can
-      // lead to incorrect results.
-      // If a point is in the bounding box, then we use a ray-cast to see
-      // if the point is actually within the model.
-      gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
-          gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
-
-      // Just in case rayModel is null
-      const gazebo::physics::ModelPtr m = rayModel != NULL ? rayModel : mdl;
-
-      if (m->GetName().find("tree") != std::string::npos)
-      {
-        result = FOREST;
-        break;
-      }
-      else if (m->GetName().find("building") != std::string::npos)
-      {
-        result = BUILDING;
-        break;
-      }
-    }
-  }
-
-  return result;
-}
-
-/////////////////////////////////////////////////
-RobotPlugin::TerrainType RobotPlugin::Terrain() const
+TerrainType RobotPlugin::Terrain() const
 {
   return this->terrainType;
 }

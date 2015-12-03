@@ -51,19 +51,6 @@ namespace swarm
   ///     - MapQuery() Query the map for height and terrain type info.
   class IGNITION_VISIBLE LostPersonPlugin : public gazebo::ModelPlugin
   {
-    /// \brief The types of terrain.
-    public: enum TerrainType
-            {
-              /// \brief Open terrain
-              PLAIN     = 0,
-
-              /// \brief Terrain with forest
-              FOREST    = 1,
-
-              /// \brief Terrain with a building
-              BUILDING  = 2
-            };
-
     /// \brief Class constructor.
     public: LostPersonPlugin();
 
@@ -149,16 +136,6 @@ namespace swarm
 
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;
-
-    /// \brief Pointer to the terrain
-    private: gazebo::physics::HeightmapShapePtr terrain;
-
-    /// \brief This is the scaling from world coordinates to heightmap
-    /// coordinates.
-    private: ignition::math::Vector2d terrainScaling;
-
-    /// \brief Size of the terrain
-    private: ignition::math::Vector3d terrainSize;
 
     /// \brief Half the height of the model.
     private: double modelHeight2 = 0;

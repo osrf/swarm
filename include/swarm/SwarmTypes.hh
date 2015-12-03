@@ -62,5 +62,18 @@ namespace swarm
   /// \brief A shared pointer to the membership data structure.
   /// \sa SwarmMembership_M
   using SwarmMembershipPtr = std::shared_ptr<SwarmMembership_M>;
+
+  /// \brief The types of terrain.
+  enum TerrainType
+  {
+    /// \brief Open terrain
+    PLAIN     = 0,
+
+    /// \brief Terrain with forest
+    FOREST    = 1,
+
+    /// \brief Terrain with a building
+    BUILDING  = 2
+  };
 }
 #endif

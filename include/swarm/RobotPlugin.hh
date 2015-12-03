@@ -45,6 +45,7 @@
 #include "msgs/log_entry.pb.h"
 #include "swarm/Common.hh"
 #include "swarm/Broker.hh"
+#include "swarm/SwarmTypes.hh"
 #include "swarm/Logger.hh"
 
 namespace swarm
@@ -154,18 +155,6 @@ namespace swarm
               BOO = 3
             };
 
-    /// \brief The types of terrain.
-    public: enum TerrainType
-            {
-              /// \brief Open terrain
-              PLAIN     = 0,
-
-              /// \brief Terrain with forest
-              FOREST    = 1,
-
-              /// \brief Terrain with a building
-              BUILDING  = 2
-            };
 
     /// \brief Class constructor.
     public: RobotPlugin();
@@ -541,12 +530,6 @@ namespace swarm
     /// \return Type of terrain at this vehicle's location.
     protected: TerrainType Terrain() const;
 
-    /// \brief Helper function to get a terrain type at a position in
-    /// Gazebo's world coordinate frame.
-    /// \param[in] _pos Position to query.
-    /// \return Type of terrain at the location.
-    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
-
     /// \brief Get the direction from the BOO to the lost person at the
     /// start of simulation. Each component (x, y) of the result is
     /// rounded to fall on one of: -1.0, -0.5, 0, 0.5, 1.0.
@@ -587,14 +570,6 @@ namespace swarm
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.
     private: void AdjustPose();
-
-    /// \brief Get terrain information at the specified location.
-    /// \param[in] _pos Reference position.
-    /// \param[out] _terrainPos The 3d point on the terrain.
-    /// \param[out] _norm Normal to the terrain.
-    private: void TerrainLookup(const ignition::math::Vector3d &_pos,
-                                ignition::math::Vector3d &_terrainPos,
-                                ignition::math::Vector3d &_norm) const;
 
     /// \brief Update and store sensor information.
     private: void UpdateSensors();
@@ -720,16 +695,6 @@ namespace swarm
     /// \brief Mutex to protect shared member variables.
     private: mutable std::mutex mutex;
 
-    /// \brief Pointer to the terrain
-    private: gazebo::physics::HeightmapShapePtr terrain;
-
-    /// \brief This is the scaling from world coordinates to heightmap
-    /// coordinates.
-    private: ignition::math::Vector2d terrainScaling;
-
-    /// \brief Size of the terrain
-    private: ignition::math::Vector3d terrainSize;
-
     /// \brief Half the height of the model.
     private: double modelHeight2;
 
@@ -844,7 +809,7 @@ namespace swarm
     private: gazebo::physics::ModelPtr rotorDockVehicle;
 
     /// \brief Current terrain type for this vehicle.
-    private: TerrainType terrainType = PLAIN;
+    private: TerrainType terrainType = TerrainType::PLAIN;
 
     /// \brief Initial vector from boo to lost person. This acts as
     /// prior knowledge about where the lost person starts.
