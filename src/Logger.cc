@@ -188,7 +188,7 @@ void Logger::FillHeader(sdf::ElementPtr _sdf)
   this->header.set_gazebo_version(GAZEBO_VERSION_FULL);
   this->header.set_seed(ignition::math::Rand::Seed());
 
-  if (_sdf &&_sdf->HasElement("log_info"))
+  if (_sdf && _sdf->HasElement("log_info"))
   {
     auto const &logElem = _sdf->GetElement("log_info");
 
