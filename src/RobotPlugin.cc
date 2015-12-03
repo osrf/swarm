@@ -864,6 +864,16 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   auto offset =
     ignition::math::Rand::DblUniform(0, 1.0 / this->sensorsUpdateRate);
   this->lastSensorUpdateTime = this->world->GetSimTime() - offset;
+
+  // Cache forest and building bounding boxes
+  for (auto const &mdl : this->world->GetModels())
+  {
+    if (mdl->GetName().find("tree") != std::string::npos ||
+        mdl->GetName().find("building") != std::string::npos)
+    {
+      this->boundingBoxes.push_back(mdl->GetBoundingBox().Ign());
+    }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -1311,9 +1321,9 @@ RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
 {
   TerrainType result = PLAIN;
 
-  for (auto const &mdl : this->world->GetModels())
+  for (auto const &bb : this->boundingBoxes)
   {
-    if (mdl->GetBoundingBox().Contains(_pos))
+    if (bb.Contains(_pos))
     {
       // The bounding box of a model is aligned to the global axis, and can
       // lead to incorrect results.
@@ -1322,15 +1332,13 @@ RobotPlugin::TerrainType RobotPlugin::TerrainAtPos(
       gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
           gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
 
-      // Just in case rayModel is null
-      const gazebo::physics::ModelPtr m = rayModel != NULL ? rayModel : mdl;
-
-      if (m->GetName().find("tree") != std::string::npos)
+      if (rayModel && rayModel->GetName().find("tree") != std::string::npos)
       {
         result = FOREST;
         break;
       }
-      else if (m->GetName().find("building") != std::string::npos)
+      else if (rayModel &&
+               rayModel->GetName().find("building") != std::string::npos)
       {
         result = BUILDING;
         break;
