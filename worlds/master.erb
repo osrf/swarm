@@ -167,8 +167,8 @@ def final_01_10_high()
   $max_time_allowed = 2400.0
 end
 
-# final_01_25_low.world
-def final_01_25_low()
+# final_01_20_low.world
+def final_01_20_low()
   # Load default parameters.
   default()
 
@@ -188,8 +188,8 @@ def final_01_25_low()
   $max_time_allowed = 7200.0
 end
 
-# final_01_25_medium.world
-def final_01_25_medium()
+# final_01_20_medium.world
+def final_01_20_medium()
   # Load default parameters.
   default()
 
@@ -209,8 +209,8 @@ def final_01_25_medium()
   $max_time_allowed = 7200.0
 end
 
-# final_01_25_high.world
-def final_01_25_high()
+# final_01_20_high.world
+def final_01_20_high()
   # Load default parameters.
   default()
 
@@ -266,9 +266,9 @@ def generate_worlds(_world_file)
   h["final_01_10_low.world"] = method(:final_01_10_low)
   h["final_01_10_medium.world"] = method(:final_01_10_medium)
   h["final_01_10_high.world"] = method(:final_01_10_high)
-  h["final_01_25_low.world"] = method(:final_01_25_low)
-  h["final_01_25_medium.world"] = method(:final_01_25_medium)
-  h["final_01_25_high.world"] = method(:final_01_25_high)
+  h["final_01_20_low.world"] = method(:final_01_20_low)
+  h["final_01_20_medium.world"] = method(:final_01_20_medium)
+  h["final_01_20_high.world"] = method(:final_01_20_high)
 
   f = h[_world_file]
   f.call
