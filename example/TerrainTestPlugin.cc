@@ -39,7 +39,7 @@ void TerrainTestPlugin::Load(sdf::ElementPtr _sdf)
   double stepLat = (maxLat - minLat) / 500.0;
 
   double elevation;
-  swarm::RobotPlugin::TerrainType terrainType;
+  swarm::TerrainType terrainType;
 
   std::ofstream elevationFile("elevation.csv");
   std::ofstream terrainFile("terrain.csv");
