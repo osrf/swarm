@@ -71,8 +71,8 @@ namespace swarm
     /// \param[in] _dstAddress Destination address of the message.
     /// \param[in] _dstPort Destination port.
     /// \param[in] _data Message payload.
-    public: virtual void OnData(const std::string &_srcAddress,
-                                const std::string &_dstAddress,
+    public: virtual void OnData(const uint32_t _srcAddress,
+                                const uint32_t _dstAddress,
                                 const uint32_t _dstPort,
                                 const std::string &_data);
 
@@ -97,7 +97,7 @@ namespace swarm
     ///   6. Error: Negative time reported.
     ///   7. Error: Future time reported.
     ///   8. Error: Unrecognized command.
-    protected: void SendAck(const std::string &_dstAddress,
+    protected: void SendAck(const uint32_t _dstAddress,
                             const int _code);
 
     /// \brief Handle reset
@@ -112,7 +112,7 @@ namespace swarm
     /// \return True if the location and time are correct.
     private: bool FoundHelper(const ignition::math::Vector3d &_pos,
                               const gazebo::common::Time &_time,
-                              const std::string &_srcAddress="");
+                              const uint32_t _srcAddress = 0);
 
     /// \brief Callback executed at the end of each world update.
     private: virtual void OnUpdateEnd();
@@ -126,8 +126,8 @@ namespace swarm
     /// \param[in] _dstAddress Destination address of the message.
     /// \param[in] _dstPort Destination port.
     /// \param[in] _data Message payload.
-    private: void OnDataReceived(const std::string &_srcAddress,
-                                 const std::string &_dstAddress,
+    private: void OnDataReceived(const uint32_t _srcAddress,
+                                 const uint32_t _dstAddress,
                                  const uint32_t _dstPort,
                                  const std::string &_data);
 

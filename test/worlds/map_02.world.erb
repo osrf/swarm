@@ -128,7 +128,7 @@
         <camera>link::camera</camera>
         <gps>link::gps</gps>
         <imu>link::imu</imu>
-        <address>192.168.2.1</address>
+        <address>10</address>
         <%=search_area%>
         <%=ground_battery%>
         <%=test_case%>
@@ -173,12 +173,12 @@
                 <normal>file://media/materials/textures/flat_normal.png</normal>
                 <size>5</size>
               </texture>
-    
+
               <blend>
                 <min_height>600</min_height>
                 <fade_dist>20</fade_dist>
               </blend>
-    
+
               <blend>
                 <min_height>720</min_height>
                 <fade_dist>20</fade_dist>
@@ -191,7 +191,7 @@
         </visual>
       </link>
     </model>
-    
+
     <% for y in 0..1 %>
       <% for x in 0..8 %>
         <model name="building_group1_<%=y*8 + x%>">
@@ -209,7 +209,7 @@
                 <diffuse>0.2 .2 .2 0.2</diffuse>
               </material>
             </visual>
-    
+
             <collision name="collision">
               <geometry>
                 <box>
@@ -221,7 +221,7 @@
         </model>
       <%end%>
     <%end%>
-    
+
     <% for y in 0..1 %>
       <% for x in 0..8 %>
         <model name="building_group2_<%=y*10 + x%>">
@@ -239,7 +239,7 @@
                 <diffuse>0.2 .2 .2 0.2</diffuse>
               </material>
             </visual>
-    
+
             <collision name="collision">
               <geometry>
                 <box>

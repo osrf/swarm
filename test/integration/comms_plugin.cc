@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "comms_plugin.hh"
+#include "test/test_config.h"
 
 using namespace swarm;
 
@@ -43,14 +44,14 @@ void CommsPlugin::Load(sdf::ElementPtr _sdf)
 //////////////////////////////////////////////////
 void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
-  std::string dstAddress;
+  uint32_t dstAddress;
 
   if (this->iterations < 100)
   {
-    if (this->Host() == "192.168.2.1")
-      dstAddress = "192.168.2.2";
+    if (this->Host() == Robot1)
+      dstAddress = Robot2;
     else
-      dstAddress = "192.168.2.1";
+      dstAddress = Robot1;
 
     if ((this->iterations == 0) &&
         ((this->testCase >= 0) && (this->testCase <= 11)))
@@ -86,7 +87,7 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
   }
 
   // Check for results only in one robot.
-  if ((this->iterations == 100) && (this->Host() == "192.168.2.2"))
+  if ((this->iterations == 100) && (this->Host() == Robot2))
   {
     int expectedNumMsgs = 0;
 
@@ -178,8 +179,8 @@ void CommsPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 }
 
 //////////////////////////////////////////////////
-void CommsPlugin::OnDataReceived(const std::string &/*_srcAddress*/,
-    const std::string &/*_dstAddress*/, const uint32_t /*_dstPort*/,
+void CommsPlugin::OnDataReceived(const uint32_t /*_srcAddress*/,
+    const uint32_t /*_dstAddress*/, const uint32_t /*_dstPort*/,
     const std::string &/*_data*/)
 {
   this->numMsgsRecv++;

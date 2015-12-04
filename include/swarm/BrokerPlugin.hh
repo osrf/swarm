@@ -87,6 +87,9 @@ namespace swarm
     // Documentation inherited.
     private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
+    /// \brief Address used by the Broker plugin.
+    protected: const uint32_t kBroker = 5;
+
     /// \brief World pointer.
     private: gazebo::physics::WorldPtr world;
 

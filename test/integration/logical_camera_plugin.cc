@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "logical_camera_plugin.hh"
+#include "test/test_config.h"
 
 using namespace swarm;
 
@@ -87,7 +88,7 @@ void LogicalCameraPlugin::Update0()
 /////////////////////////////////////////////////
 void LogicalCameraPlugin::Update1()
 {
-  if (this->Host() != "192.168.1.1")
+  if (this->Host() != Robot1)
     return;
 
   static int iteration = 0;
@@ -119,7 +120,7 @@ void LogicalCameraPlugin::Update1()
 /////////////////////////////////////////////////
 void LogicalCameraPlugin::Update2()
 {
-  if (this->Host() != "192.168.1.1")
+  if (this->Host() != Robot1)
     return;
 
   static int iteration = 0;

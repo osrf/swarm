@@ -75,6 +75,7 @@ TEST_F(BatteryTest, Recharge)
   world->Step(500);
 }
 
+/////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
   // Set a specific seed to avoid occasional test failures due to

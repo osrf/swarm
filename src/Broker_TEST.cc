@@ -28,7 +28,7 @@ class Client : public RobotPlugin
 {
   /// \brief Constructor.
   /// \param[in] _id The client ID.
-  public: Client(const std::string &_id)
+  public: Client(const uint32_t &_id)
     : id(_id)
   {
   }
@@ -38,12 +38,12 @@ class Client : public RobotPlugin
   {
   }
 
-  void OnNeighborsReceived(const std::vector<std::string> &/*_msg*/)
+  void OnNeighborsReceived(const std::vector<uint32_t> &/*_msg*/)
   {
   }
 
   /// \brief A client ID.
-  public: std::string id;
+  public: uint32_t id;
 };
 
 //////////////////////////////////////////////////
@@ -54,7 +54,7 @@ TEST(brokerTest, Broker)
 
   // Client #1.
   Broker *broker1 = Broker::Instance();
-  Client client1("192.168.3.1");
+  Client client1(10);
   EXPECT_TRUE(broker1->Register(client1.id, &client1));
 
   // Try to register an existing client.
@@ -62,17 +62,17 @@ TEST(brokerTest, Broker)
 
   // Client #2.
   Broker *broker2 = Broker::Instance();
-  Client client2("192.168.3.2");
+  Client client2(11);
   EXPECT_TRUE(broker2->Register(client2.id, &client2));
 
   EXPECT_EQ(broker->Clients().size(), 2u);
 
   // Bind.
   int port = 5000;
-  std::string endPoint1 = client1.id + ":" + std::to_string(port);
+  uint32_t endPoint1 = client1.id * swarm::kMaxPort + port;
   EXPECT_TRUE(broker1->Bind(client1.id, &client1, endPoint1));
   EXPECT_FALSE(broker1->Bind(client1.id, &client1, endPoint1));
-  std::string endPoint2 = client2.id + ":" + std::to_string(port);
+  uint32_t endPoint2 = client2.id * swarm::kMaxPort + port;
   EXPECT_TRUE(broker2->Bind(client2.id, &client2, endPoint2));
   EXPECT_FALSE(broker2->Bind(client2.id, &client2, endPoint2));
 

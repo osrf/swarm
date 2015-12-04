@@ -8,10 +8,10 @@ package swarm.msgs;
 message Datagram
 {
   /// \brief Address of the sender.
-  required string src_address = 1;
+  required uint32 src_address = 1;
 
   /// \brief Address of the destination.
-  required string dst_address = 2;
+  required uint32 dst_address = 2;
 
   /// \brief Destination port.
   required uint32 dst_port    = 3;

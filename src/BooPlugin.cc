@@ -162,8 +162,8 @@ ignition::math::Vector3i BooPlugin::PosToGrid(ignition::math::Vector3d _pos)
 }
 
 //////////////////////////////////////////////////
-void BooPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
+void BooPlugin::OnDataReceived(const uint32_t _srcAddress,
+    const uint32_t _dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // Check if a robot found the lost person.
@@ -230,7 +230,7 @@ bool BooPlugin::Found(const ignition::math::Vector3d &_pos, const double _time)
 
 /////////////////////////////////////////////////
 bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
-    const gazebo::common::Time &_time, const std::string &_srcAddress)
+    const gazebo::common::Time &_time, const uint32_t _srcAddress)
 {
   this->found = false;
 
@@ -239,7 +239,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
   {
     gzerr << "BooPlugin::Found() The reported time [" << _time << "] is"
       << " negative. Lost person is not found." << std::endl;
-    if (!_srcAddress.empty())
+    if (_srcAddress != 0)
       this->SendAck(_srcAddress, 6);
     return false;
   }
@@ -251,7 +251,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     gzerr << "The reported time [" << _time << "] is"
       << " in the future. We're at [" << now << "]. Lost person is not found"
       << std::endl;
-    if (!_srcAddress.empty())
+    if (_srcAddress != 0)
       this->SendAck(_srcAddress, 7);
     return false;
   }
@@ -263,7 +263,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
       << " too old. It should be no older than "
       << this->maxDt.Double() << " secs. We're at [" << now
       << "]. Lost person is not found" << std::endl;
-    if (!_srcAddress.empty())
+    if (_srcAddress != 0)
       this->SendAck(_srcAddress, 2);
     return false;
   }
@@ -294,7 +294,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     gzdbg << "Congratulations! Robot [" << _srcAddress << "] has found "
           << "the lost person at time [" << _time << "]" << std::endl;
 
-    if (!_srcAddress.empty())
+    if (_srcAddress != 0)
       this->SendAck(_srcAddress, 0);
 
     // Pause the simulation to make the lost person detection obvious.
@@ -303,7 +303,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
   else
   {
     gzerr << "Sorry, the reported position seems incorrect" << std::endl;
-    if (!_srcAddress.empty())
+    if (_srcAddress != 0)
       this->SendAck(_srcAddress, 1);
   }
 
@@ -326,7 +326,7 @@ void BooPlugin::Reset()
 }
 
 /////////////////////////////////////////////////
-void BooPlugin::SendAck(const std::string &_dstAddress, const int _code)
+void BooPlugin::SendAck(const uint32_t _dstAddress, const int _code)
 {
   // Format of the response: ACK <code>
   std::string data = "ACK " + std::to_string(_code);
@@ -334,8 +334,8 @@ void BooPlugin::SendAck(const std::string &_dstAddress, const int _code)
 }
 
 //////////////////////////////////////////////////
-void BooPlugin::OnData(const std::string &_srcAddress,
-    const std::string & /*_dstAddress*/, const uint32_t /*_dstPort*/,
+void BooPlugin::OnData(const uint32_t _srcAddress,
+    const uint32_t  /*_dstAddress*/, const uint32_t /*_dstPort*/,
     const std::string &_data)
 {
   // The default behavior is to send and ack.

@@ -18,6 +18,7 @@
       <comms_outage_duration_min>1.0</comms_outage_duration_min>
       <comms_outage_duration_max>10.0</comms_outage_duration_max>
     </comms_model>'''%>
+<% boo_address = 3%>
 
 <sdf version="1.5">
   <world name="default">
@@ -214,7 +215,7 @@
         <camera>link::camera</camera>
         <gps>link::gps</gps>
         <imu>link::imu</imu>
-        <address>192.168.1.1</address>
+        <address>10</address>
         <%=search_area%>
         <%=ground_battery%>
         <%=test_case%>
@@ -285,7 +286,7 @@
         <camera>link::camera</camera>
         <gps>link::gps</gps>
         <imu>link::imu</imu>
-        <address>192.168.2.2</address>
+        <address>11</address>
         <%=search_area%>
         <%=ground_battery%>
         <%=test_case%>
@@ -327,7 +328,7 @@
        <plugin name="boo" filename="libSwarmBooPlugin.so">
          <lost_person_model>lost_person</lost_person_model>
          <!-- Do not change this address -->
-         <address>boo</address>
+         <address><%=boo_address%></address>
          <type>boo</type>
          <%=search_area%>
          <%=max_dt%>

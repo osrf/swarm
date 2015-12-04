@@ -46,7 +46,7 @@ GZ_REGISTER_WORLD_PLUGIN(BrokerPlugin)
 BrokerPlugin::~BrokerPlugin()
 {
   gazebo::event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-  this->logger->Unregister("broker");
+  this->logger->Unregister(this->kBroker);
 }
 
 //////////////////////////////////////////////////
@@ -72,7 +72,7 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
   this->logger->CreateLogFile(_sdf);
 
   // Register in the logger.
-  this->logger->Register("broker", this);
+  this->logger->Register(this->kBroker, this);
 
   // Listen to the update event broadcasted every simulation iteration.
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -98,7 +98,7 @@ void BrokerPlugin::ReadSwarmFromSDF(sdf::ElementPtr _sdf)
       auto const &pluginElem = modelElem->GetElement("plugin");
       if (pluginElem->HasElement("address"))
       {
-        std::string address = pluginElem->Get<std::string>("address");
+        auto address = pluginElem->Get<int>("address");
         std::string name = modelElem->GetAttribute("name")->GetAsString();
         auto const &model = this->world->GetModel(name);
         if (model)
@@ -160,7 +160,7 @@ void BrokerPlugin::NotifyNeighbors()
   // Send neighbors update to each member of the swarm.
   for (auto const &robot : (*this->swarm))
   {
-    std::vector<std::string> v;
+    std::vector<uint32_t> v;
     auto address = robot.first;
     auto swarmMember = (*this->swarm)[address];
 
@@ -236,8 +236,7 @@ void BrokerPlugin::DispatchMessages()
       (*this->swarm)[neighbor.first]->dataRateUsage += dataSize;
     }
 
-    std::string dstEndPoint =
-      msg.dst_address() + ":" + std::to_string(msg.dst_port());
+    auto dstEndPoint = msg.dst_address() * swarm::kMaxPort + msg.dst_port();
     if (endpoints.find(dstEndPoint) != endpoints.end())
     {
       // Shuffle the clients bound to this endpoint.

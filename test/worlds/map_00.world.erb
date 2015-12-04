@@ -130,7 +130,7 @@
         <camera>link::camera</camera>
         <gps>link::gps</gps>
         <imu>link::imu</imu>
-        <address>192.168.2.1</address>
+        <address>10</address>
         <%=search_area%>
         <%=ground_battery%>
         <%=test_case%>
@@ -175,12 +175,12 @@
                 <normal>file://media/materials/textures/flat_normal.png</normal>
                 <size>5</size>
               </texture>
-    
+
               <blend>
                 <min_height>600</min_height>
                 <fade_dist>20</fade_dist>
               </blend>
-    
+
               <blend>
                 <min_height>720</min_height>
                 <fade_dist>20</fade_dist>
@@ -193,7 +193,7 @@
         </visual>
       </link>
     </model>
-    
+
     <model name="tree1">
       <pose>82 301 739 -0.210796 0 0</pose>
       <static>true</static>
@@ -209,7 +209,7 @@
             <diffuse>0 1 0 0.2</diffuse>
           </material>
         </visual>
-    
+
         <collision name="collision">
           <geometry>
             <box>
@@ -219,7 +219,7 @@
         </collision>
       </link>
     </model>
-    
+
     <model name="tree2">
       <pose>1333.32 -195.55 513 -0.026330 0.288611 -1.069755</pose>
       <static>true</static>
@@ -235,7 +235,7 @@
             <diffuse>0 1 0 0.2</diffuse>
           </material>
         </visual>
-    
+
         <collision name="collision">
           <geometry>
             <box>
@@ -245,7 +245,7 @@
         </collision>
       </link>
     </model>
-    
+
     <model name="tree3">
       <pose>3348.625244 2985.973877 712.668823 0 0 0</pose>
       <static>true</static>
@@ -261,7 +261,7 @@
             <diffuse>0 1 0 0.2</diffuse>
           </material>
         </visual>
-    
+
         <collision name="collision">
           <geometry>
             <box>
@@ -271,7 +271,7 @@
         </collision>
       </link>
     </model>
-    
+
     <model name="tree4">
       <pose>3017.438477 -3142.430908 504.709290 0 0 0</pose>
       <static>true</static>
@@ -287,7 +287,7 @@
             <diffuse>0 1 0 0.2</diffuse>
           </material>
         </visual>
-    
+
         <collision name="collision">
           <geometry>
             <box>
@@ -297,7 +297,7 @@
         </collision>
       </link>
     </model>
-    
+
     <model name="tree5">
       <pose>-1105.000000 -3927.000000 555.012695 0 0 0</pose>
       <static>true</static>
@@ -313,7 +313,7 @@
             <diffuse>0 1 0 0.2</diffuse>
           </material>
         </visual>
-    
+
         <collision name="collision">
           <geometry>
             <box>
@@ -323,7 +323,7 @@
         </collision>
       </link>
     </model>
-    
+
     <% for y in 0..1 %>
       <% for x in 0..8 %>
         <model name="building_group1_<%=y*8 + x%>">
@@ -341,7 +341,7 @@
                 <diffuse>0.2 .2 .2 0.2</diffuse>
               </material>
             </visual>
-    
+
             <collision name="collision">
               <geometry>
                 <box>
@@ -353,7 +353,7 @@
         </model>
       <%end%>
     <%end%>
-    
+
     <% for y in 0..1 %>
       <% for x in 0..8 %>
         <model name="building_group2_<%=y*10 + x%>">
@@ -371,7 +371,7 @@
                 <diffuse>0.2 .2 .2 0.2</diffuse>
               </material>
             </visual>
-    
+
             <collision name="collision">
               <geometry>
                 <box>
@@ -383,7 +383,7 @@
         </model>
       <%end%>
     <%end%>
-    
+
 
   </world>
 </sdf>

@@ -133,12 +133,12 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 }
 
 //////////////////////////////////////////////////
-void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
+void TeamControllerPlugin::OnDataReceived(const uint32_t _srcAddress,
+    const uint32_t _dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // ACK from the BOO.
-  if (_srcAddress == "boo")
+  if (_srcAddress == this->kBoo)
   {
     // You can process the ACK message here.
     return;

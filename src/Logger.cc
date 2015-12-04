@@ -101,7 +101,7 @@ std::string Logger::FilePath() const
 }
 
 //////////////////////////////////////////////////
-bool Logger::Register(const std::string &_id, const Loggable *_client)
+bool Logger::Register(const uint32_t _id, const Loggable *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
   {
@@ -115,7 +115,7 @@ bool Logger::Register(const std::string &_id, const Loggable *_client)
 }
 
 //////////////////////////////////////////////////
-bool Logger::Unregister(const std::string &_id)
+bool Logger::Unregister(const uint32_t _id)
 {
   if (this->clients.erase(_id) != 1)
   {

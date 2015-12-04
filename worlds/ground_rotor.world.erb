@@ -59,7 +59,7 @@
       <%x_pos = 0%>
       <%y_pos = index * 6%>
       <%yaw = 0%>
-      <%ip = "192.168.2.#{index+1}"%>
+      <%ip = 10 + index%>
       <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
                   nil, nil, "_sub01").result(binding)%>
     <% end %>
@@ -71,7 +71,7 @@
       <%x_pos = 0%>
       <%y_pos = index * 6%>
       <%yaw = 0%>
-      <%ip = "192.168.1.#{index + 1}"%>
+      <%ip = 10 + $ground_count + index%>
       <%= ERB.new(File.read('rotor_vehicle.sdf.erb'),
                   nil, nil, "_sub01").result(binding)%>
     <% end %>
@@ -226,7 +226,7 @@
        <plugin name="boo" filename="libSwarmBooPlugin.so">
          <lost_person_model>lost_person</lost_person_model>
          <!-- Do not change this address -->
-         <address>boo</address>
+         <address>3</address>
          <type>boo</type>
          <%=search_area%>
        </plugin>

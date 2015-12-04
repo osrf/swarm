@@ -50,10 +50,10 @@ message ImageData
 message Message
 {
   /// \brief Address of the sender.
-  required string src_address     = 1;
+  required uint32 src_address     = 1;
 
   /// \brief Address of the destination.
-  required string dst_address     = 2;
+  required uint32 dst_address     = 2;
 
   /// \brief Destination port.
   required uint32 dst_port        = 3;
@@ -90,7 +90,7 @@ enum CommsStatus
 message NeighborEntry
 {
   /// \brief Address of the destination.
-  required string dst         = 1;
+  required uint32 dst         = 1;
 
   /// \brief Status of the communication.
   required CommsStatus status = 2;
@@ -99,7 +99,7 @@ message NeighborEntry
 message VisibilityRow
 {
   /// \brief Address of the sender.
-  required string src          = 1;
+  required uint32 src          = 1;
 
   /// \brief Collection of comms status between the sender and other robots.
   repeated NeighborEntry entry = 2;
@@ -161,7 +161,7 @@ message BooReport
 message LogEntry
 {
   /// \brief Robot ID.
-  optional string id                  = 1;
+  optional uint32 id                  = 1;
 
   /// \brief Simulation time.
   optional double time                = 2;

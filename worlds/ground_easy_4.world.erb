@@ -79,7 +79,7 @@
       <%x_pos = 0%>
       <%y_pos = index * 6%>
       <%yaw = index*1.57%>
-      <%ip = "192.168.2.#{index+1}"%>
+      <%ip = 10 + index%>
       <%= ERB.new(File.read('ground_vehicle.sdf.erb'),
                   nil, nil, "_sub01").result(binding)%>
     <% end %>

@@ -28,6 +28,10 @@ using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
 
+// Robot addresses.
+static const uint32_t Robot1 = 10;
+static const uint32_t Robot2 = 11;
+
 //////////////////////////////////////////////////
 TeamControllerPlugin::TeamControllerPlugin()
   : RobotPlugin(),
@@ -69,12 +73,12 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   {
     this->msgsSent++;
 
-    std::string dstAddress;
+    uint32_t dstAddress;
 
-    if (this->Host() == "192.168.3.1")
-      dstAddress = "192.168.3.2";
+    if (this->Host() == Robot1)
+      dstAddress = Robot2;
     else
-      dstAddress = "192.168.3.1";
+      dstAddress = Robot1;
 
     // Send a unicast message.
     if (!this->SendTo("Unicast data", dstAddress))
@@ -154,7 +158,7 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
   }
 
   // Only print for one robot, to minimize console output
-  if (this->Host() == "192.168.3.1")
+  if (this->Host() == Robot1)
   {
     // Get the list of neighbors.
     auto myNeighbors = this->Neighbors();
@@ -211,8 +215,8 @@ void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 }
 
 //////////////////////////////////////////////////
-void TeamControllerPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
+void TeamControllerPlugin::OnDataReceived(const uint32_t _srcAddress,
+    const uint32_t _dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // New data received from a teammate.

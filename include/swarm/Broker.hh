@@ -35,8 +35,8 @@ namespace swarm
   /// \brief Stores information about a client broker.
   class IGNITION_VISIBLE BrokerClientInfo
   {
-    /// \brief Address of the client. E.g.: 192.168.2.2
-    public: std::string address;
+    /// \brief Address of the client. E.g.: 1
+    public: uint32_t address;
 
     /// \brief Pointer to the client.
     public: const RobotPlugin *handler;
@@ -44,7 +44,7 @@ namespace swarm
 
   /// \def EndPoints_M
   /// \brief Map of endpoints
-  using EndPoints_M = std::map<std::string, std::vector<BrokerClientInfo>>;
+  using EndPoints_M = std::map<uint32_t, std::vector<BrokerClientInfo>>;
 
   /// \brief Store messages, and exposes an API for registering new clients,
   /// bind to a particular address, push new messages or get the list of
@@ -57,16 +57,15 @@ namespace swarm
     public: static Broker *Instance();
 
     /// \brief This method associates an endpoint with a broker client and its
-    /// address. An endpoint is constructed as an address followed by ':',
-    /// followed by the port. E.g.: "192.168.1.5:8000" is a valid endpoint.
+    /// address. An endpoint is constructed as a numeric address.
     /// \param[in] _clientAddress Address of the broker client.
     /// \param[in] _client Pointer to the robot plugin.
     /// \param[in] _endpoint End point requested to bind.
     /// \return True if the operation succeed or false otherwise (if the client
     /// was already bound to the same endpoint).
-    public: bool Bind(const std::string &_clientAddress,
+    public: bool Bind(const uint32_t _clientAddress,
                       const RobotPlugin *_client,
-                      const std::string &_endpoint);
+                      const uint32_t _endpoint);
 
     /// \brief Queue a new message.
     /// \param[in] _msg A new message.
@@ -77,13 +76,13 @@ namespace swarm
     /// \param[in] _client Pointer to the robot plugin.
     /// \return True if the operation succeed of false otherwise (if the same
     /// id was already registered).
-    public: bool Register(const std::string &_id,
+    public: bool Register(const uint32_t _id,
                           RobotPlugin *_client);
 
     /// \brief Get the list of registered clients.
     /// \return Map of registered clients. The key is the client ID and the
     /// value is a pointer to the client.
-    public: const std::map<std::string, RobotPlugin*> &Clients() const;
+    public: const std::map<uint32_t, RobotPlugin*> &Clients() const;
 
     /// \brief Get the list of endpoints bound.
     /// \return Map of endpoints. The key is the endpoint and the value is a
@@ -100,7 +99,7 @@ namespace swarm
     /// \param[in] _id Unique ID of the client.
     /// \return True if the operation succeed or false otherwise (if there is
     /// no client registered for this ID).
-    public: bool Unregister(const std::string &_id);
+    public: bool Unregister(const uint32_t _id);
 
     /// \brief Handle reset.
     public: void Reset();
@@ -116,7 +115,7 @@ namespace swarm
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
-    protected: std::map<std::string, RobotPlugin*> clients;
+    protected: std::map<uint32_t, RobotPlugin*> clients;
 
     /// \brief List of bound endpoints. The key is an endpoint and the
     /// value is the vector of clients bounded on that endpoint.

@@ -82,7 +82,7 @@
         <%x_pos = x * 2.0 %>
         <%y_pos = y * 2.0 %>
         <%yaw = 0%>
-        <%ip = "192.168.3.#{y * 6 + x + 1}"%>
+        <%ip = 10 + y * 6 + x%>
 
         <%= ERB.new(File.read('fixedwing_vehicle.sdf.erb'),
                     nil, nil, "_sub01").result(binding)%>

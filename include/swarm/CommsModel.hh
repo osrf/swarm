@@ -76,7 +76,7 @@ namespace swarm
     /// robot with the updated list.
     ///
     /// \param[in] _address Address of the robot to be updated.
-    private: void UpdateNeighborList(const std::string &_address);
+    private: void UpdateNeighborList(const uint32_t _address);
 
     /// \brief Update the visibility state between vehicles.
     private: void UpdateVisibility();
@@ -177,7 +177,7 @@ namespace swarm
     /// that stores the entity names of the first and last obstacles between the
     /// vehicles. If there is line of sight the value contains a vector of one
     /// element (empty string).
-    private: std::map<std::pair<std::string, std::string>,
+    private: std::map<std::pair<uint32_t, uint32_t>,
                std::vector<std::string>> visibility;
 
     /// \brief Visibility between all the robots.
@@ -186,12 +186,12 @@ namespace swarm
     /// \brief Data structure that allows us to index using a pair of addresses.
     /// The returned value is a pointer to the visibilityMsgStatus used for
     /// logging.
-    private: std::map<std::string,
-               std::map<std::string, swarm::msgs::NeighborEntry*>>
+    private: std::map<uint32_t,
+               std::map<uint32_t, swarm::msgs::NeighborEntry*>>
                  visibilityMsgStatus;
 
     /// \brief Pairs of addresses used to update the visibility.
-    private: std::vector<std::pair<std::string, std::string>> visibilityPairs;
+    private: std::vector<std::pair<uint32_t, uint32_t>> visibilityPairs;
 
     /// \brief Index used compute the next visibility pair.
     private: unsigned int visibilityIndex = 0;
@@ -206,7 +206,7 @@ namespace swarm
     private: unsigned int neighborIndex = 0;
 
     /// Vector containing all the addresses of the swarm.
-    private: std::vector<std::string> addresses;
+    private: std::vector<uint32_t> addresses;
 
     /// Update rate of the comms model.
     private: double updateRate = 0.5;

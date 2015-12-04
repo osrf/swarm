@@ -219,7 +219,7 @@ void CommsModel::UpdateNeighbors()
 }
 
 //////////////////////////////////////////////////
-void CommsModel::UpdateNeighborList(const std::string &_address)
+void CommsModel::UpdateNeighborList(const uint32_t _address)
 {
   GZ_ASSERT(this->swarm->find(_address) != this->swarm->end(),
             "_address not found in the swarm.");
@@ -383,8 +383,8 @@ void CommsModel::CacheVisibilityPairs()
     for (auto const &robotB : (*this->swarm))
     {
       auto addressB = robotB.second->address;
-      std::pair<std::string, std::string> aPair(addressA, addressB);
-      std::pair<std::string, std::string> aPairInverse(addressB, addressA);
+      std::pair<uint32_t, uint32_t> aPair(addressA, addressB);
+      std::pair<uint32_t, uint32_t> aPairInverse(addressB, addressA);
 
       // Do not include this case.
       if (addressA == addressB)

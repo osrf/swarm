@@ -29,7 +29,7 @@ namespace swarm
 {
   /// \def Neighbors_M
   /// \brief Map of neighbors
-  using Neighbors_M = std::map<std::string, double>;
+  using Neighbors_M = std::map<uint32_t, double>;
 
   /// \brief Class used to store information about a member of the Swarm.
   class IGNITION_VISIBLE SwarmMember
@@ -37,8 +37,8 @@ namespace swarm
     /// \brief Gazebo name used for this model.
     public: std::string name;
 
-    /// \brief Address of the robot. E.g.: 192.168.1.2
-    public: std::string address;
+    /// \brief Address of the robot. E.g.: 1
+    public: uint32_t address;
 
     /// \brief Model pointer.
     public: gazebo::physics::ModelPtr model;
@@ -64,7 +64,7 @@ namespace swarm
   /// \brief Map containing information about the members of the swarm.
   /// The key is the robot address. The value is a pointer to a SwarmMember
   /// object that contains multiple information about the robot.
-  using SwarmMembership_M = std::map<std::string, SwarmMemberPtr>;
+  using SwarmMembership_M = std::map<uint32_t, SwarmMemberPtr>;
 
   /// \def SwarmMembershipPtr
   /// \brief A shared pointer to the membership data structure.

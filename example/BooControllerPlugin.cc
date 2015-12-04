@@ -45,8 +45,8 @@ void BooControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 }
 
 //////////////////////////////////////////////////
-void BooControllerPlugin::OnData(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
+void BooControllerPlugin::OnData(const uint32_t _srcAddress,
+    const uint32_t _dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // New data received from a vehicle.

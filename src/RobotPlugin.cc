@@ -62,7 +62,7 @@ void RobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
 
 //////////////////////////////////////////////////
 bool RobotPlugin::SendTo(const std::string &_data,
-    const std::string &_dstAddress, const uint32_t _port)
+    const uint32_t _dstAddress, const uint32_t _port)
 {
   // Restrict the maximum size of a message.
   if (_data.size() > this->kMtu)
@@ -452,13 +452,13 @@ void RobotPlugin::SearchArea(double &_minLatitude,
 
 
 //////////////////////////////////////////////////
-std::string RobotPlugin::Host() const
+uint32_t RobotPlugin::Host() const
 {
   return this->address;
 }
 
 //////////////////////////////////////////////////
-std::vector<std::string> RobotPlugin::Neighbors() const
+std::vector<uint32_t> RobotPlugin::Neighbors() const
 {
   return this->neighbors;
 }
@@ -722,10 +722,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     return;
   }
 
-  this->address = _sdf->Get<std::string>("address");
+  this->address = _sdf->Get<unsigned int>("address");
 
   // We treat the BOO specially; it's a robot, but doesn't have any sensors.
-  if (this->address != "boo")
+  if (this->address != this->kBoo)
   {
     // Get the camera sensor
     if (_sdf->HasElement("camera"))
@@ -915,15 +915,13 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
 //////////////////////////////////////////////////
 void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
 {
-  const std::string topic = _msg.dst_address() + ":" +
-      std::to_string(_msg.dst_port());
+  const auto endpoint = _msg.dst_address() * swarm::kMaxPort + _msg.dst_port();
 
-  std::map<std::string, Callback_t>::const_iterator iter =
-    this->callbacks.find(topic);
+  auto iter = this->callbacks.find(endpoint);
   if (iter == this->callbacks.end())
   {
     gzerr << "[" << this->Host() << "] RobotPlugin::OnMsgReceived(): "
-          << "Address [" << topic << "] not found" << std::endl;
+          << "Address [" << endpoint << "] not found" << std::endl;
     return;
   }
 
@@ -933,7 +931,7 @@ void RobotPlugin::OnMsgReceived(const msgs::Datagram &_msg) const
 
 //////////////////////////////////////////////////
 void RobotPlugin::OnNeighborsReceived(
-  const std::vector<std::string> &_neighbors)
+  const std::vector<uint32_t> &_neighbors)
 {
   this->neighbors = _neighbors;
 }

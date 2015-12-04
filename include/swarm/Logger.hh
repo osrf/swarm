@@ -90,14 +90,14 @@ namespace swarm
     /// \brief Register a new client for logging.
     /// \param[in] _id Unique ID of the client.
     /// \param[in] _client Pointer to the client.
-    public: bool Register(const std::string &_id,
+    public: bool Register(const uint32_t _id,
                           const Loggable *_client);
 
     /// \brief Unregister a client.
     /// \param[in] _id Unique ID of the client.
     /// \return True if the operation succeed or false otherwise (if there is
     /// no client registered for this ID).
-    public: bool Unregister(const std::string &_id);
+    public: bool Unregister(const uint32_t _id);
 
     /// \brief Create the log file
     /// \param[in] _sdf SDF element containing the optional <log_info> section.
@@ -115,11 +115,11 @@ namespace swarm
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
-    private: std::map<std::string, const Loggable*> clients;
+    private: std::map<uint32_t, const Loggable*> clients;
 
     /// \brief Current list of log entries stored in memory. The key is the
     /// client ID and the value is the last logEntry stored for this client.
-    private: std::map<std::string, msgs::LogEntry> log;
+    private: std::map<uint32_t, msgs::LogEntry> log;
 
     /// \brief Stream object to operate on a log file.
     private: std::fstream output;

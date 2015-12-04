@@ -53,6 +53,9 @@ namespace swarm
   /// \sa ImageData
   typedef std::map<std::string, ignition::math::Pose3d> ObjPose_M;
 
+  /// \brief Maximum port allowed.
+  static const uint32_t kMaxPort = 10000u;
+
   /// \brief A class that encapsulates image data.
   class ImageData
   {
@@ -212,12 +215,12 @@ namespace swarm
     /// * Example usage (Bind on the multicast group and custom port.):
     ///    this->Bind(&MyClass::OnDataReceived, this, this->kMulticast, 5123);
     protected: template<typename C>
-    bool Bind(void(C::*_cb)(const std::string &_srcAddress,
-                            const std::string &_dstAddress,
+    bool Bind(void(C::*_cb)(const uint32_t _srcAddress,
+                            const uint32_t _dstAddress,
                             const uint32_t _dstPort,
                             const std::string &_data),
               C *_obj,
-              const std::string &_address,
+              const uint32_t _address,
               const int _port = kDefaultPort)
     {
       // Sanity check: Make sure that you use your local address or multicast.
@@ -228,8 +231,8 @@ namespace swarm
         return false;
       }
 
-      // Mapping the "unicast socket" to a topic name.
-      const auto unicastEndPoint = _address + ":" + std::to_string(_port);
+      // Mapping the "unicast socket" to a numeric value.
+      const auto unicastEndPoint = _address * swarm::kMaxPort + _port;
 
       if (!this->broker->Bind(this->Host(), this, unicastEndPoint))
         return false;
@@ -242,7 +245,7 @@ namespace swarm
       // Only enable broadcast if the address is a regular unicast address.
       if (_address != this->kMulticast)
       {
-        const std::string bcastEndPoint = "broadcast:" + std::to_string(_port);
+        const auto bcastEndPoint = this->kBroadcast * swarm::kMaxPort + _port;
 
         if (!this->broker->Bind(this->Host(), this, bcastEndPoint))
           return false;
@@ -269,19 +272,19 @@ namespace swarm
     /// sending messages notifies an error (meaning that the message was not
     /// sent).
     protected: bool SendTo(const std::string &_data,
-                           const std::string &_dstAddress,
+                           const uint32_t _dstAddress,
                            const uint32_t _port = kDefaultPort);
 
     /// \brief Get your local address. This address should be specified as a
     /// SDF model parameter.
     ///
     /// \return The local address.
-    protected: std::string Host() const;
+    protected: uint32_t Host() const;
 
     /// \brief Get the list of local neighbors.
     ///
     /// \return A vector of addresses from your local neighbors.
-    protected: std::vector<std::string> Neighbors() const;
+    protected: std::vector<uint32_t> Neighbors() const;
 
     /// \brief Get the type of vehicle. The type of vehicle is set in the
     /// SDF world file using the <type> XML element.
@@ -580,8 +583,7 @@ namespace swarm
     /// notifies these updates.
     ///
     /// \param[in] _msg New message received containing the list of neighbors.
-    private: void OnNeighborsReceived(
-      const std::vector<std::string> &_neighbors);
+    private: void OnNeighborsReceived(const std::vector<uint32_t> &_neighbors);
 
     /// \brief Adjust the pose of the vehicle to stay within the terrain
     /// boundaries.
@@ -631,21 +633,21 @@ namespace swarm
     /// This callback contains two parameters: the source address of the agent
     /// sending the message and the payload of the message.
     using Callback_t =
-    std::function<void(const std::string &_srcAddress,
-                       const std::string &_dstAddress,
+    std::function<void(const uint32_t _srcAddress,
+                       const uint32_t _dstAddress,
                        const uint32_t _dstPort,
                        const std::string &_data)>;
 
     /// \brief Address used to send a message to all the members of the swarm
     /// listening on a specific port.
-    protected: const std::string kBroadcast = "broadcast";
+    protected: const uint32_t kBroadcast = 1;
 
     /// \brief Address used to bind to a multicast group. Note that we do not
     /// support multiple multicast groups, only one.
-    protected: const std::string kMulticast = "multicast";
+    protected: const uint32_t kMulticast = 2;
 
     /// \brief Address used by the base of operations.
-    protected: const std::string kBoo       = "boo";
+    protected: const uint32_t kBoo       = 3;
 
     /// \brief Default port.
     protected: static const uint32_t kDefaultPort = 4100u;
@@ -683,7 +685,7 @@ namespace swarm
     protected: double fixedMaxAngularVel = 3.14;
 
     /// \brief Addresses of all the local neighbors.
-    private: std::vector<std::string> neighbors;
+    private: std::vector<uint32_t> neighbors;
 
     // The gazebo transport node. Used for debugging, see source.
     // private: gazebo::transport::NodePtr gzNode;
@@ -691,15 +693,16 @@ namespace swarm
     // Used to publish markers, Used for debugging, see source.
     // private: gazebo::transport::PublisherPtr markerPub;
 
-    /// \brief User callbacks. The key is the topic name
-    /// (e.g.: "/swarm/192.168.2.1/4000") and the value is the user callback.
-    private: std::map<std::string, Callback_t> callbacks;
+    /// \brief User callbacks. The key is the endpoint (constructed as an
+    /// integer value based on the address and port) and the value is the
+    /// user callback.
+    private: std::map<uint32_t, Callback_t> callbacks;
 
     /// \brief Pointer to the model;
     private: gazebo::physics::ModelPtr model;
 
     /// \brief Local address.
-    private: std::string address;
+    private: uint32_t address;
 
     /// \brief Pointer to the update event connection.
     private: gazebo::event::ConnectionPtr updateConnection;

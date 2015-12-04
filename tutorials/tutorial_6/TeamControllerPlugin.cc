@@ -28,6 +28,10 @@ using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
 
+// Robot addresses.
+static const uint32_t Robot1 = 10;
+static const uint32_t Robot2 = 11;
+
 //////////////////////////////////////////////////
 TeamControllerPlugin::TeamControllerPlugin()
   : RobotPlugin()
@@ -43,7 +47,7 @@ void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 void TeamControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 {
   // Only print for one robot, to minimize console output
-  if (this->Host() == "192.168.2.1")
+  if (this->Host() == Robot1)
   {
     // Get IMU information.
     ignition::math::Vector3d linVel, angVel;

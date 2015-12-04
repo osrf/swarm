@@ -30,7 +30,7 @@ class LogClient : public swarm::Loggable
 {
   /// \brief Constructor.
   /// \param[in] _id The client ID.
-  public: LogClient(const std::string &_id)
+  public: LogClient(const uint32_t &_id)
     : id(_id)
   {
   }
@@ -43,7 +43,7 @@ class LogClient : public swarm::Loggable
   }
 
   /// \brief A client ID.
-  public: std::string id;
+  public: uint32_t id;
 };
 
 //////////////////////////////////////////////////
@@ -54,7 +54,7 @@ TEST(LoggerTest, Log)
 
   // Client #1.
   Logger *logger1 = Logger::Instance();
-  LogClient client1("#1");
+  LogClient client1(10);
   EXPECT_TRUE(logger1->Register(client1.id, &client1));
 
   // Try to register an existing client.
@@ -62,7 +62,7 @@ TEST(LoggerTest, Log)
 
   // Client #2.
   Logger *logger2 = Logger::Instance();
-  LogClient client2("#2");
+  LogClient client2(11);
   EXPECT_TRUE(logger2->Register(client2.id, &client2));
 
   logger->CreateLogFile(nullptr);

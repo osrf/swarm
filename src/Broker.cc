@@ -32,8 +32,8 @@ Broker *Broker::Instance()
 }
 
 //////////////////////////////////////////////////
-bool Broker::Bind(const std::string &_clientAddress,
-  const RobotPlugin *_client, const std::string &_endpoint)
+bool Broker::Bind(const uint32_t _clientAddress,
+  const RobotPlugin *_client, const uint32_t _endpoint)
 {
   // Make sure that the same client didn't bind the same end point before.
   if (this->endpoints.find(_endpoint) != this->endpoints.end())
@@ -65,7 +65,7 @@ void Broker::Push(const msgs::Datagram &_msg)
 }
 
 //////////////////////////////////////////////////
-bool Broker::Register(const std::string &_id, RobotPlugin *_client)
+bool Broker::Register(const uint32_t _id, RobotPlugin *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
   {
@@ -79,13 +79,13 @@ bool Broker::Register(const std::string &_id, RobotPlugin *_client)
 }
 
 //////////////////////////////////////////////////
-const std::map<std::string, RobotPlugin*> &Broker::Clients() const
+const std::map<uint32_t, RobotPlugin*> &Broker::Clients() const
 {
   return this->clients;
 }
 
 //////////////////////////////////////////////////
-const std::map<std::string, std::vector<BrokerClientInfo>>
+const std::map<uint32_t, std::vector<BrokerClientInfo>>
       &Broker::EndPoints() const
 {
   return this->endpoints;
@@ -98,7 +98,7 @@ std::deque<msgs::Datagram> &Broker::Messages()
 }
 
 //////////////////////////////////////////////////
-bool Broker::Unregister(const std::string &_id)
+bool Broker::Unregister(const uint32_t _id)
 {
   if (this->clients.erase(_id) != 1)
   {

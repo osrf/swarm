@@ -22,6 +22,7 @@
 #include "swarm/BooPlugin.hh"
 #include "swarm/SwarmTypes.hh"
 #include "boo_plugin.hh"
+#include "test/test_config.h"
 
 using namespace swarm;
 
@@ -48,8 +49,8 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 {
   this->iterations++;
 
-  // Only one robot will try to contact with the BOO (192.168.2.1).
-  if (this->Host() != "192.168.2.1")
+  // Only one robot will try to contact with the BOO (Robot 1).
+  if (this->Host() != Robot1)
     return;
 
   // Tests #8, #9 send the message to the BOO later than the other tests.
@@ -152,8 +153,8 @@ void BooFinderPlugin::Update(const gazebo::common::UpdateInfo & /*_info*/)
 }
 
 //////////////////////////////////////////////////
-void BooFinderPlugin::OnDataReceived(const std::string &_srcAddress,
-    const std::string &_dstAddress, const uint32_t _dstPort,
+void BooFinderPlugin::OnDataReceived(const uint32_t _srcAddress,
+    const uint32_t _dstAddress, const uint32_t _dstPort,
     const std::string &_data)
 {
   // ACK received from the BOO.
