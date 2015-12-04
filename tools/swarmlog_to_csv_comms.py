@@ -3,45 +3,6 @@
 import struct, sys, functools
 from swarm import log_entry_pb2, log_header_pb2
 
-# A simple class to read log files
-class LogReader:
-    def __init__(self, logfile):
-        self.logfile = logfile
-        self.stream = open(fname, 'rb')
-        self.header = None
-
-    # Get the next message
-    def next(self):
-        # Read the 4-byte size field
-        sizestring = self.stream.read(4)
-        if len(sizestring) < 4:
-            self.stream.close()
-            return None
-        size = struct.unpack('<I', sizestring)[0]
-        msg = self.stream.read(size)
-        # Make a protobuf message out of it
-        # The first message in the log is a LogHeader; the rest are LogEntry
-        if not self.header:
-            pbmsg = log_header_pb2.LogHeader()
-            pbmsg.ParseFromString(msg)
-            self.header = pbmsg
-        else:
-            pbmsg = log_entry_pb2.LogEntry()
-            pbmsg.ParseFromString(msg)
-        return pbmsg
-
-    # Apply a given function to each message in the file
-    def apply(self, func):
-        first = True
-        while True:
-            msg = self.next()
-            if not msg:
-                break
-            # Only pass through LogEntry messages (e.g., skip LogHeader
-            # messages)
-            if type(msg) == log_entry_pb2.LogEntry:
-                func(msg)
-
 # Global variables.
 total_msgs_sent = 0
 total_msgs_unicast = 0
@@ -58,6 +19,50 @@ counter_total_neighbors = 0.0
 wrong_boo_reports = 0
 succeed = False
 duration = 0.0
+time_step = 0.01
+
+# A simple class to read log files
+class LogReader:
+    def __init__(self, logfile):
+        self.logfile = logfile
+        self.stream = open(fname, 'rb')
+        self.header = None
+
+    # Get the next message
+    def next(self):
+        global time_step
+
+        # Read the 4-byte size field
+        sizestring = self.stream.read(4)
+        if len(sizestring) < 4:
+            self.stream.close()
+            return None
+        size = struct.unpack('<I', sizestring)[0]
+        msg = self.stream.read(size)
+        # Make a protobuf message out of it
+        # The first message in the log is a LogHeader; the rest are LogEntry
+        if not self.header:
+            pbmsg = log_header_pb2.LogHeader()
+            pbmsg.ParseFromString(msg)
+            self.header = pbmsg
+            if self.header.HasField("time_step"):
+                time_step = self.header.time_step
+        else:
+            pbmsg = log_entry_pb2.LogEntry()
+            pbmsg.ParseFromString(msg)
+        return pbmsg
+
+    # Apply a given function to each message in the file
+    def apply(self, func):
+        first = True
+        while True:
+            msg = self.next()
+            if not msg:
+                break
+            # Only pass through LogEntry messages (e.g., skip LogHeader
+            # messages)
+            if type(msg) == log_entry_pb2.LogEntry:
+                func(msg)
 
 # An example of processing a single log entry
 def process_msg(entry):
@@ -76,11 +81,11 @@ def process_msg(entry):
     global wrong_boo_reports
     global succeed
     global duration
+    global time_step
 
     # Check for the 'incoming_msgs' field, which tells us about what happened to
     # messages that were sent
     if entry.HasField('incoming_msgs') and entry.HasField('time') and entry.HasField('visibility'):
-        step_time = 0.01
         time = entry.time
 
         num_msgs_sent = 0
@@ -123,8 +128,8 @@ def process_msg(entry):
         if num_robots > 0:
             avg_num_neighbors = num_neighbors / float(num_robots)
 
-        freq_msgs_sent = num_msgs_sent / step_time
-        data_rate = (bytes_sent * 8) / step_time
+        freq_msgs_sent = num_msgs_sent / time_step
+        data_rate = (bytes_sent * 8) / time_step
         if num_recipients > 0:
             drop_ratio = (num_recipients - num_msgs_delivered)/float(num_recipients)
         print('%f,%d,%f,%d,%d,%d,%d,%d,%f,%d,%f,%f'%

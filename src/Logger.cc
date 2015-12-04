@@ -47,14 +47,11 @@ Logger::Logger()
 }
 
 /////////////////////////////////////////////////
-void Logger::CreateLogFile(sdf::ElementPtr _sdf)
+void Logger::CreateLogFile(const double _maxStepSize, sdf::ElementPtr _sdf)
 {
   if (this->enabled)
   {
     this->enabled = true;
-
-    gzmsg << "Logging enabled [" << this->logCompletePath.string()
-          << "]" << std::endl;
 
     // The base pathname for all the logs.
     const char *homePath = gazebo::common::getEnv("HOME");
@@ -70,6 +67,9 @@ void Logger::CreateLogFile(sdf::ElementPtr _sdf)
 
     this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
 
+    gzmsg << "Logging enabled [" << this->logCompletePath.string()
+          << "]" << std::endl;
+
     // Close an open stream
     if (this->output.is_open())
       this->output.close();
@@ -79,7 +79,7 @@ void Logger::CreateLogFile(sdf::ElementPtr _sdf)
       std::ios::out | std::ios::binary);
 
     // Fill the header.
-    this->FillHeader(_sdf);
+    this->FillHeader(_maxStepSize, _sdf);
 
     // Write the length of the header to be serialized.
     int32_t size = this->header.ByteSize();
@@ -182,7 +182,7 @@ void Logger::Reset()
 }
 
 /////////////////////////////////////////////////
-void Logger::FillHeader(sdf::ElementPtr _sdf)
+void Logger::FillHeader(const double _maxStepSize, sdf::ElementPtr _sdf)
 {
   this->header.set_swarm_version(SWARM_HASH_VERSION);
   this->header.set_gazebo_version(GAZEBO_VERSION_FULL);
@@ -238,4 +238,6 @@ void Logger::FillHeader(sdf::ElementPtr _sdf)
   char *teamNameEnv = std::getenv("SWARM_TEAMNAME");
   if (teamNameEnv)
     this->header.set_team_name(std::string(teamNameEnv));
+
+  this->header.set_time_step(_maxStepSize);
 }
