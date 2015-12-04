@@ -41,4 +41,7 @@ message LogHeader
 
   /// \brief Maximum number of incorrect lost person reports.
   optional uint32 max_wrong_reports   = 12;
+
+  /// \brief Time step used during the experiment.
+  optional double time_step           = 13;
 }

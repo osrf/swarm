@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     }
     if (header.has_vegetation_name())
     {
-      std::cout << "Vegetation name:          "
+      std::cout << "Vegetation name:       "
                 << header.vegetation_name() << std::endl;
     }
     if (header.has_search_area())
@@ -172,6 +172,21 @@ int main(int argc, char **argv)
     {
       std::cout << "Team:                  "
                 << header.team_name() << std::endl;
+    }
+    if (header.has_max_time_allowed())
+    {
+      std::cout << "Max time allowed:      "
+                << header.max_time_allowed() << std::endl;
+    }
+    if (header.has_max_wrong_reports())
+    {
+      std::cout << "Max wrong reports:     "
+                << header.max_wrong_reports() << std::endl;
+    }
+    if (header.has_time_step())
+    {
+      std::cout << "Time step:             "
+                << header.time_step() << std::endl;
     }
 
     auto fileSize = fileSizeStr(boost::filesystem::file_size(p));

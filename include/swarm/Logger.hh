@@ -99,9 +99,11 @@ namespace swarm
     /// no client registered for this ID).
     public: bool Unregister(const std::string &_id);
 
-    /// \brief Create the log file
+    /// \brief Create the log file.
+    /// \param[in] _maxStepSize Simulation max step size.
     /// \param[in] _sdf SDF element containing the optional <log_info> section.
-    public: void CreateLogFile(sdf::ElementPtr _sdf);
+    public: void CreateLogFile(const double _maxStepSize,
+                               sdf::ElementPtr _sdf);
 
     /// \brief Constructor.
     private: Logger();
@@ -110,8 +112,10 @@ namespace swarm
     private: virtual ~Logger() = default;
 
     /// \brief Fill the message with the header.
+    /// \param[in] _maxStepSize Simulation max step size.
     /// \param[in] _sdf SDF element containing the optional <log_info> section.
-    private: void FillHeader(sdf::ElementPtr _sdf);
+    private: void FillHeader(const double _maxStepSize,
+                             sdf::ElementPtr _sdf);
 
     /// \brief List of clients. The key is the ID of the client and the value
     /// is a pointer to each client.
