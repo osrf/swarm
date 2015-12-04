@@ -21,11 +21,11 @@
 #ifndef __SWARM_BROKER_PLUGIN_HH__
 #define __SWARM_BROKER_PLUGIN_HH__
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <random>
-#include <string>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>

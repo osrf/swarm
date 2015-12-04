@@ -18,9 +18,9 @@
 /// \file Broker.hh
 /// \brief Broker for handling message delivery among robots.
 
+#include <cstdint>
 #include <map>
 #include <deque>
-#include <string>
 #include <vector>
 #include "msgs/datagram.pb.h"
 #include "swarm/Helpers.hh"

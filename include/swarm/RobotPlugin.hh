@@ -21,6 +21,7 @@
 #ifndef __SWARM_ROBOT_PLUGIN_HH__
 #define __SWARM_ROBOT_PLUGIN_HH__
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <mutex>

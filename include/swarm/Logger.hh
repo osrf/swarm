@@ -19,6 +19,7 @@
 /// \brief Query log information from clients and create a log in disk.
 
 #include <boost/filesystem.hpp>
+#include <cstdint>
 #include <fstream>
 #include <map>
 #include <string>

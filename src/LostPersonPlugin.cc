@@ -16,6 +16,7 @@
 */
 
 #include <functional>
+#include <string>
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/physics/physics.hh>
 #include "swarm/LostPersonPlugin.hh"

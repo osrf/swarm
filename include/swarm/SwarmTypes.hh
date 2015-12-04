@@ -18,6 +18,7 @@
 #ifndef __SWARM_TYPES_HH__
 #define __SWARM_TYPES_HH__
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>

@@ -21,6 +21,7 @@
 #ifndef __SWARM_BOO_PLUGIN_HH__
 #define __SWARM_BOO_PLUGIN_HH__
 
+#include <cstdint>
 #include <map>
 #include <mutex>
 #include <string>

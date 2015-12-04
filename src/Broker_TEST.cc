@@ -15,6 +15,8 @@
  *
 */
 
+#include <cstdint>
+#include <vector>
 #include "gtest/gtest.h"
 #include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"

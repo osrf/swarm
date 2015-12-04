@@ -21,6 +21,7 @@
 #ifndef __SWARM_COMMS_MODEL_HH__
 #define __SWARM_COMMS_MODEL_HH__
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>

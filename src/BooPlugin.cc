@@ -17,6 +17,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <cmath>
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <vector>

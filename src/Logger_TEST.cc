@@ -15,6 +15,7 @@
  *
 */
 
+#include <cstdint>
 #include <stdlib.h>  // setenv
 #include "gtest/gtest.h"
 #include "msgs/log_entry.pb.h"

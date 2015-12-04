@@ -15,10 +15,10 @@
  *
 */
 
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <deque>
-#include <string>
 #include "msgs/datagram.pb.h"
 #include "swarm/Broker.hh"
 
