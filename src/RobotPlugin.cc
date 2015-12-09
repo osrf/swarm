@@ -527,7 +527,7 @@ bool RobotPlugin::IsDocked() const {
 void RobotPlugin::UpdateTerrainType()
 {
   gazebo::common::Time curTime = this->world->GetSimTime();
-  auto dt = (curTime - this->lastTerrainUpdateTime).Double();
+  double dt = (curTime - this->lastTerrainUpdateTime).Double();
   if (dt < 0)
   {
     // Probably we had a reset.
@@ -537,7 +537,11 @@ void RobotPlugin::UpdateTerrainType()
 
   // Update based on sensorsUpdateRate.
   if (dt < (1.0 / this->terrainUpdateRate))
+  {
     return;
+  }
+
+  this->lastTerrainUpdateTime = curTime;
 
   // Get current terrain type
   this->terrainType = this->common.TerrainAtPos(

@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'timeout'
 require 'fileutils'
 require 'optparse'

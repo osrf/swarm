@@ -836,7 +836,7 @@ namespace swarm
     private: double sensorsUpdateRate = 20.0;
 
     /// \brief Rate at which the terrain type should update.
-    private: double terrainUpdateRate = 20.0;
+    private: double terrainUpdateRate = 5.0;
 
     /// \brief Common attributes and functions that are used by multiple
     /// plugins
