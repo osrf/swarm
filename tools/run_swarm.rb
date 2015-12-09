@@ -3,6 +3,8 @@
 require 'timeout'
 require 'fileutils'
 require 'optparse'
+
+# $ gem install parallel
 require 'parallel'
 
 ###############################################
@@ -40,7 +42,7 @@ class Runner
 
     # Create all the runs. The outer loop is the number of repetitions to
     # perform each run
-    @reps.times do |i|
+    @reps.times do
 
       # Iterate over the search areas
       @@searchAreas.each do |searchArea|
@@ -107,7 +109,7 @@ class Runner
     puts "Starting tests..."
 
     # Run the tests in different processes
-    results = Parallel.map(@runs, :in_processes => @jobs) do |run|
+    Parallel.map(@runs, :in_processes => @jobs) do |run|
       puts "Running test: #{run}"
 
        # Spawn the job
