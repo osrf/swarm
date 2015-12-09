@@ -573,6 +573,9 @@ namespace swarm
     /// \brief Update and store sensor information.
     private: void UpdateSensors();
 
+    /// \brief Update terrain type
+    private: void UpdateTerrainType();
+
     /// \brief Update the battery capacity.
     private: void UpdateBattery();
 
@@ -826,8 +829,14 @@ namespace swarm
     /// \brief For computing dt.
     private: gazebo::common::Time lastSensorUpdateTime;
 
+    /// \brief For computing terrain update times.
+    private: gazebo::common::Time lastTerrainUpdateTime;
+
     /// \brief Rate at which the sensors should update.
     private: double sensorsUpdateRate = 20.0;
+
+    /// \brief Rate at which the terrain type should update.
+    private: double terrainUpdateRate = 20.0;
 
     /// \brief Common attributes and functions that are used by multiple
     /// plugins

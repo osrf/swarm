@@ -297,8 +297,8 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     if (!_srcAddress.empty())
       this->SendAck(_srcAddress, 0);
 
-    // Pause the simulation to make the lost person detection obvious.
-    gazebo::physics::get_world()->SetPaused(true);
+    // Shutdown the simulation to make the lost person detection obvious.
+    gazebo::shutdown();
   }
   else
   {
