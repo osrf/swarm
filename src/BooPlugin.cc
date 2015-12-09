@@ -136,6 +136,14 @@ void BooPlugin::OnUpdateEnd()
     this->lostPersonBuffer[now] = personPosInGrid;
     this->lastPersonPosInGrid = personPosInGrid;
   }
+
+  if (this->exit)
+  {
+    if (this->shutdownTimer.GetElapsed() >= shutdownPeriod)
+    {
+      gazebo::shutdown();
+    }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -232,6 +240,10 @@ bool BooPlugin::Found(const ignition::math::Vector3d &_pos, const double _time)
 bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     const gazebo::common::Time &_time, const std::string &_srcAddress)
 {
+  // Exit if we're on the tear down phase.
+  if (this->exit)
+    return false;
+
   this->found = false;
 
   // Sanity check: Time _time cannot be negative.
@@ -297,8 +309,9 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     if (!_srcAddress.empty())
       this->SendAck(_srcAddress, 0);
 
-    // Shutdown the simulation to make the lost person detection obvious.
-    gazebo::shutdown();
+    // Start tearing down.
+    this->exit = true;
+    this->shutdownTimer.Start();
   }
   else
   {
