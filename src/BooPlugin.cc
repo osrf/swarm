@@ -137,7 +137,7 @@ void BooPlugin::OnUpdateEnd()
     this->lastPersonPosInGrid = personPosInGrid;
   }
 
-  if (this->exit)
+  if (this->gazeboExit)
   {
     if (this->shutdownTimer.GetElapsed() >= shutdownPeriod)
     {
@@ -241,7 +241,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
     const gazebo::common::Time &_time, const std::string &_srcAddress)
 {
   // Exit if we're on the tear down phase.
-  if (this->exit)
+  if (this->gazeboExit)
     return false;
 
   this->found = false;
@@ -310,7 +310,7 @@ bool BooPlugin::FoundHelper(const ignition::math::Vector3d &_pos,
       this->SendAck(_srcAddress, 0);
 
     // Start tearing down.
-    this->exit = true;
+    this->gazeboExit = true;
     this->shutdownTimer.Start();
   }
   else

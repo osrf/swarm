@@ -183,7 +183,7 @@ namespace swarm
 
     /// \brief If true, we will start the tear down process (probably triggered
     /// because the lost person was found).
-    private: bool exit = false;
+    private: bool gazeboExit = false;
 
     /// \brief Once exit is set to true, we'll wait this period of simulation
     /// time before the Gazebo shutdown.
