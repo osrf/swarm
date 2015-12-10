@@ -50,7 +50,7 @@ void validateResult(const int _testCase)
     // with a time t older than the last entry stored.
     case 9:
     {
-      EXPECT_TRUE(gazebo::physics::get_world()->IsPaused());
+      // ToDo: Find a way to signal that the lost person was found.
       break;
     }
     // Unsupported command.

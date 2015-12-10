@@ -172,16 +172,14 @@ void BooFinderPlugin::ValidateACK()
     case 0:
     {
       // Valid unicast message.
-      // We shouldn't receive this message because the simulation should be
-      // paused.
-      FAIL();
+      // ToDo: Find a way to signal that the lost person was found.
+      break;
     }
     case 1:
     {
       // Valid broadcast message.
-      // We shouldn't receive this message because the simulation should be
-      // paused.
-      FAIL();
+      // ToDo: Find a way to signal that the lost person was found.
+      break;
     }
     case 2:
       // Unsupported command.
