@@ -5,11 +5,18 @@ reset
 output_dir="`echo $output_dir`"
 logfile="`echo $logfile`"
 
-set terminal png
-set output output_dir.'/swarm_comms_datarate.png'
-set xlabel "time (seconds)"
-set ylabel "Data rate (mbps)"
 set title "Overall data rate"
 set datafile separator ","
+set terminal png size 960,800 enhanced truecolor font 'Verdana,11'
+set output output_dir.'/swarm_comms_datarate.png'
+set xlabel "Time (seconds)"
+set ylabel "Data rate (mbps)"
+set pointsize 0.8
+set border 11
+set xtics out
+set tics front
+set key below
 
-plot logfile using 1:($11/1000000) title 'Data rate' with lines
+
+plot \
+  logfile using 1:($11/1000000) title 'Data rate' with lines
