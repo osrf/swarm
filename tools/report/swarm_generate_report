@@ -169,7 +169,7 @@ cp $OUTPUT_CSV_FILE $TMPDIR
 
 # Step 2: Generate images
 echo 'Generating images'
-for script in swarm_comms_msgs_sent.gplot swarm_comms_drops.gplot swarm_comms_datarate.gplot swarm_comms_neighbors.gplot swarm_coverage.gplot
+for script in swarm_comms_msgs_sent.gplot swarm_comms_drops.gplot swarm_comms_datarate.gplot swarm_comms_neighbors.gplot
 do
   echo -n '\t Executing gnuplot script ['${script}'].....'
   output_dir=$TMPDIR logfile=$OUTPUT_CSV_FILE ${script}
