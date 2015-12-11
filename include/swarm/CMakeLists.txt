@@ -9,7 +9,6 @@ set (headers
   Helpers.hh
   Logger.hh
   LogParser.hh
-  LostPersonControllerPlugin.hh
   LostPersonPlugin.hh
   RobotPlugin.hh
   SwarmTypes.hh
