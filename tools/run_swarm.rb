@@ -7,7 +7,7 @@ require 'optparse'
 # $ gem install parallel
 require 'parallel'
 
-$latex_template = %q{
+$latexTemplate = %q{
 \documentclass{article}
 
 \usepackage{graphicx} % Required for the inclusion of images
@@ -52,12 +52,19 @@ Search area                    & \swarmSearchArea\\\\
 \section*{Completion}
 
 \begin{tabular}{ll}
-Success                        & \swarmSucceed\\\\
-Number of incorrect reports    & \swarmWrongBooReports\\\\
-Duration                       & \swarmDuration ~seconds\\\\
-Score                          & \swarmScore\\\\
+Success                                     & \swarmSucceed\\\\
+Number of incorrect reports                 & \swarmWrongBooReports\\\\
+Maximum number of incorrect reports allowed & \swarmMaxWrongReports\\\\
+Duration                                    & \swarmDuration ~seconds\\\\
+Maximum duration allowed                    & \swarmMaxDuration ~seconds\\\\
+Score                                       & \swarmScore\\\\
 \end{tabular}
 
+The score is calculated using the following equation: \\
+
+\begin{center}
+\$score=0.8\cdot(1.0-min(1.0,~\frac{duration}{duration_{max}}))+0.2\cdot(1.0-min(1.0, ~\frac{incorrectReports}{incorrectReports_{max}}))$
+\end{center}
 
 \section*{Communications}
 
@@ -73,27 +80,28 @@ Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
 \end{tabular}
 
 \begin{figure}[ht]
-\centering
-\subfigure{
-    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_msgs_sent}
-    \label{fig:subfig5}
-}
-\subfigure{
-    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_drops}
-    \label{fig:subfig6}
-}
-\subfigure{
-    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_datarate}
-    \label{fig:subfig7}
-}
-\subfigure{
-    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_neighbors}
-    \label{fig:subfig8}
-}
-%\caption[Optional caption for list of figures 5-8]{General Caption of subfigures 5-8}
-\label{fig:subfigureExample2}
+  \centering
+  \includegraphics[width=\columnwidth, keepaspectratio]{swarm_msgs_sent}
+  \label{fig:subfig5}
 \end{figure}
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\columnwidth, keepaspectratio]{swarm_comms_drops}
+  \label{fig:subfig6}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\columnwidth, keepaspectratio]{swarm_comms_datarate}
+  \label{fig:subfig7}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\columnwidth, keepaspectratio]{swarm_comms_neighbors}
+  \label{fig:subfig8}
+\end{figure}
 
 \end{document}
 }
@@ -280,7 +288,7 @@ class Runner
 
       # Step 3: Generate final report
       File.open("#{report}/report.tex", 'w') {|file|
-        file.write($latex_template)
+        file.write($latexTemplate)
       }
       Dir.chdir(report) {
         `pdflatex #{report}/report.tex`
