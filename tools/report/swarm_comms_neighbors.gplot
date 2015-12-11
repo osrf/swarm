@@ -5,11 +5,17 @@ reset
 output_dir="`echo $output_dir`"
 logfile="`echo $logfile`"
 
-set terminal png
-set output output_dir.'/swarm_comms_neighbors.png'
-set xlabel "time (seconds)"
-set ylabel "Average number of neighbors per robot"
 set title "Neighbors per robot"
 set datafile separator ","
+set terminal png size 960,800 enhanced truecolor font 'Verdana,11'
+set output output_dir.'/swarm_comms_neighbors.png'
+set xlabel "Time (seconds)"
+set ylabel "Average number of neighbors per robot"
+set pointsize 0.8
+set border 11
+set xtics out
+set tics front
+set key below
 
-plot logfile using 1:12 title 'Average number of neighbors per robot' with lines
+plot \
+  logfile using 1:12 title 'Average number of neighbors per robot' with lines

@@ -261,6 +261,8 @@ def create_swarm_summary_report(log_reader, fullpath_file):
     fd.write('\\newcommand{\swarmAvgMsgsDrop}{' + str(avg_drop_ratio) + '}\n')
     fd.write('\\newcommand{\swarmAvgDataRateRobot}{' + str(avg_data_rate) + '}\n')
     fd.write('\\newcommand{\swarmAvgNeighborsRobot}{' + str(avg_neighbors) + '}\n')
+    fd.write('\\newcommand{\swarmMaxDuration}{' + str(max_duration) + '}\n')
+    fd.write('\\newcommand{\swarmMaxWrongReports}{' + str(max_wrong_reports) + '}\n')
     fd.close()
 
 def score(duration, max_duration, wrong_reports, max_wrong_reports):
