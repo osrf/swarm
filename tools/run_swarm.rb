@@ -63,7 +63,7 @@ Score                                       & \swarmScore\\\\
 The score is calculated using the following equation: \\
 
 \begin{center}
-\$score=0.8\cdot(1.0-min(1.0,~\frac{duration}{duration_{max}}))+0.2\cdot(1.0-min(1.0, ~\frac{incorrectReports}{incorrectReports_{max}}))$
+$score=0.8\cdot(1.0-min(1.0,~\frac{duration}{duration_{max}}))+0.2\cdot(1.0-min(1.0, ~\frac{incorrectReports}{incorrectReports_{max}}))$
 \end{center}
 
 \section*{Communications}
@@ -274,14 +274,14 @@ class Runner
     # Generate reports in different processes
     Parallel.map(reports, :in_processes => @jobs) do |report|
       puts "Generating #{report}"
-      swarmLog = "#{report}/swarm.log" 
+      swarmLog = "#{report}/swarm.log"
       swarmSummary = "#{report}/swarm_summary.tex"
       swarmCsv = "#{report}/swarm.csv"
 
       # Step 1: Create csv and summary files
       `swarmlog_to_csv_comms.py #{swarmLog} #{swarmSummary} > #{swarmCsv}`
-     
-      # Step 2: Generate images 
+
+      # Step 2: Generate images
       plots.each do |plot|
         `output_dir=#{report} logfile=#{swarmCsv} #{plot}`
       end
