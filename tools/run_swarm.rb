@@ -7,6 +7,97 @@ require 'optparse'
 # $ gem install parallel
 require 'parallel'
 
+$latex_template = %q{
+\documentclass{article}
+
+\usepackage{graphicx} % Required for the inclusion of images
+\usepackage{amsmath} % Required for some math elements
+\usepackage{subfigure}
+\usepackage{geometry}
+  \geometry{
+  left=20mm,
+  right=20mm,
+  top=20mm,
+}
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+\renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number (e.g. section 6)
+
+\input{swarm_summary}
+
+\title{Swarm experiment report} % Title
+
+\author{\textsc{Open Source Robotics Foundation}} % Author name
+
+\date{\today} % Date for the report
+
+\begin{document}
+
+\maketitle % Insert the title, author and date
+
+\section*{Configuration}
+
+\begin{tabular}{ll}
+Team                           & \swarmTeamName\\\\
+Number of ground vehicles      & \swarmNumGroundVehicles\\\\
+Number of fixed wing vehicles  & \swarmNumFixedVehicles\\\\
+Number of rotor craft vehicles & \swarmNumRotorVehicles\\\\
+Terrain name                   & \swarmTerrainName\\\\
+Vegetation name                & \swarmVegetationName\\\\
+Search area                    & \swarmSearchArea\\\\
+\end{tabular}
+
+
+\section*{Completion}
+
+\begin{tabular}{ll}
+Success                        & \swarmSucceed\\\\
+Number of incorrect reports    & \swarmWrongBooReports\\\\
+Duration                       & \swarmDuration ~seconds\\\\
+Score                          & \swarmScore\\\\
+\end{tabular}
+
+
+\section*{Communications}
+
+\begin{tabular}{ll}
+Number of messages sent               & \swarmNumMsgsSent\\\\
+Number of unicast messages sent       & \swarmNumUnicastSent\\\\
+Number of broadcast messages sent     & \swarmNumBroadcastSent\\\\
+Number of multicast messages sent     & \swarmNumMulticastSent\\\\
+Average message publication frequency & \swarmFreqMsgsSent ~messages per second\\\\
+Average percentage message drop       & \swarmAvgMsgsDrop ~\%\\\\
+Average data rate per robot           & \swarmAvgDataRateRobot ~mbps\\\\
+Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
+\end{tabular}
+
+\begin{figure}[ht]
+\centering
+\subfigure{
+    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_msgs_sent}
+    \label{fig:subfig5}
+}
+\subfigure{
+    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_drops}
+    \label{fig:subfig6}
+}
+\subfigure{
+    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_datarate}
+    \label{fig:subfig7}
+}
+\subfigure{
+    \includegraphics[width=0.45\columnwidth, keepaspectratio]{swarm_comms_neighbors}
+    \label{fig:subfig8}
+}
+%\caption[Optional caption for list of figures 5-8]{General Caption of subfigures 5-8}
+\label{fig:subfigureExample2}
+\end{figure}
+
+
+\end{document}
+}
+
 ###############################################
 # \brief A class that runs swarm tests.
 class Runner
@@ -19,6 +110,7 @@ class Runner
   ###############################################
   # \brief Initialize the runner with options from the command line
   def initialize(options)
+    @jobs = options[:jobs]
 
     @minSearch =  options[:minSearch]
     @maxSearch =  options[:maxSearch]
@@ -31,12 +123,22 @@ class Runner
     @clearLogs = options[:clear]
 
     @timeout = options[:timeout]
-    @jobs = options[:jobs]
     @team = options[:team]
     @reps = options[:reps]
 
     @dir = options[:dir]
 
+    if options.has_key?(:reports) then
+      generate_reports(options[:reports])
+    else
+      run_tests
+    end
+  end
+
+
+  ###############################################
+  # Generate all the runs based on the provided parameters
+  def generate_runs
     port = 11345
     @runs = []
 
@@ -73,6 +175,13 @@ class Runner
         end
       end
     end
+  end
+
+  ###############################################
+  # \brief Run all the tests
+  def run_tests
+
+    generate_runs
 
     # Output some useful information
     puts "Parameters:"
@@ -91,11 +200,14 @@ class Runner
     puts "Tests to run:"
     puts @runs
     puts
-  end
 
-  ###############################################
-  # \brief Run all the tests
-  def run
+    # Ask before proceeding
+    print "Run tests ? (y/N) "
+    ans = gets.chomp
+    if ans != 'y' && ans != 'Y' then
+      return
+    end
+
     # Get the current time.
     time = Time.now.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -127,6 +239,53 @@ class Runner
     FileUtils.mkdir("#{@dir}/#{time}")
     FileUtils.cp_r("#{ENV['HOME']}/.swarm/log", "#{@dir}/#{time}/swarm")
     FileUtils.cp_r("#{ENV['HOME']}/.gazebo/log", "#{@dir}/#{time}/gazebo")
+
+    # Generate the reports
+    generate_reports("#{@dir}/#{time}/swarm")
+  end
+
+  #################################################
+  # Generate report for all directories in _path
+  def generate_reports(_path)
+    # Plots to output
+    plots = ["swarm_comms_msgs_sent.gplot",
+             "swarm_comms_drops.gplot",
+             "swarm_comms_datarate.gplot",
+             "swarm_comms_neighbors.gplot"]
+
+    # Get an array of all the reports to generate
+    reports = Dir.entries(_path).select{ |entry|
+      File.directory?(File.join(_path, entry)) && entry != '.' && entry != '..'
+    }.collect{ |entry|
+      File.join(_path, entry)
+    }
+
+    puts "Generate reports for:\n"
+    puts reports
+
+    # Generate reports in different processes
+    Parallel.map(reports, :in_processes => @jobs) do |report|
+      puts "Generating #{report}"
+      swarmLog = "#{report}/swarm.log" 
+      swarmSummary = "#{report}/swarm_summary.tex"
+      swarmCsv = "#{report}/swarm.csv"
+
+      # Step 1: Create csv and summary files
+      `swarmlog_to_csv_comms.py #{swarmLog} #{swarmSummary} > #{swarmCsv}`
+     
+      # Step 2: Generate images 
+      plots.each do |plot|
+        `output_dir=#{report} logfile=#{swarmCsv} #{plot}`
+      end
+
+      # Step 3: Generate final report
+      File.open("#{report}/report.tex", 'w') {|file|
+        file.write($latex_template)
+      }
+      Dir.chdir(report) {
+        `pdflatex #{report}/report.tex`
+      }
+    end
   end
 end
 
@@ -193,15 +352,12 @@ if __FILE__ == $0
       options[:reps] = n
     end
 
+    opts.on("-g DIR", "--generate-report DIR", String, "Generate reports for a directory") do |n|
+      options[:reports] = n
+    end
+
   end.parse!
 
   # Create the runner
   runner = Runner.new(options)
-
-  # Run the tests.
-  print "Run tests ? (y/N) "
-  ans = gets.chomp
-  if ans == 'y' || ans == 'Y' then
-    runner.run
-  end
 end
