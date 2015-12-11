@@ -15,7 +15,8 @@
  *
 */
 
-#include "LostPersonControllerPlugin.hh"
+#include <ignition/math/Helpers.hh>
+#include "swarm/LostPersonControllerPlugin.hh"
 
 using namespace swarm;
 
@@ -23,7 +24,10 @@ GZ_REGISTER_MODEL_PLUGIN(LostPersonControllerPlugin)
 
 //////////////////////////////////////////////////
 LostPersonControllerPlugin::LostPersonControllerPlugin()
-  : LostPersonPlugin()
+  : LostPersonPlugin(),
+    latitude(0.0),
+    longitude(0.0),
+    altitude(0.0)
 {
 }
 
@@ -80,7 +84,7 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
     //Figure out the distance we have travelled here:
     //double distance = .................
-    double bearing = 0;
+    double mybearing = 0;
     double distance = (_info.simTime.Double() - this->prevUpdate.Double()) * velocityMagnitude; //I think that this length will give the magnitude...
     double AltitudeThreshold = tan(degreeThreshold * ((2 * M_PI) / 360))*distance; //This is in meters, assuming that the height we query for is in meters.
 
@@ -89,7 +93,7 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
 
     //double distance = .25; //15 km...
     for(int i = 0; i < 6; i++)
-      FindNeighbor(bearing + i * 60, distance, &neighborLats[i], &neighborLongs[i]);
+      FindNeighbor(mybearing + i * 60, distance, &neighborLats[i], &neighborLongs[i]);
     neighborLats[6] = latitude;        //Adding ourselves to lat and long dictionaries for goal-finding
     neighborLongs[6] = longitude;
 
@@ -108,7 +112,8 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     //compute for neighbors:
     for(int i = 0; i < 6; i++)
     {
-      if(neighborLats[i] == 0 && neighborLongs[i] == 0)
+      if(ignition::math::equal(neighborLats[i], 0.0) &&
+         ignition::math::equal(neighborLongs[i], 0.0))
       {
         transitionalProbabilities[i] = 0;
         continue;
@@ -186,12 +191,13 @@ void LostPersonControllerPlugin::MoveToPosition(double currentX, double currentY
   double diffY = targetY - currentY;
   double distance = GetDistance(currentX, currentY, targetX, targetY);
 
-  if( distance == 0)
+  if (ignition::math::equal(distance, 0.0))
   {
     //printf("\nAttempting to Stay Put.\n");
     this->velocity *= 0;
   }
-  else if( targetX == 0 && targetY == 0)
+  else if (ignition::math::equal(targetX, 0.0) &&
+           ignition::math::equal(targetY, 0.0))
   {
     printf("\nGoal is outside of search area.\n");
     this->velocity *= 0;
@@ -209,19 +215,19 @@ double LostPersonControllerPlugin::GetDistance(double currentX, double currentY,
 }
 
 //Distance in km, bearing in degrees. Based on current location.
-void LostPersonControllerPlugin::FindNeighbor(double bearing, double distance, double* neighborLat, double* neighborLong)
+void LostPersonControllerPlugin::FindNeighbor(double _bearing, double distance, double* neighborLat, double* neighborLong)
 {
   //To radians:
   double lat1;
   double lon1;
 
-  bearing = bearing * (2 * M_PI) / 360;
+  _bearing = _bearing * (2 * M_PI) / 360;
   lat1 = latitude * (2 * M_PI) / 360; //Current lat point converted to radians
   lon1 = longitude * (2 * M_PI) / 360; //Current long point converted to radians
 
-  double lat2 = asin(sin(lat1)*cos(distance/earthRad) + cos(lat1)*sin(distance/earthRad)*cos(bearing));
+  double lat2 = asin(sin(lat1)*cos(distance/earthRad) + cos(lat1)*sin(distance/earthRad)*cos(_bearing));
 
-  double lon2 = lon1 + atan2(sin(bearing)*sin(distance/earthRad)*cos(lat1), cos(distance/earthRad)-sin(lat1)*sin(lat2));
+  double lon2 = lon1 + atan2(sin(_bearing)*sin(distance/earthRad)*cos(lat1), cos(distance/earthRad)-sin(lat1)*sin(lat2));
 
   //To degrees:
   lat2 = lat2 * 360 / (2 * M_PI);
@@ -231,7 +237,7 @@ void LostPersonControllerPlugin::FindNeighbor(double bearing, double distance, d
   *neighborLong = lon2;
 }
 
-int LostPersonControllerPlugin::DetermineNewGoal(double transitionalProbabilities[])
+int LostPersonControllerPlugin::DetermineNewGoal(double _transitionalProbabilities[])
 {
 
   double randomNumber = ((double) rand() / (RAND_MAX));
@@ -239,11 +245,13 @@ int LostPersonControllerPlugin::DetermineNewGoal(double transitionalProbabilitie
 
   for (int i = 0; i < 7; i++)
   {
-    counter+= transitionalProbabilities[i];
-    if(randomNumber <= counter)
+    counter += _transitionalProbabilities[i];
+    if (randomNumber <= counter)
     {
       return i;
     }
-
   }
+
+  // ToDo: Line inserted by caguero. Please review.
+  return 0;
 }

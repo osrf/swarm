@@ -74,10 +74,11 @@ namespace swarm
         TerrainType curType;   //an enum: 0 is PLAIN, 1 for FOREST, 2 for BUILDING
         double latitude, longitude, altitude; //Latitude and Longitude kept up by the controller.
         TerrainType neighborTypes[6];
-        double neighborLats[7];
-        double neighborLongs[7];
-        double neighborHeights[6];
-        double transitionalProbabilities[7]; //0 is 12 o'clock, 6 is transition to      //variables for finding neighbors
+        double neighborLats[7] = {0, 0, 0, 0, 0, 0, 0};
+        double neighborLongs[7] = {0, 0, 0, 0, 0, 0, 0};
+        double neighborHeights[6] = {0, 0, 0, 0, 0, 0};
+        // 0 is 12 o'clock, 6 is transition to      //variables for finding neighbors
+        double transitionalProbabilities[7] = {0, 0, 0, 0, 0, 0, 0};
         double earthRad = 6378.1; //km
 
 
