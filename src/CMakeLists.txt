@@ -82,6 +82,7 @@ ign_install_library(${PROJECT_LIB_LOST_PERSON_NAME})
 # Create the libLostPersonControllerPlugin.so library.
 ign_add_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME} ${lost_person_controller_sources})
 target_link_libraries(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME}
+                      ${PROJECT_LIB_LOST_PERSON_NAME}
                       ${PROTOBUF_LIBRARY}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME})

@@ -23,14 +23,14 @@
 #define __SWARM_LOST_PERSON_CONTROLLER_PLUGIN_HH__
 
 #include <gazebo/common/Time.hh>
-#include <swarm/LostPersonPlugin.hh>
-#include <swarm/RobotPlugin.hh>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <cmath>
 #include <gazebo/math/gzmath.hh>
 #include <gazebo/physics/physics.hh>
+#include "swarm/LostPersonPlugin.hh"
+#include "swarm/RobotPlugin.hh"
 
 namespace swarm
 {

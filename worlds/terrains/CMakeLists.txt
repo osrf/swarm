@@ -6,7 +6,7 @@ set (terrains
 if (${gazebo_VERSION_MAJOR} GREATER 6)
   install(FILES ${terrains}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}/media/materials/textures)
-elseif()
+else()
   install(FILES ${terrains}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}.${gazebo_VERSION_MINOR}/media/materials/textures)
 endif()
