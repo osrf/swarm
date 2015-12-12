@@ -156,7 +156,7 @@ class LogParser
   end
 
   ###############################################
-  # Implement an each message
+  # Implement an each method
   def each
     while true do
       msg = nextMsg
