@@ -1,8 +1,17 @@
 #!/usr/bin/env ruby
 
+# TODO: Fix this!!
+$LOAD_PATH.push('/home/nkoenig/local/lib/ruby/swarm')
+puts $LOAD_PATH
+
+require 'protobuf'
+require '/home/nkoenig/local/lib/ruby/swarm/log_entry.pb'
+require '/home/nkoenig/local/lib/ruby/swarm/log_header.pb'
+
 require 'timeout'
 require 'fileutils'
 require 'optparse'
+require 'net/http'
 
 # $ gem install parallel
 require 'parallel'
@@ -105,6 +114,59 @@ Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
 
 \end{document}
 }
+
+###############################################
+# \brief A class that parses a log file.
+class LogParser
+  include Enumerable
+
+  def initialize(_logFile)
+    @logFile = _logFile
+    @file = File.open(@logFile, 'rb')
+    @header = nil
+  end
+
+  #################################################  
+  def nextMsg
+    # Read the 4-byte header
+    sizeString = @file.read(4)
+    if sizeString.length < 4 then
+      @file.close
+      return nil
+    end
+
+    # Get the message size
+    size = sizeString.unpack('<I')[0]
+
+    # Read the message, in binary
+    msg = @file.read(size)
+
+    # Make a protobuf message out of it
+    # The first message in the log is a LogHeader; the rest are LogEntry
+    if @header.nil?
+      @header = Swarm::Msgs::LogHeader.new
+      @header.decode(msg)
+      return nextMsg
+    end
+
+    pbmsg = Swarm::Msgs::LogEntry.new
+    pbmsg.decode(msg)
+
+    return pbmsg
+  end
+
+  ###############################################
+  # Implement an each message
+  def each
+    while true do
+      msg = nextMsg
+      if msg.nil? then
+        break
+      end
+      yield msg
+    end
+  end
+end
 
 ###############################################
 # \brief A class that runs swarm tests.
@@ -366,6 +428,12 @@ if __FILE__ == $0
 
   end.parse!
 
+  parser = LogParser.new("/data/swarm_logs/2015-12-10T07:50:32/swarm/2015-12-10T07:50:40.110786/swarm.log")
+
+  parser.each do |msg|
+    puts msg.to_json
+  end 
+
   # Create the runner
-  runner = Runner.new(options)
+  # runner = Runner.new(options)
 end

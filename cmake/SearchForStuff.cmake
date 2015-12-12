@@ -65,3 +65,11 @@ if(NOT ${_python_result})
 else()
   message(STATUS "Couldn't find Python install location; will not install Python message code")
 endif()
+
+########################################
+# The ruby Interpreter.
+find_program(RUBY ruby)
+if (NOT RUBY)
+  message (FATAL_ERROR "Missing: ruby (ruby)")
+endif()
+set(RUBY_INSTALL_DIR lib/ruby)
