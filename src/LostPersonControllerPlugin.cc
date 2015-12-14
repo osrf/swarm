@@ -151,22 +151,25 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
       transitionalProbabilities[i] = transitionalProbabilities[i] / sumProbs;
     }
 
-    //Print the transitional matrix for debugging purposes and the occasional sanity check.
-    printf("\n\n");
-    printf("            ______                 \n");
-    printf("           /      \\               \n");
-    printf("    ______/  %.2f  \\______        \n", transitionalProbabilities[0]);
-    printf("   /      \\        /      \\      \n");
-    printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[5], transitionalProbabilities[1]);
-    printf("  \\        /      \\        /     \n");
-    printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[6]);
-    printf("   /      \\        /      \\      \n");
-    printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[4], transitionalProbabilities[2]);
-    printf("  \\        /      \\        /     \n");
-    printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[3]);
-    printf("          \\        /              \n");
-    printf("           \\______/               \n");
-    printf("\n\n");
+    if (!gazebo::common::Console::GetQuiet())
+    {
+      //Print the transitional matrix for debugging purposes and the occasional sanity check.
+      printf("\n\n");
+      printf("            ______                 \n");
+      printf("           /      \\               \n");
+      printf("    ______/  %.2f  \\______        \n", transitionalProbabilities[0]);
+      printf("   /      \\        /      \\      \n");
+      printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[5], transitionalProbabilities[1]);
+      printf("  \\        /      \\        /     \n");
+      printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[6]);
+      printf("   /      \\        /      \\      \n");
+      printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[4], transitionalProbabilities[2]);
+      printf("  \\        /      \\        /     \n");
+      printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[3]);
+      printf("          \\        /              \n");
+      printf("           \\______/               \n");
+      printf("\n\n");
+    }
 
     /*******************************/
     // End Transition Matrix Creation
