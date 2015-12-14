@@ -38,6 +38,9 @@ TeamControllerPlugin::TeamControllerPlugin()
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
+  gzmsg << "[" << this->Host() << "] TeamController plugin loaded succesfully"
+        << std::endl;
+
   // Read the <num_messages> SDF parameter.
   if (!_sdf->HasElement("num_messages"))
   {
