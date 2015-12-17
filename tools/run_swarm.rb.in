@@ -492,6 +492,7 @@ class Runner
     @reps = options[:reps]
 
     @dir = options[:dir]
+    @pass = options[:pass]
 
     if options.has_key?(:reports)
       generate_reports(options[:reports])
@@ -509,25 +510,34 @@ class Runner
   ###############################################
   # Upload the reports to the gazebo web server
   def upload_reports(_dir, _pass)
-    jsonFilename = File.join(_dir, "summary.json")
-    csvFilename = File.join(_dir, "swarm.csv")
+    # Get an array of all the reports to generate
+    reports = Dir.entries(_path).select{ |entry|
+      File.directory?(File.join(_path, entry)) && entry != '.' && entry != '..'
+    }.collect{ |entry|
+      File.join(_path, entry)
+    }
 
-    if !File.exist?(jsonFilename)
-      puts "Error: JSON Summary file doesn't exist: #{jsonFilename}"
-      return
+    reports.each do |report|
+      jsonFilename = File.join(report, "summary.json")
+      csvFilename = File.join(report, "swarm.csv")
+
+      if !File.exist?(jsonFilename)
+        puts "Error: JSON Summary file doesn't exist: #{jsonFilename}"
+        return
+      end
+
+      if !File.exist?(csvFilename)
+        puts "Error: CSV file doesn't exist: #{csvFilename}"
+        return
+      end
+
+      summaryData = File.read(jsonFilename)
+      RestClient.post('http://localhost:3000/swarm/result', {
+        :pass => _pass,
+        :result => JSON.parse(summaryData),
+        :upload => { :file => File.new(csvFilename, "rb") }
+      })
     end
-
-    if !File.exist?(csvFilename)
-      puts "Error: CSV file doesn't exist: #{csvFilename}"
-      return
-    end
-
-    summaryData = File.read(jsonFilename)
-    RestClient.post('http://localhost:3000/swarm/result', {
-      :pass => _pass,
-      :result => JSON.parse(summaryData),
-      :upload => { :file => File.new(csvFilename, "rb") }
-    })
   end
 
   ###############################################
@@ -636,6 +646,9 @@ class Runner
 
     # Generate the reports
     generate_reports("#{@dir}/#{time}/swarm")
+
+    # Upload the reports
+    upload_reports("#{@dir}/#{time}/swarm", @pass)
   end
 
   #################################################
@@ -672,7 +685,6 @@ class Runner
       
       # Step 2: Create the summary files
       parser.to_summary(swarmSummaryTex, swarmSummaryJson)
-
 
       # Step 3: Generate images
       plots.each do |plot|
