@@ -307,12 +307,30 @@ class LogParser
   ###############################################
   # Output a summary report. Make sure to run to_csv first.
   def to_summary(_texFile, _jsonFile)
-    avgMsgsSentFreq = @totalMsgsSentFreq / @counterMsgsSentFreq
-    avgDropRatio = 100.0 * @totalDropRatio / @counterDropRatio
+    if @counterMsgsSentFreq != 0
+      avgMsgsSentFreq = @totalMsgsSentFreq / @counterMsgsSentFreq
+    else
+      avgMsgsSentFreq = 0
+    end
+
+    if @counterDropRatio != 0
+      avgDropRatio = 100.0 * @totalDropRatio / @counterDropRatio
+    else
+      avgDropRatio = 0
+    end
 
     # mbps.
-    avgDataRate = 0.000001 * @totalDataRate / @counterDataRate
-    avgNeighbors = @totalNeighbors / @counterTotalNeighbors
+    if @counterDataRate != 0
+      avgDataRate = 0.000001 * @totalDataRate / @counterDataRate
+    else
+      avgDataRate = 0
+    end
+
+    if @counterTotalNeighbors != 0
+      avgNeighbors = @totalNeighbors / @counterTotalNeighbors
+    else
+      avgNeighbors = 0
+    end
 
     texFd = File.open(_texFile, "wb")
     jsonFd = File.open(_jsonFile, "wb")
@@ -511,10 +529,10 @@ class Runner
   # Upload the reports to the gazebo web server
   def upload_reports(_dir, _pass)
     # Get an array of all the reports to generate
-    reports = Dir.entries(_path).select{ |entry|
-      File.directory?(File.join(_path, entry)) && entry != '.' && entry != '..'
+    reports = Dir.entries(_dir).select{ |entry|
+      File.directory?(File.join(_dir, entry)) && entry != '.' && entry != '..'
     }.collect{ |entry|
-      File.join(_path, entry)
+      File.join(_dir, entry)
     }
 
     reports.each do |report|
@@ -523,12 +541,12 @@ class Runner
 
       if !File.exist?(jsonFilename)
         puts "Error: JSON Summary file doesn't exist: #{jsonFilename}"
-        return
+        next
       end
 
       if !File.exist?(csvFilename)
         puts "Error: CSV file doesn't exist: #{csvFilename}"
-        return
+        next
       end
 
       summaryData = File.read(jsonFilename)
@@ -711,7 +729,7 @@ if __FILE__ == $0
              :minVehicle => 0, :maxVehicle => 50,
              :minDensity => 0, :maxDensity => 2,
              :clear => false, :timeout => 3600, :jobs => 1,
-             :dir => "/tmp", :team => "OSRF", :reps => 1}
+             :dir => "/tmp", :team => "OSRF", :reps => 1, :pass => ""}
 
   # Process command line options
   OptionParser.new do |opts|
