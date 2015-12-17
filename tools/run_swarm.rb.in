@@ -532,7 +532,7 @@ class Runner
       end
 
       summaryData = File.read(jsonFilename)
-      RestClient.post('http://localhost:3000/swarm/result', {
+      RestClient.post('http://gazebosim.org/swarm/result', {
         :pass => _pass,
         :result => JSON.parse(summaryData),
         :upload => { :file => File.new(csvFilename, "rb") }
