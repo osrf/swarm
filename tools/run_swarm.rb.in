@@ -2,6 +2,7 @@
 
 $LOAD_PATH.push("@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm")
 
+# $ gem install protobuf
 require 'protobuf'
 require '@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm/log_entry.pb'
 require '@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm/log_header.pb'
@@ -10,6 +11,9 @@ require 'timeout'
 require 'fileutils'
 require 'optparse'
 require 'json'
+
+# $ sudo apt-get install ruby-dev
+# $ gem install rest-client
 require 'rest-client'
 
 # $ gem install parallel
@@ -119,7 +123,7 @@ Average number of neighbors per robot & \swarmAvgNeighborsRobot\\\\
 class LogParser
   include Enumerable
 
-  #################################################  
+  #################################################
   # Constructor
   def initialize(_logFile)
     @logFile = _logFile
@@ -146,8 +150,8 @@ class LogParser
     @counterTotalNeighbors = 0
   end
 
-  #################################################  
-  # Get the next message in a log file, or nil if 
+  #################################################
+  # Get the next message in a log file, or nil if
   # the end of file is reached
   def nextMsg
     # Read the 4-byte header
@@ -196,7 +200,7 @@ class LogParser
       if entry.field?(:incoming_msgs) and entry.field?(:time) and
          entry.field?(:visibility)
         time = entry.time
-      
+
         numMsgsSent = 0
         numUnicastSent = 0
         numBroadcastSent = 0
@@ -231,7 +235,7 @@ class LogParser
         end
 
         entry.visibility.row.each do |msg|
-          if msg.src == 'boo' 
+          if msg.src == 'boo'
             next
           end
 
@@ -286,7 +290,7 @@ class LogParser
       if !@succeed
         @duration = entry.time
       end
-    end 
+    end
     file.close
   end
 
@@ -570,13 +574,13 @@ class Runner
 
       # Iterate over the search areas
       @@searchAreas.each do |searchArea|
-        if searchArea < @minSearch || searchArea > @maxSearch 
+        if searchArea < @minSearch || searchArea > @maxSearch
           next
         end
 
         # Iterate over the densities
         @@densities.each do |density|
-          if density < @minDensity || density > @maxDensity 
+          if density < @minDensity || density > @maxDensity
             next
           end
 
@@ -700,7 +704,7 @@ class Runner
 
       # Step 1: Create csv file
       parser.to_csv(swarmCSV)
-      
+
       # Step 2: Create the summary files
       parser.to_summary(swarmSummaryTex, swarmSummaryJson)
 
