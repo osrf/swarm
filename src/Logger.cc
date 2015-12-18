@@ -14,7 +14,7 @@
  * limitations under the License.
  *
 */
-
+#include <chrono>
 #include <gazebo/gazebo_config.h>
 #include <cstdint>
 #include <cstdlib>
@@ -184,6 +184,7 @@ void Logger::Reset()
 /////////////////////////////////////////////////
 void Logger::FillHeader(const double _maxStepSize, sdf::ElementPtr _sdf)
 {
+  this->header.set_timestamp(std::chrono::seconds(std::time(NULL)).count());
   this->header.set_swarm_version(SWARM_HASH_VERSION);
   this->header.set_gazebo_version(GAZEBO_VERSION_FULL);
   this->header.set_seed(ignition::math::Rand::Seed());

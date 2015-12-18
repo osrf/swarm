@@ -44,4 +44,7 @@ message LogHeader
 
   /// \brief Time step used during the experiment.
   optional double time_step           = 13;
+
+  /// \brief Unix timestamp (in milliseconds) of when the log was created.
+  optional uint64 timestamp           = 14;
 }
