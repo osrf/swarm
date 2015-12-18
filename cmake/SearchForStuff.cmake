@@ -73,3 +73,10 @@ if (NOT RUBY)
   message (FATAL_ERROR "Missing: ruby (ruby)")
 endif()
 set(RUBY_INSTALL_DIR lib/ruby)
+
+########################################
+# The protobuf ruby bindings.
+find_program(RUBY_PROTOBUF protoc-gen-ruby)
+if (NOT RUBY_PROTOBUF)
+  message (FATAL_ERROR "Missing: protobuf ruby bindings (sudo gem install protobuf)")
+endif()
