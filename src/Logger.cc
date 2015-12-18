@@ -44,19 +44,14 @@ Logger::Logger()
   // Did the user set SWARM_LOG?
   char *logEnableEnv = std::getenv("SWARM_LOG");
   this->enabled = ((logEnableEnv) && (std::string(logEnableEnv) == "1"));
-
-  this->CreateLogFile();
 }
 
 /////////////////////////////////////////////////
-void Logger::CreateLogFile()
+void Logger::CreateLogFile(const double _maxStepSize, sdf::ElementPtr _sdf)
 {
   if (this->enabled)
   {
     this->enabled = true;
-
-    gzmsg << "Logging enabled [" << this->logCompletePath.string()
-          << "]" << std::endl;
 
     // The base pathname for all the logs.
     const char *homePath = gazebo::common::getEnv("HOME");
@@ -72,6 +67,9 @@ void Logger::CreateLogFile()
 
     this->logCompletePath = logBasePath / logTimeDir / "swarm.log";
 
+    gzmsg << "Logging enabled [" << this->logCompletePath.string()
+          << "]" << std::endl;
+
     // Close an open stream
     if (this->output.is_open())
       this->output.close();
@@ -81,16 +79,13 @@ void Logger::CreateLogFile()
       std::ios::out | std::ios::binary);
 
     // Fill the header.
-    msgs::LogHeader header;
-    header.set_swarm_version(SWARM_HASH_VERSION);
-    header.set_gazebo_version(GAZEBO_VERSION_FULL);
-    header.set_seed(ignition::math::Rand::Seed());
+    this->FillHeader(_maxStepSize, _sdf);
 
     // Write the length of the header to be serialized.
-    int32_t size = header.ByteSize();
+    int32_t size = this->header.ByteSize();
     this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
 
-    if (!header.SerializeToOstream(&this->output))
+    if (!this->header.SerializeToOstream(&this->output))
     {
       std::cerr << "Failed to write header into disk." << std::endl;
       return;
@@ -184,6 +179,65 @@ void Logger::Update(const double _simTime)
 /////////////////////////////////////////////////
 void Logger::Reset()
 {
-  // Create a new log file
-  this->CreateLogFile();
+}
+
+/////////////////////////////////////////////////
+void Logger::FillHeader(const double _maxStepSize, sdf::ElementPtr _sdf)
+{
+  this->header.set_swarm_version(SWARM_HASH_VERSION);
+  this->header.set_gazebo_version(GAZEBO_VERSION_FULL);
+  this->header.set_seed(ignition::math::Rand::Seed());
+
+  if (_sdf && _sdf->HasElement("log_info"))
+  {
+    auto const &logElem = _sdf->GetElement("log_info");
+
+    if (logElem->HasElement("num_ground_vehicles"))
+    {
+      this->header.set_num_ground_vehicles(
+        logElem->Get<int>("num_ground_vehicles"));
+    }
+    if (logElem->HasElement("num_fixed_vehicles"))
+    {
+      this->header.set_num_fixed_vehicles(
+        logElem->Get<int>("num_fixed_vehicles"));
+    }
+    if (logElem->HasElement("num_rotor_vehicles"))
+    {
+      this->header.set_num_rotor_vehicles(
+        logElem->Get<int>("num_rotor_vehicles"));
+    }
+    if (logElem->HasElement("terrain_name"))
+    {
+      this->header.set_terrain_name(
+        logElem->Get<std::string>("terrain_name"));
+    }
+    if (logElem->HasElement("vegetation_name"))
+    {
+      this->header.set_vegetation_name(
+        logElem->Get<std::string>("vegetation_name"));
+    }
+    if (logElem->HasElement("search_area"))
+    {
+      this->header.set_search_area(
+        logElem->Get<std::string>("search_area"));
+    }
+    if (logElem->HasElement("max_time_allowed"))
+    {
+      this->header.set_max_time_allowed(
+        logElem->Get<double>("max_time_allowed"));
+    }
+    if (logElem->HasElement("max_wrong_reports"))
+    {
+      this->header.set_max_wrong_reports(
+        logElem->Get<int>("max_wrong_reports"));
+    }
+  }
+
+  // Did the user set SWARM_TEAMNAME?
+  char *teamNameEnv = std::getenv("SWARM_TEAMNAME");
+  if (teamNameEnv)
+    this->header.set_team_name(std::string(teamNameEnv));
+
+  this->header.set_time_step(_maxStepSize);
 }

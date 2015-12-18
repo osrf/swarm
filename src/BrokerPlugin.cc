@@ -34,6 +34,7 @@
 #include <sdf/sdf.hh>
 
 #include "msgs/datagram.pb.h"
+#include "swarm/RobotPlugin.hh"
 #include "swarm/CommsModel.hh"
 #include "swarm/BrokerPlugin.hh"
 
@@ -67,6 +68,9 @@ void BrokerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   this->maxDataRatePerCycle = this->commsModel->MaxDataRate() *
       this->world->GetPhysicsEngine()->GetMaxStepSize();
+
+  auto maxStepSize = this->world->GetPhysicsEngine()->GetMaxStepSize();
+  this->logger->CreateLogFile(maxStepSize, _sdf);
 
   // Register in the logger.
   this->logger->Register("broker", this);
@@ -192,7 +196,7 @@ void BrokerPlugin::DispatchMessages()
     this->rndEngine);
 
   // Get the current list of endpoints and clients bound.
-  const auto &endpoints = this->broker->EndPoints();
+  const EndPoints_M &endpoints = this->broker->EndPoints();
 
   // Clear the data rate usage for each robot.
   for (const auto &member : (*this->swarm))
@@ -201,7 +205,7 @@ void BrokerPlugin::DispatchMessages()
   while (!incomingMsgsBuffer.empty())
   {
     // Get the next message to dispatch.
-    const auto msg = incomingMsgsBuffer.front();
+    const msgs::Datagram msg = incomingMsgsBuffer.front();
     incomingMsgsBuffer.pop_front();
 
     // Sanity check: Make sure that the sender is a member of the swarm.
@@ -214,14 +218,14 @@ void BrokerPlugin::DispatchMessages()
     }
 
     // For logging purposes, we store the request for communication.
-    auto logMsg = this->logIncomingMsgs.add_message();
+    swarm::msgs::Message *logMsg = this->logIncomingMsgs.add_message();
     logMsg->set_src_address(msg.src_address());
     logMsg->set_dst_address(msg.dst_address());
     logMsg->set_dst_port(msg.dst_port());
     logMsg->set_size(msg.data().size());
 
     // Get the list of neighbors of the sender.
-    const auto &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
+    const Neighbors_M &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
 
     // Update the data rate usage.
     auto dataSize = (msg.data().size() + this->commsModel->UdpOverhead()) * 8;
@@ -233,14 +237,15 @@ void BrokerPlugin::DispatchMessages()
       (*this->swarm)[neighbor.first]->dataRateUsage += dataSize;
     }
 
-    auto dstEndPoint = msg.dst_address() + ":" + std::to_string(msg.dst_port());
+    std::string dstEndPoint =
+      msg.dst_address() + ":" + std::to_string(msg.dst_port());
     if (endpoints.find(dstEndPoint) != endpoints.end())
     {
       // Shuffle the clients bound to this endpoint.
-      auto clientsV = endpoints.at(dstEndPoint);
+      std::vector<BrokerClientInfo> clientsV = endpoints.at(dstEndPoint);
       std::shuffle(clientsV.begin(), clientsV.end(), this->rndEngine);
 
-      for (const auto &client : clientsV)
+      for (const BrokerClientInfo &client : clientsV)
       {
         // Make sure that we're sending the message to a valid neighbor.
         if (neighbors.find(client.address) == neighbors.end())
@@ -264,7 +269,7 @@ void BrokerPlugin::DispatchMessages()
 
         // Decide whether this neighbor gets this message, according to the
         // probability of communication between them right now.
-        const auto &neighborProb = neighbors.at(client.address);
+        const double &neighborProb = neighbors.at(client.address);
         if (ignition::math::Rand::DblUniform(0.0, 1.0) < neighborProb)
         {
           // Debug output
@@ -306,4 +311,8 @@ void BrokerPlugin::Reset()
 
   // Recreate the comms model
   this->commsModel.reset(new CommsModel(this->swarm, this->world, this->sdf));
+
+  // Create a new log file.
+  auto maxStepSize = this->world->GetPhysicsEngine()->GetMaxStepSize();
+  this->logger->CreateLogFile(maxStepSize, this->sdf);
 }

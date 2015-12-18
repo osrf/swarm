@@ -145,6 +145,19 @@ message VisibilityMap
   repeated VisibilityRow row = 1;
 }
 
+message BooReport
+{
+  /// \brief Time at which the lost person was seen.
+  required double time_seen              = 1;
+
+  /// \brief Position at which the lost person was seen.
+  required gazebo.msgs.Vector3d pos_seen = 2;
+
+  /// \brief Success of the reported command. True if the BOO considered the
+  /// command correct or false otherwise.
+  required bool succeed                  = 3;
+}
+
 message LogEntry
 {
   /// \brief Robot ID.
@@ -167,4 +180,7 @@ message LogEntry
 
   /// \brief Gazebo model name.
   optional string model_name          = 7;
+
+  /// \brief Result of a "FOUND" request.
+  repeated BooReport boo_report       = 8;
 }

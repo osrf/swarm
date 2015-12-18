@@ -23,15 +23,9 @@ add_library(BooControllerPlugin SHARED BooControllerPlugin.cc)
 target_link_libraries(BooControllerPlugin ${SWARM_LIBRARIES})
 
 #################################################
-# Generate the plugin for controlling a lost person.
-add_library(LostPersonControllerPlugin SHARED LostPersonControllerPlugin.cc)
-target_link_libraries(LostPersonControllerPlugin ${SWARM_LIBRARIES})
-
-#################################################
 # Install the library so that it can be found at run-time by Gazebo.
 # GNUInstallDirst defines CMAKE_INSTALL_LIBDIR, among other things.
 include(GNUInstallDirs)
 install(TARGETS TeamControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
 install(TARGETS BooControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
-install(TARGETS LostPersonControllerPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)
 install(TARGETS TerrainTestPlugin DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shlib)

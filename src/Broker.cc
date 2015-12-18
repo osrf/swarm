@@ -33,7 +33,7 @@ Broker *Broker::Instance()
 
 //////////////////////////////////////////////////
 bool Broker::Bind(const std::string &_clientAddress,
-  const BrokerClient *_client, const std::string &_endpoint)
+  const RobotPlugin *_client, const std::string &_endpoint)
 {
   // Make sure that the same client didn't bind the same end point before.
   if (this->endpoints.find(_endpoint) != this->endpoints.end())
@@ -65,7 +65,7 @@ void Broker::Push(const msgs::Datagram &_msg)
 }
 
 //////////////////////////////////////////////////
-bool Broker::Register(const std::string &_id, BrokerClient *_client)
+bool Broker::Register(const std::string &_id, RobotPlugin *_client)
 {
   if (this->clients.find(_id) != this->clients.end())
   {
@@ -79,7 +79,7 @@ bool Broker::Register(const std::string &_id, BrokerClient *_client)
 }
 
 //////////////////////////////////////////////////
-const std::map<std::string, BrokerClient*> &Broker::Clients() const
+const std::map<std::string, RobotPlugin*> &Broker::Clients() const
 {
   return this->clients;
 }

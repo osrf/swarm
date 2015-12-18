@@ -53,7 +53,8 @@ else
     CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc" -o -name "*.hh"`
   fi
   CPPLINT_FILES=`\
-    find $CHECK_DIRS -name "*.cc" -o -name "*.hh" -o -name "*.c" -o -name "*.h"`
+    find $CHECK_DIRS -name "*.cc" -o -name "*.hh" -o -name "*.c" -o -name "*.h"\
+        | grep -v -e LostPersonControllerPlugin`
 fi
 
 SUPPRESS=/tmp/cpp_check.suppress
@@ -105,7 +106,7 @@ elif [ $QUICK_CHECK -eq 1 ]; then
       DO_CPPCHECK=1
     elif [ $CPPCHECK_LT_157 -eq 0 ]; then
       DO_CPPCHECK=1
-    fi 
+    fi
 
     if [ $DO_CPPCHECK -eq 1 ]; then
       $CPPCHECK_BASE $CPPCHECK_CMD1A $CPPCHECK_RULES $tmp2 2>&1 \

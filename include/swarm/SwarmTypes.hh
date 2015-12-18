@@ -27,6 +27,10 @@
 
 namespace swarm
 {
+  /// \def Neighbors_M
+  /// \brief Map of neighbors
+  using Neighbors_M = std::map<std::string, double>;
+
   /// \brief Class used to store information about a member of the Swarm.
   class IGNITION_VISIBLE SwarmMember
   {
@@ -40,7 +44,7 @@ namespace swarm
     public: gazebo::physics::ModelPtr model;
 
     /// \brief List of neighbors and comms probabilities for this robot.
-    public: std::map<std::string, double> neighbors;
+    public: Neighbors_M neighbors;
 
     /// \brief Is this robot on outage?
     public: bool onOutage;
@@ -52,15 +56,32 @@ namespace swarm
     public: uint32_t dataRateUsage;
   };
 
+  /// \def SwarmMemberPtr
+  /// \brief Shared pointer to SwarmMember
+  using SwarmMemberPtr = std::shared_ptr<SwarmMember>;
+
   /// \def SwarmMembership_M
   /// \brief Map containing information about the members of the swarm.
   /// The key is the robot address. The value is a pointer to a SwarmMember
   /// object that contains multiple information about the robot.
-  using SwarmMembership_M = std::map<std::string, std::shared_ptr<SwarmMember>>;
+  using SwarmMembership_M = std::map<std::string, SwarmMemberPtr>;
 
   /// \def SwarmMembershipPtr
   /// \brief A shared pointer to the membership data structure.
   /// \sa SwarmMembership_M
   using SwarmMembershipPtr = std::shared_ptr<SwarmMembership_M>;
+
+  /// \brief The types of terrain.
+  enum TerrainType
+  {
+    /// \brief Open terrain
+    PLAIN     = 0,
+
+    /// \brief Terrain with forest
+    FOREST    = 1,
+
+    /// \brief Terrain with a building
+    BUILDING  = 2
+  };
 }
 #endif

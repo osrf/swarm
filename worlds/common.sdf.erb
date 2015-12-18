@@ -21,8 +21,8 @@
       <type>world</type>
     </solver>
   </ode>
-  <max_step_size>0.01</max_step_size>
-  <real_time_update_rate>100</real_time_update_rate>
+  <max_step_size><%=$max_step_size%></max_step_size>
+  <real_time_update_rate>0</real_time_update_rate>
 </physics>
 
 <!-- Load the plugin to deliver all the messages inside the swarm -->
@@ -41,4 +41,15 @@
     <comms_outage_duration_max><%=$comms_outage_duration_max%></comms_outage_duration_max>
     <comms_data_rate_max><%=$comms_data_rate_max%></comms_data_rate_max>
   </comms_model>
+  <log_info>
+    <num_ground_vehicles><%=$ground_count%></num_ground_vehicles>
+    <num_fixed_vehicles><%=$fixed_count%></num_fixed_vehicles>
+    <num_rotor_vehicles><%=$rotor_count%></num_rotor_vehicles>
+    <terrain_name><%=$terrain_file%></terrain_name>
+    <vegetation_name><%=$vegetation_file%></vegetation_name>
+    <search_area><%=$search_area%></search_area>
+    <max_time_allowed><%=$max_time_allowed%></max_time_allowed>
+    <max_wrong_reports><%=$max_wrong_reports%></max_wrong_reports>
+
+  </log_info>
 </plugin>

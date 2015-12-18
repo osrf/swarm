@@ -43,6 +43,10 @@ set (_robot_members
   10
   25
   50
+  100
+  200
+  400
+  800
 )
 
 # World files that are automatically generated based on master.erb
@@ -54,9 +58,9 @@ set (generated_master_world_files
   final_01_10_low.world
   final_01_10_medium.world
   final_01_10_high.world
-  final_01_25_low.world
-  final_01_25_medium.world
-  final_01_25_high.world
+  final_01_20_low.world
+  final_01_20_medium.world
+  final_01_20_high.world
 )
 
 # Process the erb files
@@ -89,5 +93,10 @@ endforeach()
 add_custom_target(erb_master_generation ALL DEPENDS ${world_files})
 
 # Install all the world files
-install(FILES ${world_files}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}.${gazebo_VERSION_MINOR}/worlds)
+if (${gazebo_VERSION_MAJOR} GREATER 6)
+  install(FILES ${world_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}/worlds)
+else()
+  install(FILES ${world_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${gazebo_VERSION_MAJOR}.${gazebo_VERSION_MINOR}/worlds)
+endif()

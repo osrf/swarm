@@ -9,4 +9,4 @@ target_link_libraries(swarmlog ${SWARM_LIBRARIES} ${PROTOBUF_LIBRARY}
                       ${Boost_LIBRARIES}
                       ${PROJECT_LIB_MSGS_NAME})
 
-install (PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/swarmlog ${CMAKE_CURRENT_SOURCE_DIR}/swarmlog_to_csv_comms.py  DESTINATION ${BIN_INSTALL_DIR})
+install (PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/swarmlog ${CMAKE_CURRENT_SOURCE_DIR}/swarmlog_to_csv_comms.py ${CMAKE_CURRENT_SOURCE_DIR}/run_swarm.rb DESTINATION ${BIN_INSTALL_DIR})

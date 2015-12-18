@@ -134,12 +134,63 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    std::cout << "Swarm Version:  " << header.swarm_version() << std::endl;
-    std::cout << "Gazebo Version: " << header.gazebo_version() << std::endl;
+    std::cout << "Swarm Version:         " << header.swarm_version() << std::endl;
+    std::cout << "Gazebo Version:        " << header.gazebo_version() << std::endl;
     boost::filesystem::path p(logfile);
-    std::cout << "Random Seed:    " << header.seed() << std::endl;
+    std::cout << "Random Seed:           " << header.seed() << std::endl;
+    if (header.has_num_ground_vehicles())
+    {
+      std::cout << "# ground vehicles:     "
+                << header.num_ground_vehicles() << std::endl;
+    }
+    if (header.has_num_fixed_vehicles())
+    {
+      std::cout << "# fixed-wing vehicles: "
+                << header.num_fixed_vehicles() << std::endl;
+    }
+    if (header.has_num_rotor_vehicles())
+    {
+      std::cout << "# rotorcraft vehicles: "
+                << header.num_rotor_vehicles() << std::endl;
+    }
+    if (header.has_terrain_name())
+    {
+      std::cout << "Terrain name:          "
+                << header.terrain_name() << std::endl;
+    }
+    if (header.has_vegetation_name())
+    {
+      std::cout << "Vegetation name:       "
+                << header.vegetation_name() << std::endl;
+    }
+    if (header.has_search_area())
+    {
+      std::cout << "Search area:           "
+                << header.search_area() << std::endl;
+    }
+    if (header.has_team_name())
+    {
+      std::cout << "Team:                  "
+                << header.team_name() << std::endl;
+    }
+    if (header.has_max_time_allowed())
+    {
+      std::cout << "Max time allowed:      "
+                << header.max_time_allowed() << std::endl;
+    }
+    if (header.has_max_wrong_reports())
+    {
+      std::cout << "Max wrong reports:     "
+                << header.max_wrong_reports() << std::endl;
+    }
+    if (header.has_time_step())
+    {
+      std::cout << "Time step:             "
+                << header.time_step() << std::endl;
+    }
+
     auto fileSize = fileSizeStr(boost::filesystem::file_size(p));
-    std::cout << "Size:           " << fileSize << std::endl;
+    std::cout << "Size:                  " << fileSize << std::endl;
     std::cout << std::endl;
     return 0;
   }

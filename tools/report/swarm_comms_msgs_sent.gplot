@@ -5,14 +5,18 @@ reset
 output_dir="`echo $output_dir`"
 logfile="`echo $logfile`"
 
-set terminal png
-set output output_dir.'/swarm_msgs_sent.png'
-set xlabel "time (seconds)"
-set ylabel "Number of messages"
 set title "Messages sent"
 set datafile separator ","
-
-plot logfile using 1:2 title 'All message types' with lines,\
-     logfile using 1:4 title 'Unicasts messages' with lines,\
-     logfile using 1:5 title 'Broadcast messages' with lines,\
-     logfile using 1:6 title 'Multicast messages' with lines
+set terminal png size 960,800 enhanced truecolor font 'Verdana,11'
+set output output_dir.'/swarm_msgs_sent.png'
+set ylabel "Messages"
+set xlabel "Time (seconds)"
+set pointsize 0.8
+set border 11
+set xtics out
+set tics front
+set key below
+plot \
+  logfile using 1:($4+$5+$6) title 'Unicast' with filledcurves x1, \
+  logfile using 1:($5+$6) title 'Broadcast' with filledcurves x1, \
+  logfile using 1:($6) title 'Multicast' with filledcurves x1
