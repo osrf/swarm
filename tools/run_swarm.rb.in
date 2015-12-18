@@ -122,6 +122,12 @@ class LogParser
   #################################################  
   # Constructor
   def initialize(_logFile)
+
+    # Get the log timestamp from the directory name.
+    fileParts = _logFile.split("/")
+    time = Time.parse(fileParts[fileParts.length - 2])
+    @timestamp = time.to_i
+
     @logFile = _logFile
     @file = File.open(@logFile, 'rb')
     @header = nil
@@ -170,6 +176,11 @@ class LogParser
       @header.decode(msg)
       if @header.field?(:time_step)
         @timeStep = @header.time_step
+      end
+
+      # Use a timestamp from the log header, if present
+      if @header.field?(:timestamp)
+        @timestamp = @header.timestamp
       end
 
       # Return the next actual message
@@ -351,6 +362,7 @@ class LogParser
     end
 
     jsonFd.write("{")
+    jsonFd.write("\"timestamp\" : #{@timestamp},")
     texFd.write("\\newcommand{\\swarmTeamName}{#{teamName}}\n")
     jsonFd.write("\"team\" : \"#{teamName}\",")
 
