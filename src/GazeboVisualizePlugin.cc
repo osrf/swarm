@@ -43,76 +43,14 @@ GazeboVisualizePlugin::~GazeboVisualizePlugin()
 void GazeboVisualizePlugin::Load(int /*_argc*/, char ** /*_argv*/)
 {
   std::cout << "GazeboVisualizePlugin::Load\n";
-/*  po::options_description v_desc("Options");
-  v_desc.add_options()
-    ("propshop-save", po::value<std::string>(),
-     "Path to save image files into.")
-    ("propshop-model", po::value<std::string>(), "Model to spawn.");
 
-  po::options_description desc("Options");
-  desc.add(v_desc);
+  this->searchMinLatitude = 35.6653;
+  this->searchMaxLatitude = 35.8853;
 
-  po::variables_map vm;
-  try
-  {
-    po::store(po::command_line_parser(_argc, _argv).options(
-          desc).allow_unregistered().run(), vm);
-    po::notify(vm);
-  } catch(boost::exception &_e)
-  {
-    std::cerr << "Error. Invalid arguments\n";
-    return;
-  }
+  this->searchMinLongitude = -120.884;
+  this->searchMaxLongitude = -120.664;
 
-  // Get the directory in which to save the images.
-  if (vm.count("propshop-save"))
-  {
-    this->savePath = boost::filesystem::path(
-        vm["propshop-save"].as<std::string>());
-    if (!boost::filesystem::exists(this->savePath))
-      boost::filesystem::create_directories(this->savePath);
-  }
-  else
-    this->savePath = boost::filesystem::temp_directory_path();
-
-  std::string modelFile;
-
-  if (vm.count("propshop-model"))
-    modelFile = vm["propshop-model"].as<std::string>();
-  else
-    return;
-
-  std::ifstream ifs(modelFile.c_str());
-  if (!ifs)
-  {
-    std::cerr << "Error: Unable to open file[" << modelFile << "]\n";
-    return;
-  }
-
-  this->sdf.reset(new sdf::SDF());
-  if (!sdf::init(this->sdf))
-  {
-    std::cerr << "ERROR: SDF parsing the xml failed" << std::endl;
-    return;
-  }
-
-  if (!sdf::readFile(modelFile, this->sdf))
-  {
-    std::cerr << "Error: SDF parsing the xml failed\n";
-    return;
-  }
-
-  sdf::ElementPtr modelElem = this->sdf->Root()->GetElement("model");
-  this->modelName = modelElem->Get<std::string>("name");
-  */
-
-  this->searchMinLatitude = 35.7653;
-  this->searchMaxLatitude = 35.7853;
-
-  this->searchMinLongitude = -120.784;
-  this->searchMaxLongitude = -120.764;
-
-  std::string logFile = "/home/nkoenig/Downloads/swarm.log";
+  std::string logFile = "/home/nkoenig/swarm.log";
   this->parser.Load(logFile);
 
   swarm::msgs::LogHeader header;
@@ -259,8 +197,8 @@ void GazeboVisualizePlugin::VisualizeSearchArea()
   this->markerPub->Publish(markerMsg);
 
   // get lat/lon bounds
-  double stepLon = (this->searchMaxLongitude - this->searchMinLongitude) / 15.0;
-  double stepLat = (this->searchMaxLatitude - this->searchMinLatitude) / 15.0;
+  double stepLon = (this->searchMaxLongitude - this->searchMinLongitude) / 90.0;
+  double stepLat = (this->searchMaxLatitude - this->searchMinLatitude) / 90.0;
 
   double elevation;
   GazeboVisualizePlugin::TerrainType terrainType;
