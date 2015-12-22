@@ -37,23 +37,35 @@ namespace swarm
   /// When the log file reaches the end, Next() will return false.
   class IGNITION_VISIBLE LogParser
   {
+    public: LogParser()
+            : isOpen(false)
+    {
+    }
+
     /// \brief Class constructor.
     /// \param[in] _filename Full path to the log file.
     public: LogParser(const std::string &_filename)
-      : filename(_filename),
-        isOpen(false),
-        input(filename, std::ios::in | std::ios::binary)
+        : isOpen(false)
     {
+      this->Load(_filename);
+    };
+
+    /// \brief Load a log file
+    public: bool Load(const std::string &_filename)
+    {
+      this->filename = _filename;
+      this->input.open(this->filename, std::ios::in | std::ios::binary);
+
       if (!this->input)
       {
         std::cerr << this->filename << ": File not found" << std::endl;
-        return;
+        return false;
       }
 
       // Read the header size.
       int32_t size = 0;
       if (!this->input.read(reinterpret_cast<char*>(&size), sizeof(size)))
-        return;
+        return false;
 
       // Read the header.
       std::vector<char> buffer;
@@ -62,12 +74,12 @@ namespace swarm
       if (!this->header.ParseFromArray(&buffer[0], size))
       {
         std::cerr << "Failed to parse header log file" << std::endl;
-        return;
+        return false;
       }
 
       this->isOpen = true;
-    };
-
+      return true;
+    }
     /// \brief Get the header of the log file.
     /// \param[out] _header Copy of the header.
     /// \return True if the operation succeed or false otherwise. E.g.: The

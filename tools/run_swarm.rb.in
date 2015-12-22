@@ -11,6 +11,9 @@ require 'timeout'
 require 'fileutils'
 require 'optparse'
 require 'json'
+require 'nokogiri'
+require 'base64'
+require 'zlib'
 
 # $ sudo apt-get install ruby-dev
 # $ gem install rest-client
@@ -198,51 +201,64 @@ class LogParser
   end
 
   ###############################################
-  # Convert log file to CSV file
-  def to_csv(_file)
-    file = File.open(_file, 'w')
-    file.print "# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors\n"
+  # Convert swarm comms log file to csv and zipped json files
+  def to_comms(_csvFile, _jsonFile)
+    csvFile = File.open(_csvFile, 'w')
+    csvFile.print "# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors\n"
+
+    json = []
+
+    modelMapping = {}
 
     # Process each message in the logfile
     self.each do |entry|
+      modelMapping[entry.id] = entry.model_name
+
       # Check for the 'incoming_msgs' field,
       # which tells us about what happened to
       # messages that were sent
       if entry.field?(:incoming_msgs) and entry.field?(:time) and
          entry.field?(:visibility)
-        time = entry.time
+        entryData = {
+          :time => entry.time.to_f,
+          :msg_sent => 0,
+          :num_unicast => 0,
+          :num_broadcast => 0,
+          :num_multicast => 0,
+          :msg_freq => 0,
+          :potential_recipients => 0,
+          :msgs_delivered => 0,
+          :drop_ratio => 0,
+          :bytes_sent => 0,
+          :data_rate => 0,
+          :avg_neighbors => 0,
+          :msgs => []
+        }
 
-        numMsgsSent = 0
-        numUnicastSent = 0
-        numBroadcastSent = 0
-        numMulticastSent = 0
-        freqMsgsSent = 0
-        numRecipients = 0
-        numMsgsDelivered = 0
-        dropRatio = 0
-        bytesSent = 0
-        dataRate = 0
-        numNeighbors = 0
         numRobots = 0
-        avgNumNeighbors = 0
+        numNeighbors = 0
 
         entry.incoming_msgs.message.each do |msg|
+          # puts "#{msg.src_address} == #{modelMapping[msg.src_address]}"
           if msg.dst_address == 'broadcast'
-            numBroadcastSent += 1
+            entryData[:num_broadcast] += 1
           elsif msg.dst_address == 'multicast'
-            numMulticastSent += 1
+            entryData[:num_multicast] += 1
           else
-            numUnicastSent += 1
+            entryData[:num_unicast] += 1
           end
 
-          numMsgsSent += 1
-          bytesSent += msg.size + 56
+          dsts = []
+          entryData[:msg_sent] += 1
+          entryData[:bytes_sent] += msg.size + 56
           msg.neighbor.each do |neighbor|
-            numRecipients += 1
+            entryData[:potential_recipients] += 1
             if neighbor.status == Swarm::Msgs::CommsStatus::DELIVERED
-              numMsgsDelivered += 1
+              dsts.push(modelMapping[neighbor.dst])
+              entryData[:msgs_delivered] += 1
             end
           end
+          entryData[:msgs].push([modelMapping[msg.src_address], dsts])
         end
 
         entry.visibility.row.each do |msg|
@@ -259,34 +275,40 @@ class LogParser
         end
 
         if numRobots > 0
-          avgNumNeighbors = numNeighbors / numRobots.to_f
+          entryData[:avg_neighbors] = numNeighbors / numRobots.to_f
         end
 
-        freqMsgsSent = numMsgsSent / @timeStep
-        dataRate = (bytesSent * 8) / @timeStep
+        entryData[:msg_freq] = entryData[:msg_sent] / @timeStep
+        entryData[:data_rate] = (entryData[:bytes_sent] * 8) / @timeStep
 
-        if numRecipients > 0
-          dropRatio = (numRecipients - numMsgsDelivered)/numRecipients.to_f
+        if entryData[:potential_recipients] > 0
+          entryData[:drop_ratio] = (entryData[:potential_recipients] -
+            entryData[:msgs_delivered])/entryData[:potential_recipients].to_f
         end
 
-        file.print "%f,%d,%f,%d,%d,%d,%d,%d,%f,%d,%f,%f\n" %
-            [time, numMsgsSent, freqMsgsSent, numUnicastSent, numBroadcastSent,
-             numMulticastSent, numRecipients, numMsgsDelivered, dropRatio,
-             bytesSent, dataRate, avgNumNeighbors]
+        json.push(entryData)
+
+        csvFile.print "%f,%d,%f,%d,%d,%d,%d,%d,%f,%d,%f,%f\n" %
+            [entryData[:time], entryData[:msg_sent], entryData[:msg_freq],
+             entryData[:num_unicast], entryData[:num_broadcast],
+             entryData[:num_multicast], entryData[:potential_recipients],
+             entryData[:msgs_delivered], entryData[:drop_ratio],
+             entryData[:bytes_sent], entryData[:data_rate],
+             entryData[:avg_neighbors]]
 
         # Update global variables.
-        @totalMsgsSent += numMsgsSent
-        @totalMsgsUnicast += numUnicastSent
-        @totalMsgsBroadcast += numBroadcastSent
-        @totalMsgsMulticast += numMulticastSent
-        @totalMsgsSentFreq += freqMsgsSent
+        @totalMsgsSent += entryData[:msg_sent]
+        @totalMsgsUnicast += entryData[:num_unicast]
+        @totalMsgsBroadcast += entryData[:num_broadcast]
+        @totalMsgsMulticast += entryData[:num_multicast]
+        @totalMsgsSentFreq += entryData[:msg_freq]
 
         @counterMsgsSentFreq += 1
-        @totalDropRatio += dropRatio
+        @totalDropRatio += entryData[:drop_ratio]
         @counterDropRatio += 1
-        @totalDataRate += dataRate
+        @totalDataRate += entryData[:data_rate]
         @counterDataRate += 1
-        @totalNeighbors += avgNumNeighbors
+        @totalNeighbors += entryData[:avg_neighbors]
         @counterTotalNeighbors += 1
       end
 
@@ -302,7 +324,16 @@ class LogParser
         @duration = entry.time
       end
     end
-    file.close
+    csvFile.close
+
+    z = Zlib::Deflate.new
+    deflated = z.deflate(json.to_json.to_s, Zlib::FINISH)
+    z.close
+    
+    # Write compressed file
+    File.open(_jsonFile, 'w') do |file|
+      file.write(deflated)
+    end
   end
 
   ###############################################
@@ -320,7 +351,7 @@ class LogParser
 
 
   ###############################################
-  # Output a summary report. Make sure to run to_csv first.
+  # Output a summary report. Make sure to run to_comms first.
   def to_summary(_texFile, _jsonFile)
     if @counterMsgsSentFreq != 0
       avgMsgsSentFreq = @totalMsgsSentFreq / @counterMsgsSentFreq
@@ -530,6 +561,8 @@ class Runner
 
     if options.has_key?(:reports)
       generate_reports(options[:reports])
+    elsif options.has_key?(:filter)
+      filter_gazebo_logs(options[:filter])
     elsif options.has_key?(:upload)
       if options.has_key?(:pass)
         upload_reports(options[:upload], options[:pass])
@@ -544,32 +577,63 @@ class Runner
   ###############################################
   # Upload the reports to the gazebo web server
   def upload_reports(_dir, _pass)
-    # Get an array of all the reports to generate
-    reports = Dir.entries(_dir).select{ |entry|
-      File.directory?(File.join(_dir, entry)) && entry != '.' && entry != '..'
-    }.collect{ |entry|
-      File.join(_dir, entry)
+    gazeboDirs = Dir.entries(File.join(_dir, "gazebo")).select{ |entry|
+      File.directory?(File.join(_dir, "gazebo", entry)) && entry != '.' && entry != '..'
     }
 
+    # Get an array of all the swarm reports
+    reports = Dir.entries(File.join(_dir, "swarm")).select{ |entry|
+      File.directory?(File.join(_dir, "swarm", entry)) && entry != '.' && entry != '..'
+    }.collect{ |entry|
+      # Convert dir name to time
+      t = Time.parse(entry)
+
+      minDelta = 1000000
+      gazeboDir = ""
+
+      # Find the matching gazebo directory
+      gazeboDirs.each do |d|
+        gt = Time.parse(d)
+        delta = t - gt
+        if delta > 0 and delta < minDelta
+          minDelta = delta
+          gazeboDir = d
+        end
+      end
+
+      {:swarm => File.join(_dir, "swarm", entry),
+       :gazebo => File.join(_dir, "gazebo", gazeboDir)}
+    }
+
+
+    puts "Upload reports for #{_dir}"
     reports.each do |report|
-      jsonFilename = File.join(report, "summary.json")
-      csvFilename = File.join(report, "swarm.csv")
+      puts report[:gazebo]
+      jsonFilename = File.join(report[:swarm], "summary.json")
+      commsFilename = File.join(report[:swarm], "swarm_comms.json.zip")
+      logFilename = File.join(report[:gazebo], "gzserver", "filtered.json.zip")
 
       if !File.exist?(jsonFilename)
         puts "Error: JSON Summary file doesn't exist: #{jsonFilename}"
         next
       end
 
-      if !File.exist?(csvFilename)
-        puts "Error: CSV file doesn't exist: #{csvFilename}"
+      if !File.exist?(commsFilename)
+        puts "Error: Comms file doesn't exist: #{commsFilename}"
+        next
+      end
+
+      if !File.exist?(logFilename)
+        puts "Error: Filtered log file doesn't exist: #{logFilename}"
         next
       end
 
       summaryData = File.read(jsonFilename)
-      RestClient.post('http://gazebosim.org/swarm/result', {
+      RestClient.post('http://swarm.gazebosim.org/swarm/result', {
         :pass => _pass,
         :result => JSON.parse(summaryData),
-        :upload => { :file => File.new(csvFilename, "rb") }
+        :upload => { :comms => File.new(commsFilename, "rb"),
+                     :log => File.new(logFilename, "rb")}
       })
     end
   end
@@ -679,10 +743,125 @@ class Runner
     FileUtils.cp_r("#{ENV['HOME']}/.gazebo/log", "#{@dir}/#{time}/gazebo")
 
     # Generate the reports
-    generate_reports("#{@dir}/#{time}/swarm")
+    generate_reports("#{@dir}/#{time}")
+
+    filter_gazebo_logs("#{@dir}/#{time}")
 
     # Upload the reports
-    upload_reports("#{@dir}/#{time}/swarm", @pass)
+    upload_reports("#{@dir}/#{time}", @pass)
+  end
+
+  #################################################
+  # Filter gazebo logs
+  def filter_gazebo_logs(_path)
+
+    # Get an array of all the logs to generate
+    reports = Dir.entries(File.join(_path, 'gazebo')).select{ |entry|
+      File.directory?(File.join(_path, 'gazebo', entry)) && entry != '.' && entry != '..'
+    }.collect{ |entry|
+      File.join(_path, 'gazebo', entry)
+    }
+
+    puts "Filter logs for:\n"
+    puts reports
+
+    reports.each do |report|
+      stateLog = "#{report}/gzserver/state.log"
+
+      # Read the log data
+      doc = Nokogiri::XML(File.read(stateLog))
+
+      # Get all the chunks
+      chunks = doc.xpath("//chunk")
+
+      result = []
+
+      # Process each chunk
+      chunks.each do |chunk|
+        # Get the cdata
+        cdata = chunk.children.find{|e| e.cdata?}
+
+        if cdata.nil?
+          next
+        end
+
+        # Decode from base64
+        binary = Base64.decode64(cdata.content)
+
+        # Inflate from zlib
+        raw = Zlib::Inflate.new.inflate(binary)
+
+        types = ["ground", "fixed", "rotor"]
+
+        # There are multiple <sdf> states in one chunk. So, process each <sdf
+        raw.split("<sdf ").each do |sdf|
+          if sdf.empty?
+            next
+          end
+
+          # Read the SDF
+          chunkXml = Nokogiri::XML("<sdf " + sdf)
+
+          # Get the simulation time
+          simTimeXml = chunkXml.xpath("//sim_time/text()").first
+          simTime = 0.0
+          if !simTimeXml.nil?
+            parts = simTimeXml.content.split(" ")
+            simTime = parts[0].to_f + parts[1].to_f * 1e-9
+          end
+
+          # Create new element in database
+          #swarmPos = swarm.swarm_positions.new({:time => simTime})
+          iter = {:time => simTime, :name=>[], :type => [], :pos => []}
+
+          # Process each type of vehicles
+          types.each_with_index do |vehicleType, index|
+
+            # Get all the vehicles of a type
+            searchString = "//model[starts-with(@name,'#{vehicleType}')]"
+            chunkXml.xpath(searchString).each do |vehicle|
+              # Name of the vehicle
+              name = vehicle.xpath("./@name").first.content.inspect
+
+              # Position of the vehicle
+              posXML = vehicle.xpath("./pose/text()")
+              pos = [0.0, 0.0]
+              if !posXML.nil? and !posXML.first.nil?
+                pos = posXML.first.content.split(" ")[0..1].collect { |p| p.to_f}
+              end
+
+              # Save the data
+              iter[:name].push(name.gsub!(/\A"|"\Z/, ''))
+              iter[:type].push(index)
+              iter[:pos].push(pos)
+            end
+          end
+
+          # Get the lost person
+          searchString = "//model[starts-with(@name,'lost_person')]/pose/text()"
+          posXML = chunkXml.xpath(searchString).first
+          pos = [0.0, 0.0]
+          if !posXML.nil? and !posXML.content.nil?
+            pos = posXML.content.split(" ")[0..1].collect { |p| p.to_f}
+          end
+
+          # Save the data
+          iter[:lost_person_x] = pos[0]
+          iter[:lost_person_y] = pos[1]
+
+          result.push(iter)
+        end
+      end
+
+      z = Zlib::Deflate.new
+      deflated = z.deflate(result.to_json.to_s, Zlib::FINISH)
+      z.close
+    
+      # Write compressed file
+      File.open("#{report}/gzserver/filtered.json.zip", 'w') do |file|
+        file.write(deflated)
+      end
+    end
   end
 
   #################################################
@@ -695,10 +874,10 @@ class Runner
              "swarm_comms_neighbors.gplot"]
 
     # Get an array of all the reports to generate
-    reports = Dir.entries(_path).select{ |entry|
-      File.directory?(File.join(_path, entry)) && entry != '.' && entry != '..'
+    reports = Dir.entries(File.join(_path, "swarm")).select{ |entry|
+      File.directory?(File.join(_path, "swarm", entry)) && entry != '.' && entry != '..'
     }.collect{ |entry|
-      File.join(_path, entry)
+      File.join(_path, "swarm", entry)
     }
 
     puts "Generate reports for:\n"
@@ -710,12 +889,13 @@ class Runner
       swarmLog = "#{report}/swarm.log"
       swarmSummaryTex = "#{report}/swarm_summary.tex"
       swarmCSV = "#{report}/swarm.csv"
+      swarmJson = "#{report}/swarm_comms.json.zip"
       swarmSummaryJson = "#{report}/summary.json"
 
       parser = LogParser.new(swarmLog)
 
       # Step 1: Create csv file
-      parser.to_csv(swarmCSV)
+      parser.to_comms(swarmCSV, swarmJson)
 
       # Step 2: Create the summary files
       parser.to_summary(swarmSummaryTex, swarmSummaryJson)
@@ -802,6 +982,11 @@ if __FILE__ == $0
     opts.on("-g DIR", "--generate-reports DIR", String,
             "Generate reports for a directory") do |n|
       options[:reports] = n
+    end
+
+    opts.on("-f DIR", "--filter DIR", String,
+            "Filter gazebo logs for a directory") do |n|
+      options[:filter] = n
     end
 
     opts.on("-u DIR", "--upload-reports DIR", String,
