@@ -17,6 +17,9 @@ set (broker_plugin_sources
 set (robot_plugin_sources
   RobotPlugin.cc
 )
+if (PYTHONLIBS_FOUND)
+  set (robot_plugin_sources ${robot_plugin_sources} python_api.cc)
+endif()
 
 set (lost_person_plugin_sources
   LostPersonPlugin.cc
@@ -58,10 +61,15 @@ ign_install_library(${PROJECT_LIB_BROKER_NAME})
 ign_add_library(${PROJECT_LIB_ROBOT_NAME}
                 ${robot_plugin_sources}
                 ${common_sources})
-target_link_libraries(${PROJECT_LIB_ROBOT_NAME}
-                      ${PROJECT_LIB_MSGS_NAME}
-                      ${PROTOBUF_LIBRARY}
-                      ${IGNITION-TRANSPORT_LIBRARIES})
+set(_libs_tmp ${PROJECT_LIB_MSGS_NAME}
+              ${PROTOBUF_LIBRARY}
+              ${IGNITION-TRANSPORT_LIBRARIES})
+if (PYTHONLIBS_FOUND)
+  set(_libs_tmp ${_libs_tmp} ${PYTHON_LIBRARIES})
+  target_include_directories(${PROJECT_LIB_ROBOT_NAME} PRIVATE ${PYTHON_INCLUDE_DIRS})
+  target_compile_definitions(${PROJECT_LIB_ROBOT_NAME} PRIVATE -DSWARM_PYTHON_API)
+endif()
+target_link_libraries(${PROJECT_LIB_ROBOT_NAME} ${_libs_tmp})
 ign_install_library(${PROJECT_LIB_ROBOT_NAME})
 
 # Create the libSwarmBooPlugin.so library.
