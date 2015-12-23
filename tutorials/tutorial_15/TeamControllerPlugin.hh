@@ -36,7 +36,7 @@ namespace swarm
   class TeamControllerPlugin : public swarm::RobotPlugin
   {
     /// \brief Class constructor.
-    public: TeamControllerPlugin();
+    public: TeamControllerPlugin() = default;
 
     /// \brief Class destructor.
     public: virtual ~TeamControllerPlugin() = default;
