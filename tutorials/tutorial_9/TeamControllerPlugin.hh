@@ -46,20 +46,6 @@ namespace swarm
 
     // Documentation inherited.
     private: virtual void Update(const gazebo::common::UpdateInfo &_info);
-
-    // Documentation inherited.
-    private: virtual void OnDataReceived(const std::string &_srcAddress,
-      const std::string &_dstAddress, const uint32_t _dstPort,
-      const std::string &_data);
-
-    /// \brief The last commands I sent to myself
-    private: ignition::math::Vector3d lastLinVel, lastAngVel;
-
-    /// \brief The last time at which I sent a command to myself
-    private: gazebo::common::Time lastCmdTime;
-
-    /// \brief List of messages that I've sent or relayed
-    private: std::list<std::string> messagesSent;
   };
 }
 
