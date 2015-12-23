@@ -15,11 +15,10 @@
  *
 */
 
+#include <Python.h>
 #include <unordered_map>
 
 #include "swarm/RobotPlugin.hh"
-
-#include <Python.h>
 
 using namespace swarm;
 
@@ -29,11 +28,11 @@ std::unordered_map<std::string, RobotPlugin*> robotPointers;
 static RobotPlugin*
 get_robot_pointer(const std::string &addr)
 {
-  char err_buf[1024];
   std::unordered_map<std::string, RobotPlugin*>::const_iterator it =
     robotPointers.find(addr);
-  if(it == robotPointers.end())
+  if (it == robotPointers.end())
   {
+    char err_buf[1024];
     snprintf(err_buf, sizeof(err_buf),
              "Unknown robot address: %s", addr.c_str());
     PyErr_SetString(PyExc_RuntimeError, err_buf);
@@ -52,12 +51,12 @@ robot_bind(PyObject *, PyObject *args)
   char* robot_addr;
   char* addr;
   int port;
-  if(!PyArg_ParseTuple(args, "ssi", &robot_addr, &addr, &port))
+  if (!PyArg_ParseTuple(args, "ssi", &robot_addr, &addr, &port))
     return NULL;
 
   // Send to the right controller.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     bool res = robot->Bind(&RobotPlugin::OnDataReceivedPython,
                            robot, std::string(addr), port);
@@ -75,12 +74,12 @@ robot_set_linear_velocity(PyObject *, PyObject *args)
 {
   char* robot_addr;
   float x, y, z;
-  if(!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
+  if (!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
     return NULL;
 
   // Send to the right controller.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     bool res = robot->SetLinearVelocity(ignition::math::Vector3d(x, y, z));
     return Py_BuildValue("b", res);
@@ -97,12 +96,12 @@ robot_set_angular_velocity(PyObject *, PyObject *args)
 {
   char* robot_addr;
   float x, y, z;
-  if(!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
+  if (!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
     return NULL;
 
   // Send to the right controller.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     bool res = robot->SetAngularVelocity(ignition::math::Vector3d(x, y, z));
     return Py_BuildValue("b", res);
@@ -118,12 +117,12 @@ static PyObject *
 robot_neighbors(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   // Send to the right controller.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     const std::vector<std::string> &neighbors = robot->Neighbors();
     PyObject *pArgs = PyTuple_New(neighbors.size());
@@ -148,13 +147,13 @@ robot_send_to(PyObject *, PyObject *args)
   char* robot_addr;
   char *data, *dest;
   int port;
-  if(!PyArg_ParseTuple(args, "sssi", &robot_addr, &data, &dest, &port))
+  if (!PyArg_ParseTuple(args, "sssi", &robot_addr, &data, &dest, &port))
     return NULL;
 
   // Send message
   // Send to the right controller.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     bool sent = robot->SendTo(std::string(data), std::string(dest), port);
     return Py_BuildValue("b", sent);
@@ -170,21 +169,21 @@ static PyObject *
 robot_pose(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   // Get pose and altitude.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     double latitude, longitude, altitude;
     robot->Pose(latitude, longitude, altitude);
-  
+
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
     PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", altitude));
-  
+
     return pArgs;
   }
   else
@@ -198,20 +197,20 @@ static PyObject *
 robot_boo_pose(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   // Get pose and altitude.
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     double latitude, longitude;
     robot->BooPose(latitude, longitude);
-  
+
     PyObject *pArgs = PyTuple_New(2);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
-  
+
     return pArgs;
   }
   else
@@ -225,19 +224,19 @@ static PyObject *
 robot_lost_person_dir(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   // Get direction
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     ignition::math::Vector2d dir = robot->LostPersonDir();
-  
+
     PyObject *pArgs = PyTuple_New(2);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("i", dir.X()));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", dir.Y()));
-  
+
     return pArgs;
   }
   else
@@ -251,17 +250,17 @@ static PyObject *
 robot_imu(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get IMU information.
     ignition::math::Vector3d linVel, angVel;
     ignition::math::Quaterniond orient;
     robot->Imu(linVel, angVel, orient);
-  
+
     // Return
     PyObject *pArgs = PyTuple_New(9);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("f", linVel.X()));
@@ -273,7 +272,7 @@ robot_imu(PyObject *, PyObject *args)
     PyTuple_SetItem(pArgs, 6, Py_BuildValue("f", orient.X()));
     PyTuple_SetItem(pArgs, 7, Py_BuildValue("f", orient.Y()));
     PyTuple_SetItem(pArgs, 8, Py_BuildValue("f", orient.Z()));
-  
+
     return pArgs;
   }
   else
@@ -287,11 +286,11 @@ static PyObject *
 robot_bearing(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get IMU information.
     ignition::math::Angle bearing;
@@ -311,22 +310,22 @@ static PyObject *
 robot_search_area(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get pose and altitude.
     double minLatitude, maxLatitude, minLongitude, maxLongitude;
     robot->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-  
+
     PyObject *pArgs = PyTuple_New(4);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", minLatitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", maxLatitude));
     PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", minLongitude));
     PyTuple_SetItem(pArgs, 3, Py_BuildValue("d", maxLongitude));
-  
+
     return pArgs;
   }
   else
@@ -340,11 +339,11 @@ static PyObject *
 robot_image(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!(PyArg_ParseTuple(args, "s", &robot_addr)))
+  if (!(PyArg_ParseTuple(args, "s", &robot_addr)))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     ImageData img;
     robot->Image(img);
@@ -375,16 +374,16 @@ static PyObject *
 robot_type(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get vehicle type
     RobotPlugin::VehicleType vtype = robot->Type();
     std::string vtypeString;
-    switch(vtype)
+    switch (vtype)
     {
       case RobotPlugin::GROUND:
         vtypeString = "ground";
@@ -417,16 +416,16 @@ static PyObject *
 robot_terrain_type(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get vehicle type
     TerrainType ttype = robot->Terrain();
     std::string ttypeString;
-    switch(ttype)
+    switch (ttype)
     {
       case PLAIN:
         ttypeString = "plain";
@@ -456,11 +455,11 @@ static PyObject *
 robot_host(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get host
     std::string host = robot->Host();
@@ -478,11 +477,11 @@ static PyObject *
 robot_name(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Get host
     std::string name = robot->Name();
@@ -500,11 +499,11 @@ static PyObject *
 robot_launch(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Launch
     robot->Launch();
@@ -523,11 +522,11 @@ robot_dock(PyObject *, PyObject *args)
 {
   char* target;
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "ss", &robot_addr, &target))
+  if (!PyArg_ParseTuple(args, "ss", &robot_addr, &target))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Launch
     bool res = robot->Dock(std::string(target));
@@ -545,11 +544,11 @@ static PyObject *
 robot_is_docked(PyObject *, PyObject *args)
 {
   char* robot_addr;
-  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+  if (!PyArg_ParseTuple(args, "s", &robot_addr))
     return NULL;
 
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
-  if(robot)
+  if (robot)
   {
     // Launch
     bool docked = robot->IsDocked();
@@ -568,7 +567,7 @@ robot_gzmsg(PyObject *, PyObject *args)
 {
   char *message;
 
-  if(!PyArg_ParseTuple(args, "s", &message))
+  if (!PyArg_ParseTuple(args, "s", &message))
     return NULL;
 
   // Print
@@ -584,7 +583,7 @@ robot_gzerr(PyObject *, PyObject *args)
 {
   char *message;
 
-  if(!PyArg_ParseTuple(args, "s", &message))
+  if (!PyArg_ParseTuple(args, "s", &message))
     return NULL;
 
   // Print
@@ -600,7 +599,7 @@ robot_gzlog(PyObject *, PyObject *args)
 {
   char *message;
 
-  if(!PyArg_ParseTuple(args, "s", &message))
+  if (!PyArg_ParseTuple(args, "s", &message))
     return NULL;
 
   // Print
@@ -612,27 +611,49 @@ robot_gzlog(PyObject *, PyObject *args)
  * Python methods to call c++.
  */
 PyMethodDef EmbMethods[] = {
-        {"bind",                 robot_bind,                 METH_VARARGS, "Bind."},
-        {"set_linear_velocity",  robot_set_linear_velocity,  METH_VARARGS, "Linear velocity."},
-        {"set_angular_velocity", robot_set_angular_velocity, METH_VARARGS, "Angular velocity."},
-        {"send_to",              robot_send_to,              METH_VARARGS, "Send message to."},
-        {"neighbors",            robot_neighbors,            METH_VARARGS, "Neighbors."},
-        {"pose",                 robot_pose,                 METH_VARARGS, "Robot pose using GPS."},
-        {"imu",                  robot_imu,                  METH_VARARGS, "Robot IMU."},
-        {"bearing",              robot_bearing,              METH_VARARGS, "Robot bearing."},
-        {"search_area",          robot_search_area,          METH_VARARGS, "Search area for GPS."},
-        {"image",                robot_image,                METH_VARARGS, "Logic camera."},
-        {"type",                 robot_type,                 METH_VARARGS, "Vehicle type."},
-        {"host",                 robot_host,                 METH_VARARGS, "Vehicle host."},
-        {"name",                 robot_name,                 METH_VARARGS, "Vehicle name."},
-        {"launch",               robot_launch,               METH_VARARGS, "Launch vehicle."},
-        {"dock",                 robot_dock,                 METH_VARARGS, "Dock vehicle."},
-        {"is_docked",            robot_is_docked,            METH_VARARGS, "Is vehicle docked."},
-        {"boo_pose",             robot_boo_pose,             METH_VARARGS, "BOO pose."},
-        {"terrain_type",         robot_terrain_type,         METH_VARARGS, "Terrain type."},
-        {"lost_person_dir",      robot_lost_person_dir,      METH_VARARGS, "Lost person direction."},
-        {"gzmsg",                robot_gzmsg,                METH_VARARGS, "Print gazebo message."},
-        {"gzerr",                robot_gzerr,                METH_VARARGS, "Print gazebo error."},
-        {"gzlog",                robot_gzlog,                METH_VARARGS, "Gazebo log."},
+        {"bind",                 robot_bind,
+          METH_VARARGS, "Bind."},
+        {"set_linear_velocity",  robot_set_linear_velocity,
+          METH_VARARGS, "Linear velocity."},
+        {"set_angular_velocity", robot_set_angular_velocity,
+          METH_VARARGS, "Angular velocity."},
+        {"send_to",              robot_send_to,
+          METH_VARARGS, "Send message to."},
+        {"neighbors",            robot_neighbors,
+          METH_VARARGS, "Neighbors."},
+        {"pose",                 robot_pose,
+          METH_VARARGS, "Robot pose using GPS."},
+        {"imu",                  robot_imu,
+          METH_VARARGS, "Robot IMU."},
+        {"bearing",              robot_bearing,
+          METH_VARARGS, "Robot bearing."},
+        {"search_area",          robot_search_area,
+          METH_VARARGS, "Search area for GPS."},
+        {"image",                robot_image,
+          METH_VARARGS, "Logic camera."},
+        {"type",                 robot_type,
+          METH_VARARGS, "Vehicle type."},
+        {"host",                 robot_host,
+          METH_VARARGS, "Vehicle host."},
+        {"name",                 robot_name,
+          METH_VARARGS, "Vehicle name."},
+        {"launch",               robot_launch,
+          METH_VARARGS, "Launch vehicle."},
+        {"dock",                 robot_dock,
+          METH_VARARGS, "Dock vehicle."},
+        {"is_docked",            robot_is_docked,
+          METH_VARARGS, "Is vehicle docked."},
+        {"boo_pose",             robot_boo_pose,
+          METH_VARARGS, "BOO pose."},
+        {"terrain_type",         robot_terrain_type,
+          METH_VARARGS, "Terrain type."},
+        {"lost_person_dir",      robot_lost_person_dir,
+          METH_VARARGS, "Lost person direction."},
+        {"gzmsg",                robot_gzmsg,
+          METH_VARARGS, "Print gazebo message."},
+        {"gzerr",                robot_gzerr,
+          METH_VARARGS, "Print gazebo error."},
+        {"gzlog",                robot_gzlog,
+          METH_VARARGS, "Gazebo log."},
         {NULL, NULL, 0, NULL}
 };

@@ -85,8 +85,8 @@ bool RobotPlugin::LoadPython(const std::string &_module,
     "can't initialize Python for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
-  if(!this->pInitialized)
+  std::lock_guard<std::mutex> lock(this->pMutex);
+  if (!this->pInitialized)
   {
     gzmsg << "Initializing Python" << std::endl;
     Py_Initialize();
@@ -94,9 +94,9 @@ bool RobotPlugin::LoadPython(const std::string &_module,
 
     // Import user's module
     PyObject* pName = PyString_FromString(_module.c_str());
-    this->pModule = (void*)PyImport_Import(pName);
+    this->pModule = reinterpret_cast<void*>(PyImport_Import(pName));
     Py_DECREF(pName);
-    if(this->pModule == NULL)
+    if (this->pModule == NULL)
     {
       PyErr_Print();
       return false;
@@ -104,18 +104,20 @@ bool RobotPlugin::LoadPython(const std::string &_module,
 
     // Python update function.
     this->pUpdateFunc =
-      (void*)PyObject_GetAttrString((PyObject*)this->pModule,
-                                    _update.c_str());
-    if(this->pUpdateFunc == NULL)
+      reinterpret_cast<void*>(PyObject_GetAttrString(
+            reinterpret_cast<PyObject*>(this->pModule), _update.c_str()));
+    if (this->pUpdateFunc == NULL)
     {
       PyErr_Print();
       return false;
     }
     // On data received function.
     this->pOnDataReceivedFunc =
-      (void*)PyObject_GetAttrString((PyObject*)this->pModule,
-                                    _onDataReceived.c_str());
-    if(this->pOnDataReceivedFunc == NULL)
+      reinterpret_cast<void*>(PyObject_GetAttrString(
+            reinterpret_cast<PyObject*>(this->pModule),
+            _onDataReceived.c_str()));
+
+    if (this->pOnDataReceivedFunc == NULL)
     {
       PyErr_Print();
       return false;
@@ -129,9 +131,9 @@ bool RobotPlugin::LoadPython(const std::string &_module,
   // Call the given load method once for every robot
   // Load function
   PyObject* pLoad =
-    PyObject_GetAttrString((PyObject*)this->pModule,
+    PyObject_GetAttrString(reinterpret_cast<PyObject*>(this->pModule),
                            _load.c_str());
-  if(pLoad == NULL)
+  if (pLoad == NULL)
   {
     PyErr_Print();
     return false;
@@ -140,7 +142,7 @@ bool RobotPlugin::LoadPython(const std::string &_module,
   // Robot address
   PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyObject *res = PyObject_CallObject(pLoad, pArgs);
-  if(res == NULL)
+  if (res == NULL)
   {
     PyErr_Print();
     return false;
@@ -158,8 +160,8 @@ void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
     "can't call Python Update for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
-  if(!this->pInitialized)
+  std::lock_guard<std::mutex> lock(this->pMutex);
+  if (!this->pInitialized)
     return;
   PyObject *pArgs = PyTuple_New(4);
   // Robot address
@@ -170,8 +172,9 @@ void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
   PyTuple_SetItem(pArgs, 3, PyFloat_FromDouble(_info.realTime.Double()));
 
   // Call UPDATE function in python.
-  PyObject *res = PyObject_CallObject((PyObject*)this->pUpdateFunc, pArgs);
-  if(res == NULL)
+  PyObject *res = PyObject_CallObject(
+      reinterpret_cast<PyObject*>(this->pUpdateFunc), pArgs);
+  if (res == NULL)
     PyErr_Print();
 #endif
 }
@@ -188,9 +191,9 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
     this->address << std::endl;
   return false;
 #else
-  if(!this->pInitialized)
+  if (!this->pInitialized)
     return;
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   PyObject *pArgs = PyTuple_New(5);
   PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyTuple_SetItem(pArgs, 1, PyString_FromString(_srcAddress.c_str()));
@@ -199,8 +202,10 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
   PyTuple_SetItem(pArgs, 4, PyString_FromString(_data.c_str()));
 
   // Call UPDATE function in python.
-  PyObject *res = PyObject_CallObject((PyObject*)this->pOnDataReceivedFunc, pArgs);
-  if(res == NULL)
+  PyObject *res =
+    PyObject_CallObject(reinterpret_cast<PyObject*>(this->pOnDataReceivedFunc),
+        pArgs);
+  if (res == NULL)
       PyErr_Print();
 #endif
 }

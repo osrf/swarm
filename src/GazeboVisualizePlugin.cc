@@ -35,6 +35,11 @@ namespace po = boost::program_options;
 GZ_REGISTER_SYSTEM_PLUGIN(GazeboVisualizePlugin)
 
 /////////////////////////////////////////////
+GazeboVisualizePlugin::GazeboVisualizePlugin()
+{
+}
+
+/////////////////////////////////////////////
 GazeboVisualizePlugin::~GazeboVisualizePlugin()
 {
 }
@@ -102,11 +107,9 @@ void GazeboVisualizePlugin::OnWorldCreated()
     this->terrain =
       boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
           terrainModel->GetLink()->GetCollision("collision")->GetShape());
-
   }
   else
     gzerr << "Invalid terrain\n";
-
 }
 
 /////////////////////////////////////////////
@@ -137,17 +140,20 @@ void GazeboVisualizePlugin::VisualizeSearchArea()
 
   ignition::math::Vector3d pt2 =
     this->world->GetSphericalCoordinates()->LocalFromSpherical(
-        ignition::math::Vector3d(this->searchMinLatitude, this->searchMaxLongitude, 0));
+        ignition::math::Vector3d(this->searchMinLatitude,
+          this->searchMaxLongitude, 0));
   pt2 = this->world->GetSphericalCoordinates()->GlobalFromLocal(pt2);
 
   ignition::math::Vector3d pt3 =
     this->world->GetSphericalCoordinates()->LocalFromSpherical(
-        ignition::math::Vector3d(this->searchMaxLatitude, this->searchMaxLongitude, 0));
+        ignition::math::Vector3d(this->searchMaxLatitude,
+          this->searchMaxLongitude, 0));
   pt3 = this->world->GetSphericalCoordinates()->GlobalFromLocal(pt3);
 
   ignition::math::Vector3d pt4 =
     this->world->GetSphericalCoordinates()->LocalFromSpherical(
-        ignition::math::Vector3d(this->searchMaxLatitude, this->searchMinLongitude, 0));
+        ignition::math::Vector3d(this->searchMaxLatitude,
+          this->searchMinLongitude, 0));
   pt4 = this->world->GetSphericalCoordinates()->GlobalFromLocal(pt4);
 
 
@@ -207,7 +213,8 @@ void GazeboVisualizePlugin::VisualizeSearchArea()
   for (double lat = this->searchMinLatitude; lat < this->searchMaxLatitude;
       lat += stepLat)
   {
-    for (double lon = this->searchMinLongitude; lon < this->searchMaxLongitude; lon += stepLon)
+    for (double lon = this->searchMinLongitude;
+         lon < this->searchMaxLongitude; lon += stepLon)
     {
       this->MapQuery(lat, lon, elevation, terrainType);
 
@@ -415,7 +422,8 @@ void GazeboVisualizePlugin::VisualizeNeighbors(swarm::msgs::LogEntry &_logEntry)
           ignition::math::Vector3d(radius * cos(t), radius * sin(t), 20.0));
     }
     gazebo::msgs::Set(markerMsg.add_point(),
-          ignition::math::Vector3d(radius * cos(2*M_PI), radius * sin(2*M_PI), 20.0));
+          ignition::math::Vector3d(radius * cos(2*M_PI),
+            radius * sin(2*M_PI), 20.0));
 
     this->markerPub->Publish(markerMsg);
 
@@ -467,7 +475,8 @@ void GazeboVisualizePlugin::Update()
         this->terrain->GetSize().y /
         (this->terrain->GetVertexCount().y-1));
 
-    std::cout << "TerrainSize[" << this->terrainSize << "] Scal[" << this->terrainScaling << "]\n";
+    std::cout << "TerrainSize[" << this->terrainSize << "] Scal["
+      << this->terrainScaling << "]\n";
     this->CreateLostPersonMarker();
     this->VisualizeSearchArea();
     first = false;

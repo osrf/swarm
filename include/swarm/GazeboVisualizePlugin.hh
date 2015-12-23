@@ -24,8 +24,11 @@
 
 namespace gazebo
 {
-  class GAZEBO_VISIBLE GazeboVisualizePlugin : public SystemPlugin
+  class GazeboVisualizePlugin : public SystemPlugin
   {
+    /// \brief Constructor
+    public: GazeboVisualizePlugin();
+
     /// \brief The types of terrain.
     public: enum TerrainType
             {
@@ -125,6 +128,5 @@ namespace gazebo
     /// \brief Min/max lat/long of search area.
     private: double searchMinLatitude, searchMaxLatitude,
                     searchMinLongitude, searchMaxLongitude;
-
   };
 }
