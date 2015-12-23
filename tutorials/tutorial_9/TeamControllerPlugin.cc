@@ -31,12 +31,6 @@ using namespace swarm;
 GZ_REGISTER_MODEL_PLUGIN(TeamControllerPlugin)
 
 //////////////////////////////////////////////////
-TeamControllerPlugin::TeamControllerPlugin()
-  : RobotPlugin()
-{
-}
-
-//////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
   this->LoadPython("mycontroller", "myload", "myupdate", "myondatareceived");
