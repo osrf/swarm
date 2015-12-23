@@ -1,5 +1,8 @@
 include (${project_cmake_dir}/Utils.cmake)
 
+set (gazebo_visualize_sources 
+)
+
 set (common_sources ${common_sources}
   Common.cc
   Broker.cc
@@ -86,3 +89,10 @@ target_link_libraries(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME}
                       ${PROTOBUF_LIBRARY}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME})
+
+# ign_add_library(GazeboVisualizePlugin GazeboVisualizePlugin.cc)
+# target_link_libraries(GazeboVisualizePlugin 
+#   ${PROJECT_LIB_MSGS_NAME}
+#   ${PROTOBUF_LIBRARY}
+#   ${IGNITION-TRANSPORT_LIBRARIES})
+# ign_install_library(GazeboVisualizePlugin )
