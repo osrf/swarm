@@ -89,7 +89,6 @@ bool RobotPlugin::LoadPython(const std::string &_module,
   if(!this->pInitialized)
   {
     gzmsg << "Initializing Python" << std::endl;
-    this->pInitialized = true;
     Py_Initialize();
     Py_InitModule("swarm", EmbMethods);
 
@@ -121,10 +120,11 @@ bool RobotPlugin::LoadPython(const std::string &_module,
       PyErr_Print();
       return false;
     }
+    this->pInitialized = true;
   }
 
   // Put this robot in the list used by Python
-  robotPointers[this->Host()] = this;
+  robotPointers[this->Name()] = this;
 
   // Call the given load method once for every robot
   // Load function
@@ -138,7 +138,7 @@ bool RobotPlugin::LoadPython(const std::string &_module,
   }
   PyObject *pArgs = PyTuple_New(1);
   // Robot address
-  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyObject *res = PyObject_CallObject(pLoad, pArgs);
   if(res == NULL)
   {
@@ -159,9 +159,11 @@ void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
   return false;
 #else
   std::lock_guard<std::mutex> lock(this->pMutex); 
+  if(!this->pInitialized)
+    return;
   PyObject *pArgs = PyTuple_New(4);
   // Robot address
-  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   // contents of _info
   PyTuple_SetItem(pArgs, 1, PyString_FromString(_info.worldName.c_str()));
   PyTuple_SetItem(pArgs, 2, PyFloat_FromDouble(_info.simTime.Double()));
@@ -186,9 +188,11 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
     this->address << std::endl;
   return false;
 #else
+  if(!this->pInitialized)
+    return;
   std::lock_guard<std::mutex> lock(this->pMutex); 
   PyObject *pArgs = PyTuple_New(5);
-  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyTuple_SetItem(pArgs, 1, PyString_FromString(_srcAddress.c_str()));
   PyTuple_SetItem(pArgs, 2, PyString_FromString(_dstAddress.c_str()));
   PyTuple_SetItem(pArgs, 3, PyInt_FromLong(_dstPort));

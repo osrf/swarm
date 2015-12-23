@@ -39,6 +39,7 @@ TeamControllerPlugin::TeamControllerPlugin()
 //////////////////////////////////////////////////
 void TeamControllerPlugin::Load(sdf::ElementPtr _sdf)
 {
+  this->LoadPython("mycontroller", "myload", "myupdate", "myondatareceived");
 }
 
 //////////////////////////////////////////////////

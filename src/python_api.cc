@@ -26,9 +26,6 @@ using namespace swarm;
 // Track the robot pointers
 std::unordered_map<std::string, RobotPlugin*> robotPointers;
 
-RobotPlugin *tcplugins[1000];
-
-
 static RobotPlugin*
 get_robot_pointer(const std::string &addr)
 {
@@ -62,9 +59,9 @@ robot_bind(PyObject *, PyObject *args)
   RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
   if(robot)
   {
-    robot->Bind(&RobotPlugin::OnDataReceivedPython,
-                robot, std::string(addr), port);
-    Py_RETURN_NONE;
+    bool res = robot->Bind(&RobotPlugin::OnDataReceivedPython,
+                           robot, std::string(addr), port);
+    return Py_BuildValue("b", res);
   }
   else
     return NULL;
@@ -74,28 +71,44 @@ robot_bind(PyObject *, PyObject *args)
  * Python function for: Set linear velocity
  */
 static PyObject *
-robot_set_linear_velocity(PyObject *, PyObject *args) {
-  int robot_id;
+robot_set_linear_velocity(PyObject *, PyObject *args)
+{
+  char* robot_addr;
   float x, y, z;
-  PyArg_ParseTuple(args, "ifff", &robot_id, &x, &y, &z);
+  if(!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
+    return NULL;
 
   // Send to the right controller.
-  tcplugins[robot_id]->SetLinearVelocity(ignition::math::Vector3d(x, y, z));
-  return Py_BuildValue("i", robot_id);
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    bool res = robot->SetLinearVelocity(ignition::math::Vector3d(x, y, z));
+    return Py_BuildValue("b", res);
+  }
+  else
+    return NULL;
 }
 
 /**
  * Python function for: Set angular velocity
  */
 static PyObject *
-robot_set_angular_velocity(PyObject *, PyObject *args) {
-  int robot_id;
+robot_set_angular_velocity(PyObject *, PyObject *args)
+{
+  char* robot_addr;
   float x, y, z;
-  PyArg_ParseTuple(args, "ifff", &robot_id, &x, &y, &z);
+  if(!PyArg_ParseTuple(args, "sfff", &robot_addr, &x, &y, &z))
+    return NULL;
 
   // Send to the right controller.
-  tcplugins[robot_id]->SetAngularVelocity(ignition::math::Vector3d(x, y, z));
-  return Py_BuildValue("i", robot_id);
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    bool res = robot->SetAngularVelocity(ignition::math::Vector3d(x, y, z));
+    return Py_BuildValue("b", res);
+  }
+  else
+    return NULL;
 }
 
 /**
@@ -154,233 +167,445 @@ robot_send_to(PyObject *, PyObject *args)
  * Python function for: ask for GPS localization.
  */
 static PyObject *
-robot_pose(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
+robot_pose(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
 
   // Get pose and altitude.
-  double latitude, longitude, altitude;
-  tcplugins[robot_id]->Pose(latitude, longitude, altitude);
-
-  PyObject *pArgs = PyTuple_New(3);
-  PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
-  PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
-  PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", altitude));
-
-
-  return pArgs;
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    double latitude, longitude, altitude;
+    robot->Pose(latitude, longitude, altitude);
+  
+    PyObject *pArgs = PyTuple_New(3);
+    PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
+    PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
+    PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", altitude));
+  
+    return pArgs;
+  }
+  else
+    return NULL;
 }
 
 /**
  * Python function for: ask for GPS localization.
  */
 static PyObject *
-robot_gazebo_pose(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
-
-  // For localization MODEL Type
-  std::string model_type = "rotor_";
-
-  switch (tcplugins[robot_id]->Type()) {
-    case RobotPlugin::VehicleType::GROUND: {  // GROUND
-      model_type = "ground_";
-      break;
-    }
-    case  RobotPlugin::VehicleType::ROTOR: {   //ROTOR
-      model_type = "rotor_";
-      break;
-    }
-    case  RobotPlugin::VehicleType::FIXED_WING: {   //ROTOR
-      model_type = "fixed_wing_";
-      break;
-    }
-    default: {
-      gzerr << "Unknown vehicle type[" << tcplugins[robot_id]->Type() << "]\n";
-      break;
-    }
-  };
-
-
-  std::string model_id = model_type + std::to_string(robot_id);
-
-  gazebo::physics::ModelPtr gazebo_model = gazebo::physics::get_world()->GetModel(model_id);
-  double rx = gazebo_model->GetWorldPose().pos.x;
-  double ry = gazebo_model->GetWorldPose().pos.y;
-  double rz = gazebo_model->GetWorldPose().pos.z;
-//
-//
-  double rrx = gazebo_model->GetWorldPose().rot.GetAsEuler().x;
-  double rry = gazebo_model->GetWorldPose().rot.GetAsEuler().y;
-  double rrz = gazebo_model->GetWorldPose().rot.GetAsEuler().z;
-//
-//
-  PyObject *pArgs = PyTuple_New(6);
-  PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", rx));
-  PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", ry));
-  PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", rz));
-  PyTuple_SetItem(pArgs, 3, Py_BuildValue("d", rrx));
-  PyTuple_SetItem(pArgs, 4, Py_BuildValue("d", rry));
-  PyTuple_SetItem(pArgs, 5, Py_BuildValue("d", rrz));
-
-
-  return pArgs;
-}
-
-/**
- * Python function for: ask for IMU.
- */
-static PyObject *
-robot_imu(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
-
-
-  // Get IMU information.
-  ignition::math::Vector3d linVel, angVel;
-  ignition::math::Quaterniond orient;
-  tcplugins[robot_id]->Imu(linVel, angVel, orient);
-
-  // Return
-  PyObject *pArgs = PyTuple_New(9);
-  PyTuple_SetItem(pArgs, 0, Py_BuildValue("f", linVel.X()));
-  PyTuple_SetItem(pArgs, 1, Py_BuildValue("f", linVel.Y()));
-  PyTuple_SetItem(pArgs, 2, Py_BuildValue("f", linVel.Z()));
-  PyTuple_SetItem(pArgs, 3, Py_BuildValue("f", angVel.X()));
-  PyTuple_SetItem(pArgs, 4, Py_BuildValue("f", angVel.Y()));
-  PyTuple_SetItem(pArgs, 5, Py_BuildValue("f", angVel.Z()));
-  PyTuple_SetItem(pArgs, 6, Py_BuildValue("f", orient.X()));
-  PyTuple_SetItem(pArgs, 7, Py_BuildValue("f", orient.Y()));
-  PyTuple_SetItem(pArgs, 8, Py_BuildValue("f", orient.Z()));
-
-
-  return pArgs;
-}
-
-
-/**
- * Python function for: ask for IMU.
- */
-static PyObject *
-robot_bearing(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
-
-
-  // Get IMU information.
-  ignition::math::Angle bearing;
-  tcplugins[robot_id]->Bearing(bearing);
-
-  // Return
-  return Py_BuildValue("f", bearing.Radian());
-}
-
-
-/**
- * Python function for: SearchArea function.
- */
-static PyObject *
-robot_search_area(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
+robot_boo_pose(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
 
   // Get pose and altitude.
-  double minLatitude, maxLatitude, minLongitude, maxLongitude;
-  tcplugins[robot_id]->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-
-  PyObject *pArgs = PyTuple_New(4);
-  PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", minLatitude));
-  PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", maxLatitude));
-  PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", minLongitude));
-  PyTuple_SetItem(pArgs, 3, Py_BuildValue("d", maxLongitude));
-
-  return pArgs;
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    double latitude, longitude;
+    robot->BooPose(latitude, longitude);
+  
+    PyObject *pArgs = PyTuple_New(2);
+    PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
+    PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
+  
+    return pArgs;
+  }
+  else
+    return NULL;
 }
 
+/**
+ * Python function for: ask for lost person direction
+ */
+static PyObject *
+robot_lost_person_dir(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  // Get direction
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    ignition::math::Vector2d dir = robot->LostPersonDir();
+  
+    PyObject *pArgs = PyTuple_New(2);
+    PyTuple_SetItem(pArgs, 0, Py_BuildValue("i", dir.X()));
+    PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", dir.Y()));
+  
+    return pArgs;
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: ask for IMU.
+ */
+static PyObject *
+robot_imu(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get IMU information.
+    ignition::math::Vector3d linVel, angVel;
+    ignition::math::Quaterniond orient;
+    robot->Imu(linVel, angVel, orient);
+  
+    // Return
+    PyObject *pArgs = PyTuple_New(9);
+    PyTuple_SetItem(pArgs, 0, Py_BuildValue("f", linVel.X()));
+    PyTuple_SetItem(pArgs, 1, Py_BuildValue("f", linVel.Y()));
+    PyTuple_SetItem(pArgs, 2, Py_BuildValue("f", linVel.Z()));
+    PyTuple_SetItem(pArgs, 3, Py_BuildValue("f", angVel.X()));
+    PyTuple_SetItem(pArgs, 4, Py_BuildValue("f", angVel.Y()));
+    PyTuple_SetItem(pArgs, 5, Py_BuildValue("f", angVel.Z()));
+    PyTuple_SetItem(pArgs, 6, Py_BuildValue("f", orient.X()));
+    PyTuple_SetItem(pArgs, 7, Py_BuildValue("f", orient.Y()));
+    PyTuple_SetItem(pArgs, 8, Py_BuildValue("f", orient.Z()));
+  
+    return pArgs;
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: ask for IMU.
+ */
+static PyObject *
+robot_bearing(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get IMU information.
+    ignition::math::Angle bearing;
+    robot->Bearing(bearing);
+
+    // Return
+    return Py_BuildValue("f", bearing.Radian());
+  }
+  else
+    return NULL;
+}
 
 /**
  * Python function for: SearchArea function.
  */
 static PyObject *
-robot_camera(PyObject *, PyObject *args) {
-  int robot_id;
-  PyArg_ParseTuple(args, "i", &robot_id);
+robot_search_area(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
 
-  // Get the camera information
-  ImageData img;
-  if (tcplugins[robot_id]->Image(img)) {
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get pose and altitude.
+    double minLatitude, maxLatitude, minLongitude, maxLongitude;
+    robot->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+  
+    PyObject *pArgs = PyTuple_New(4);
+    PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", minLatitude));
+    PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", maxLatitude));
+    PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", minLongitude));
+    PyTuple_SetItem(pArgs, 3, Py_BuildValue("d", maxLongitude));
+  
+    return pArgs;
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: image function.
+ */
+static PyObject *
+robot_image(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!(PyArg_ParseTuple(args, "s", &robot_addr)))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    ImageData img;
+    robot->Image(img);
     PyObject *camera_locs = PyTuple_New(img.objects.size());
     int i = 0;
-    for (auto const obj : img.objects) {
-      PyObject *camera_obj = PyTuple_New(1);
+    for (auto const obj : img.objects)
+    {
+      PyObject *camera_obj = PyTuple_New(2);
       PyTuple_SetItem(camera_obj, 0, Py_BuildValue("s", obj.first.c_str()));
-      // TODO obtain pose
-      //double x, y, z, p, r, ya;
-//      obj.second.Pose3(x, y, z, p, r, ya);
-//      PyTuple_SetItem(camera_obj, 1, Py_BuildValue("d", x));
-//      PyTuple_SetItem(camera_obj, 2, Py_BuildValue("d", y));
-//      PyTuple_SetItem(camera_obj, 3, Py_BuildValue("d", z));
-//      PyTuple_SetItem(camera_obj, 4, Py_BuildValue("d", p));
-//      PyTuple_SetItem(camera_obj, 5, Py_BuildValue("d", r));
-//      PyTuple_SetItem(camera_obj, 6, Py_BuildValue("d", ya));
-//
-
+      ignition::math::Pose3d pose = robot->CameraToWorld(obj.second);
+      PyObject *obj_pos = PyTuple_New(3);
+      PyTuple_SetItem(obj_pos, 0, Py_BuildValue("d", pose.Pos().X()));
+      PyTuple_SetItem(obj_pos, 1, Py_BuildValue("d", pose.Pos().Y()));
+      PyTuple_SetItem(obj_pos, 2, Py_BuildValue("d", pose.Pos().Z()));
+      PyTuple_SetItem(camera_obj, 1, obj_pos);
       PyTuple_SetItem(camera_locs, i++, camera_obj);
     }
     return camera_locs;
   }
-
-
-  return Py_BuildValue("i", -1);
+  else
+    return NULL;
 }
 
+/**
+ * Python function for: vehicle type
+ */
+static PyObject *
+robot_type(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get vehicle type
+    RobotPlugin::VehicleType vtype = robot->Type();
+    std::string vtypeString;
+    switch(vtype)
+    {
+      case RobotPlugin::GROUND:
+        vtypeString = "ground";
+        break;
+      case RobotPlugin::ROTOR:
+        vtypeString = "rotor";
+        break;
+      case RobotPlugin::FIXED_WING:
+        vtypeString = "fixed_wing";
+        break;
+      case RobotPlugin::BOO:
+        vtypeString = "boo";
+        break;
+      default:
+        PyErr_SetString(PyExc_RuntimeError, "unknown vehicle type");
+        return NULL;
+    }
+
+    // Return
+    return Py_BuildValue("s", vtypeString.c_str());
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: terrain type
+ */
+static PyObject *
+robot_terrain_type(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get vehicle type
+    TerrainType ttype = robot->Terrain();
+    std::string ttypeString;
+    switch(ttype)
+    {
+      case PLAIN:
+        ttypeString = "plain";
+        break;
+      case FOREST:
+        ttypeString = "forest";
+        break;
+      case BUILDING:
+        ttypeString = "building";
+        break;
+      default:
+        PyErr_SetString(PyExc_RuntimeError, "unknown terrain type");
+        return NULL;
+    }
+
+    // Return
+    return Py_BuildValue("s", ttypeString.c_str());
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: host
+ */
+static PyObject *
+robot_host(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get host
+    std::string host = robot->Host();
+    // Return
+    return Py_BuildValue("s", host.c_str());
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: name
+ */
+static PyObject *
+robot_name(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Get host
+    std::string name = robot->Name();
+    // Return
+    return Py_BuildValue("s", name.c_str());
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: launch
+ */
+static PyObject *
+robot_launch(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Launch
+    robot->Launch();
+    // Return
+    Py_RETURN_NONE;
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: dock
+ */
+static PyObject *
+robot_dock(PyObject *, PyObject *args)
+{
+  char* target;
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "ss", &robot_addr, &target))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Launch
+    bool res = robot->Dock(std::string(target));
+    // Return
+    return Py_BuildValue("b", res);
+  }
+  else
+    return NULL;
+}
+
+/**
+ * Python function for: is docked
+ */
+static PyObject *
+robot_is_docked(PyObject *, PyObject *args)
+{
+  char* robot_addr;
+  if(!PyArg_ParseTuple(args, "s", &robot_addr))
+    return NULL;
+
+  RobotPlugin* robot = get_robot_pointer(std::string(robot_addr));
+  if(robot)
+  {
+    // Launch
+    bool docked = robot->IsDocked();
+    // Return
+    return Py_BuildValue("b", docked);
+  }
+  else
+    return NULL;
+}
 
 /**
  * Python function for: print gazebo logging messages.
  */
 static PyObject *
-robot_gzmsg(PyObject *, PyObject *args) {
-  int robot_id;
+robot_gzmsg(PyObject *, PyObject *args)
+{
   char *message;
 
-  // Get arguments
-  PyArg_ParseTuple(args, "is", &robot_id, &message);
+  if(!PyArg_ParseTuple(args, "s", &message))
+    return NULL;
 
   // Print
-  gzmsg << message << "\n";
-  return Py_BuildValue("i", -1);
+  gzmsg << message << std::endl;
+  Py_RETURN_NONE;
 }
 
 /**
  * Python function for: print gazebo logging messages.
  */
 static PyObject *
-robot_gzerr(PyObject *, PyObject *args) {
-  int robot_id;
+robot_gzerr(PyObject *, PyObject *args)
+{
   char *message;
 
-  // Get arguments
-  PyArg_ParseTuple(args, "is", &robot_id, &message);
+  if(!PyArg_ParseTuple(args, "s", &message))
+    return NULL;
 
   // Print
-  gzerr << message << "\n";
-  return Py_BuildValue("i", -1);
+  gzerr << message << std::endl;
+  Py_RETURN_NONE;
 }
 
 /**
  * Python function for: print gazebo logging messages.
  */
 static PyObject *
-robot_gzlog(PyObject *, PyObject *args) {
-  int robot_id;
+robot_gzlog(PyObject *, PyObject *args)
+{
   char *message;
 
-  // Get arguments
-  PyArg_ParseTuple(args, "is", &robot_id, &message);
+  if(!PyArg_ParseTuple(args, "s", &message))
+    return NULL;
 
   // Print
-  gzlog << message << "\n";
-  return Py_BuildValue("i", -1);
+  gzlog << message << std::endl;
+  Py_RETURN_NONE;
 }
 
 /**
@@ -396,8 +621,16 @@ PyMethodDef EmbMethods[] = {
         {"imu",                  robot_imu,                  METH_VARARGS, "Robot IMU."},
         {"bearing",              robot_bearing,              METH_VARARGS, "Robot bearing."},
         {"search_area",          robot_search_area,          METH_VARARGS, "Search area for GPS."},
-        {"camera",               robot_camera,               METH_VARARGS, "Logic camera."},
-        {"gazebo_pose",          robot_gazebo_pose,          METH_VARARGS, "Get pose from gazebo."},
+        {"image",                robot_image,                METH_VARARGS, "Logic camera."},
+        {"type",                 robot_type,                 METH_VARARGS, "Vehicle type."},
+        {"host",                 robot_host,                 METH_VARARGS, "Vehicle host."},
+        {"name",                 robot_name,                 METH_VARARGS, "Vehicle name."},
+        {"launch",               robot_launch,               METH_VARARGS, "Launch vehicle."},
+        {"dock",                 robot_dock,                 METH_VARARGS, "Dock vehicle."},
+        {"is_docked",            robot_is_docked,            METH_VARARGS, "Is vehicle docked."},
+        {"boo_pose",             robot_boo_pose,             METH_VARARGS, "BOO pose."},
+        {"terrain_type",         robot_terrain_type,         METH_VARARGS, "Terrain type."},
+        {"lost_person_dir",      robot_lost_person_dir,      METH_VARARGS, "Lost person direction."},
         {"gzmsg",                robot_gzmsg,                METH_VARARGS, "Print gazebo message."},
         {"gzerr",                robot_gzerr,                METH_VARARGS, "Print gazebo error."},
         {"gzlog",                robot_gzlog,                METH_VARARGS, "Gazebo log."},
