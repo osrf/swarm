@@ -48,6 +48,10 @@
 #include "swarm/SwarmTypes.hh"
 #include "swarm/Logger.hh"
 
+#ifdef SWARM_PYTHON_API
+  #include <Python.h>
+#endif
+
 namespace swarm
 {
   /// Typedef for object pose data.
@@ -244,6 +248,21 @@ namespace swarm
 
       return true;
     }
+
+    /// \brief Hand control over to a Python script
+    protected: bool LoadPython(const std::string &_module,
+                               const std::string &_load,
+                               const std::string &_update,
+                               const std::string &_onDataReceived);
+
+    /// \brief Invoke the previously arranged Python update method
+    protected: void UpdatePython(const gazebo::common::UpdateInfo & _info);
+
+    /// \brief Invoke the previously arranged Python ondatareceived method
+    public: void OnDataReceivedPython(const std::string &_srcAddress,
+                                      const std::string &_dstAddress,
+                                      const uint32_t _dstPort,
+                                      const std::string &_data);
 
     /// \brief Send some data to other/s member/s of the swarm.
     /// \param[in] _dstAddress Destination address. Note that the destination
@@ -844,6 +863,17 @@ namespace swarm
 
     /// \brief Store the forest and building bounding boxes.
     private: std::vector<ignition::math::Box> boundingBoxes;
+
+    /// \brief Mutex to protect access to common Python-related variables
+    private: static std::mutex pMutex;
+
+    /// \brief Have we initialized Python yet?
+    private: static bool pInitialized;
+
+    /// \brief Various pointers used in the Python API
+    /// They're declared as void* here to allow this file to be compiled without
+    //  including Python.h
+    private: static void *pModule, *pDict, *pUpdateFunc, *pOnDataReceivedFunc;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

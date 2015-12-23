@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <ignition/math/Helpers.hh>
 
@@ -32,6 +33,20 @@
 using namespace swarm;
 
 GZ_REGISTER_MODEL_PLUGIN(RobotPlugin)
+
+#ifdef SWARM_PYTHON_API
+  #include <Python.h>
+  extern PyMethodDef EmbMethods[];
+  extern std::unordered_map<std::string, RobotPlugin*> robotPointers;
+#endif
+
+// Allocate storage for static class member
+std::mutex RobotPlugin::pMutex;
+bool RobotPlugin::pInitialized = false;
+void *RobotPlugin::pModule = NULL;
+void *RobotPlugin::pDict = NULL;
+void *RobotPlugin::pUpdateFunc = NULL;
+void *RobotPlugin::pOnDataReceivedFunc = NULL;
 
 //////////////////////////////////////////////////
 RobotPlugin::RobotPlugin()
@@ -58,6 +73,132 @@ RobotPlugin::~RobotPlugin()
 //////////////////////////////////////////////////
 void RobotPlugin::Load(sdf::ElementPtr /*_sdf*/)
 {
+}
+
+bool RobotPlugin::LoadPython(const std::string &_module,
+                             const std::string &_load,
+                             const std::string &_update,
+                             const std::string &_onDataReceived)
+{
+#ifndef SWARM_PYTHON_API
+  gzerr << "Swarm was built without Python API support; "
+    "can't initialize Python for robot " << this->address << std::endl;
+  return false;
+#else
+  std::lock_guard<std::mutex> lock(this->pMutex); 
+  if(!this->pInitialized)
+  {
+    gzmsg << "Initializing Python" << std::endl;
+    this->pInitialized = true;
+    Py_Initialize();
+    Py_InitModule("swarm", EmbMethods);
+
+    // Import user's module
+    PyObject* pName = PyString_FromString(_module.c_str());
+    this->pModule = (void*)PyImport_Import(pName);
+    Py_DECREF(pName);
+    if(this->pModule == NULL)
+    {
+      PyErr_Print();
+      return false;
+    }
+
+    // Python update function.
+    this->pUpdateFunc =
+      (void*)PyObject_GetAttrString((PyObject*)this->pModule,
+                                    _update.c_str());
+    if(this->pUpdateFunc == NULL)
+    {
+      PyErr_Print();
+      return false;
+    }
+    // On data received function.
+    this->pOnDataReceivedFunc =
+      (void*)PyObject_GetAttrString((PyObject*)this->pModule,
+                                    _onDataReceived.c_str());
+    if(this->pOnDataReceivedFunc == NULL)
+    {
+      PyErr_Print();
+      return false;
+    }
+  }
+
+  // Put this robot in the list used by Python
+  robotPointers[this->Host()] = this;
+
+  // Call the given load method once for every robot
+  // Load function
+  PyObject* pLoad =
+    PyObject_GetAttrString((PyObject*)this->pModule,
+                           _load.c_str());
+  if(pLoad == NULL)
+  {
+    PyErr_Print();
+    return false;
+  }
+  PyObject *pArgs = PyTuple_New(1);
+  // Robot address
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  PyObject *res = PyObject_CallObject(pLoad, pArgs);
+  if(res == NULL)
+  {
+    PyErr_Print();
+    return false;
+  }
+
+  return true;
+#endif
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
+{
+#ifndef SWARM_PYTHON_API
+  gzerr << "Swarm was built without Python API support; "
+    "can't call Python Update for robot " << this->address << std::endl;
+  return false;
+#else
+  std::lock_guard<std::mutex> lock(this->pMutex); 
+  PyObject *pArgs = PyTuple_New(4);
+  // Robot address
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  // contents of _info
+  PyTuple_SetItem(pArgs, 1, PyString_FromString(_info.worldName.c_str()));
+  PyTuple_SetItem(pArgs, 2, PyFloat_FromDouble(_info.simTime.Double()));
+  PyTuple_SetItem(pArgs, 3, PyFloat_FromDouble(_info.realTime.Double()));
+
+  // Call UPDATE function in python.
+  PyObject *res = PyObject_CallObject((PyObject*)this->pUpdateFunc, pArgs);
+  if(res == NULL)
+    PyErr_Print();
+#endif
+}
+
+//////////////////////////////////////////////////
+void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
+                                       const std::string &_dstAddress,
+                                       const uint32_t _dstPort,
+                                       const std::string &_data)
+{
+#ifndef SWARM_PYTHON_API
+  gzerr << "Swarm was built without Python API support; "
+    "can't call Python OnDataReceivedPython for robot " <<
+    this->address << std::endl;
+  return false;
+#else
+  std::lock_guard<std::mutex> lock(this->pMutex); 
+  PyObject *pArgs = PyTuple_New(5);
+  PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Host().c_str()));
+  PyTuple_SetItem(pArgs, 1, PyString_FromString(_srcAddress.c_str()));
+  PyTuple_SetItem(pArgs, 2, PyString_FromString(_dstAddress.c_str()));
+  PyTuple_SetItem(pArgs, 3, PyInt_FromLong(_dstPort));
+  PyTuple_SetItem(pArgs, 4, PyString_FromString(_data.c_str()));
+
+  // Call UPDATE function in python.
+  PyObject *res = PyObject_CallObject((PyObject*)this->pOnDataReceivedFunc, pArgs);
+  if(res == NULL)
+      PyErr_Print();
+#endif
 }
 
 //////////////////////////////////////////////////

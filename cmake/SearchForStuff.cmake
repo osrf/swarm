@@ -80,3 +80,14 @@ find_program(RUBY_PROTOBUF protoc-gen-ruby)
 if (NOT RUBY_PROTOBUF)
   message (FATAL_ERROR "Missing: protobuf ruby bindings (sudo gem install protobuf)")
 endif()
+
+#################################################
+# Check for Python libs, to allow building of Python support in RobotPlugin
+include(FindPythonLibs)
+find_package(PythonLibs)
+if(PYTHONLIBS_FOUND)
+  message(STATUS "Found Python; will build plugin support for Python controllers.")
+else()
+  message(STATUS "Did not find Python; will not build plugin support for Python controllers")
+  message(STATUS "(try `sudo apt-get install libpython2.7-dev` or something similar) .")
+endif()
