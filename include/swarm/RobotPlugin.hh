@@ -48,6 +48,10 @@
 #include "swarm/SwarmTypes.hh"
 #include "swarm/Logger.hh"
 
+#ifdef SWARM_PYTHON_API
+  #include <Python.h>
+#endif
+
 namespace swarm
 {
   /// Typedef for object pose data.
@@ -200,7 +204,7 @@ namespace swarm
     ///    this->Bind(&MyClass::OnDataReceived, this, this->Host());
     /// * Example usage (Bind on the multicast group and custom port.):
     ///    this->Bind(&MyClass::OnDataReceived, this, this->kMulticast, 5123);
-    protected: template<typename C>
+    public: template<typename C>
     bool Bind(void(C::*_cb)(const std::string &_srcAddress,
                             const std::string &_dstAddress,
                             const uint32_t _dstPort,
@@ -245,6 +249,21 @@ namespace swarm
       return true;
     }
 
+    /// \brief Hand control over to a Python script
+    protected: bool LoadPython(const std::string &_module,
+                               const std::string &_load,
+                               const std::string &_update,
+                               const std::string &_onDataReceived);
+
+    /// \brief Invoke the previously arranged Python update method
+    protected: void UpdatePython(const gazebo::common::UpdateInfo & _info);
+
+    /// \brief Invoke the previously arranged Python ondatareceived method
+    public: void OnDataReceivedPython(const std::string &_srcAddress,
+                                      const std::string &_dstAddress,
+                                      const uint32_t _dstPort,
+                                      const std::string &_data);
+
     /// \brief Send some data to other/s member/s of the swarm.
     /// \param[in] _dstAddress Destination address. Note that the destination
     /// address might be a unicast address, "kBroadcast" or "kMulticast".
@@ -257,31 +276,31 @@ namespace swarm
     /// \return True when success or false if the underlying library used for
     /// sending messages notifies an error (meaning that the message was not
     /// sent).
-    protected: bool SendTo(const std::string &_data,
-                           const std::string &_dstAddress,
-                           const uint32_t _port = kDefaultPort);
+    public: bool SendTo(const std::string &_data,
+                        const std::string &_dstAddress,
+                        const uint32_t _port = kDefaultPort);
 
     /// \brief Get your local address. This address should be specified as a
     /// SDF model parameter.
     ///
     /// \return The local address.
-    protected: std::string Host() const;
+    public: std::string Host() const;
 
     /// \brief Get the list of local neighbors.
     ///
     /// \return A vector of addresses from your local neighbors.
-    protected: std::vector<std::string> Neighbors() const;
+    public: std::vector<std::string> Neighbors() const;
 
     /// \brief Get the type of vehicle. The type of vehicle is set in the
     /// SDF world file using the <type> XML element.
     /// \return The enum value that specifies what type of vehicles this
     /// plugin controls.
-    protected: VehicleType Type() const;
+    public: VehicleType Type() const;
 
     /// \brief Get the name of this robot.
     ///
     /// \return The name given to this robot in the SDF file.
-    protected: std::string Name() const;
+    public: std::string Name() const;
 
     /// \brief Set the robot's target linear velocity.
     ///
@@ -299,8 +318,7 @@ namespace swarm
     /// coordinate frame (m/s).
     /// \return True if the command was successful. False if the linear
     /// velocity could not be set, such as due to low battery.
-    protected: bool SetLinearVelocity(
-                   const ignition::math::Vector3d &_velocity);
+    public: bool SetLinearVelocity(const ignition::math::Vector3d &_velocity);
 
     /// \brief Set the robot's target linear velocity.
     ///
@@ -319,7 +337,7 @@ namespace swarm
     /// \param[in] _z Z velocity in the robot's local coordinate frame (m/s).
     /// \return True if the command was successful. False if the linear
     /// velocity could not be set, such as due to low battery.
-    protected: bool SetLinearVelocity(const double _x,
+    public: bool SetLinearVelocity(const double _x,
                    const double _y, const double _z);
 
     /// \brief Set the robot's target angular velocity, using Euler angles.
@@ -338,8 +356,7 @@ namespace swarm
     /// (radian/s).
     /// \return True if the command was successful. False if the angular
     /// velocity could not be set, such as due to low battery.
-    protected: bool SetAngularVelocity(
-                   const ignition::math::Vector3d &_velocity);
+    public: bool SetAngularVelocity(const ignition::math::Vector3d &_velocity);
 
     /// \brief Set the robot's target angular velocity, using Euler angles.
     ///
@@ -358,8 +375,8 @@ namespace swarm
     /// \param[in] _z Velocity about the robot's local Z axis (radian/s).
     /// \return True if the command was successful. False if the angular
     /// velocity could not be set, such as due to low battery.
-    protected: bool SetAngularVelocity(const double _x, const double _y,
-                   const double _z);
+    public: bool SetAngularVelocity(const double _x, const double _y,
+                                    const double _z);
 
     /// \brief Get the robot's IMU information.
     ///
@@ -387,9 +404,9 @@ namespace swarm
     /// \param[out] _angVel Angular velocity in the robot's local coordinate
     /// frame (m/s).
     /// \param[out] _orient Offset with respect the reference pos.
-    protected: bool Imu(ignition::math::Vector3d &_linVel,
-                        ignition::math::Vector3d &_angVel,
-                        ignition::math::Quaterniond &_orient) const;
+    public: bool Imu(ignition::math::Vector3d &_linVel,
+                     ignition::math::Vector3d &_angVel,
+                     ignition::math::Quaterniond &_orient) const;
 
     /// \brief Angle between the true North and the robot. If the vehicle is
     /// facing North the bearing is 0. The bearing increments clockwise up to
@@ -399,7 +416,7 @@ namespace swarm
     ///
     /// \param[out] _bearing Bearing between the true North and the robot.
     /// \return True if the call was successful.
-    protected: bool Bearing(ignition::math::Angle &_bearing) const;
+    public: bool Bearing(ignition::math::Angle &_bearing) const;
 
     /// \brief Get the robot's current pose from its GPS sensor.
     ///
@@ -407,9 +424,9 @@ namespace swarm
     /// \param[out] _longitude Robot longitude will be written here.
     /// \param[out] _altitude Robot altitude will be written here.
     /// \return True if the call was successful.
-    protected: bool Pose(double &_latitude,
-                         double &_longitude,
-                         double &_altitude) const;
+    public: bool Pose(double &_latitude,
+                      double &_longitude,
+                      double &_altitude) const;
 
     /// \brief Get the base of operation's (BOO) position information. The
     /// BOO is always located on the ground.
@@ -418,7 +435,7 @@ namespace swarm
     /// \param[out] _longitude BOO longitude
     /// \return True if the function was successful. False may be returned
     /// if there is no BOO present.
-    protected: bool BooPose(double &_latitude, double &_longitude) const;
+    public: bool BooPose(double &_latitude, double &_longitude) const;
 
     /// \brief Get the set of objects detected by the camera.
     ///
@@ -427,7 +444,7 @@ namespace swarm
     /// Use CameraToWorld() for making a conversion to world coordinates.
     /// \return True if the call was successful.
     /// \sa CameraToWorld
-    protected: bool Image(ImageData &_img) const;
+    public: bool Image(ImageData &_img) const;
 
     /// \brief Get the search area, in GPS coordinates.
     ///
@@ -435,10 +452,10 @@ namespace swarm
     /// \param[out] _maxLatitude Maximum latitude will be written here.
     /// \param[out] _minLongitude Minimum longitude will be written here.
     /// \param[out] _maxLongitude Maximum longitude will be written here.
-    protected: void SearchArea(double &_minLatitude,
-                               double &_maxLatitude,
-                               double &_minLongitude,
-                               double &_maxLongitude);
+    public: void SearchArea(double &_minLatitude,
+                            double &_maxLatitude,
+                            double &_minLongitude,
+                            double &_maxLongitude);
 
     /// \brief Query the map to get the height and terrain type
     /// at a specific latitude and longitude.
@@ -449,36 +466,36 @@ namespace swarm
     /// \param[out] _type Type of terrain at the query point.
     /// \return True if the latitude and longitude specify a valid point.
     /// False otherwise.
-    protected: bool MapQuery(const double _lat, const double _lon,
-                             double &_height, TerrainType &_type);
+    public: bool MapQuery(const double _lat, const double _lon,
+                          double &_height, TerrainType &_type);
 
     /// \brief Get starting battery capacity (mAh).
     /// \return The battery's start capacity in mAh.
-    protected: double BatteryStartCapacity() const;
+    public: double BatteryStartCapacity() const;
 
     /// \brief Get the current battery capacity (mAh).
     /// \return The battery capacity in mAh.
-    protected: double BatteryCapacity() const;
+    public: double BatteryCapacity() const;
 
     /// \brief Get the vehicle's battery consumption (mA).
     /// \return The battery consumption in mA.
-    protected: double BatteryConsumption() const;
+    public: double BatteryConsumption() const;
 
     /// \brief Get the vehicle's battery consumption factor (unitless).
     /// \return Get the factor applied to battery consumption. This value
     /// will be between 0 and 1, where a value < 1 accounts for additional
     /// current  draw.
-    protected: double BatteryConsumptionFactor() const;
+    public: double BatteryConsumptionFactor() const;
 
     /// \brief Get the expected battery life in seconds.
     /// \return Battery life in seconds, based on the current capacity and
     /// consumption.
-    protected: double ExpectedBatteryLife() const;
+    public: double ExpectedBatteryLife() const;
 
     /// \brief Convert a pose in a robot's camera frame into the world frame.
     /// \param[in] _poseinCamera The pose in the camera frame
     /// \return The pose in the world frame.
-    protected: ignition::math::Pose3d CameraToWorld(
+    public: ignition::math::Pose3d CameraToWorld(
       const ignition::math::Pose3d &_poseinCamera) const;
 
     /// \brief Set the pitch and yaw of the camera.
@@ -486,14 +503,14 @@ namespace swarm
     /// Valid values must fall between (+/-)PI/2 radian.
     /// \param[in] _yaw The yaw of the camera in radians.
     /// The camera can rotate 2PI radians.
-    protected: void SetCameraOrientation(const double _pitch,
+    public: void SetCameraOrientation(const double _pitch,
                                          const double _yaw);
 
     /// \brief Get the camera's orientation (pitch and yaw).
     /// \param[out] _pitch Camera's current pitch in radians.
     /// \param[out] _yaw Camera's current yaw in radians.
-    protected: void CameraOrientation(double &_pitch,
-                                      double &_yaw) const;
+    public: void CameraOrientation(double &_pitch,
+                                   double &_yaw) const;
 
     /// \brief Launch a rotor vehicle from a ground vehicle. When docked, a
     /// rotor vehicle cannot move, but can process sensor data. When
@@ -502,7 +519,7 @@ namespace swarm
     /// This has no affect for ground and fixed wing vehicles.
     /// \sa Dock
     /// \sa IsDocked
-    protected: void Launch();
+    public: void Launch();
 
     /// \brief Dock a rotor vehicle. When docked, a
     /// rotor vehicle cannot move independently, but can process sensor data.
@@ -515,7 +532,7 @@ namespace swarm
     /// the vehicle was not found, or the _vehicle is not a ground vehicle.
     /// \sa Launch
     /// \sa IsDocked
-    protected: bool Dock(const std::string &_vehicle);
+    public: bool Dock(const std::string &_vehicle);
 
     /// \brief Get whether this vehicle is docked. This function only has
     /// meaning for rotor vehicles.
@@ -523,11 +540,11 @@ namespace swarm
     /// False if the rotor vehicle is free to move independently.
     /// \sa Dock
     /// \sa Launch
-    protected: bool IsDocked() const;
+    public: bool IsDocked() const;
 
     /// \brief Get the terrain type at this vehicle's location.
     /// \return Type of terrain at this vehicle's location.
-    protected: TerrainType Terrain() const;
+    public: TerrainType Terrain() const;
 
     /// \brief Get the direction from the BOO to the lost person at the
     /// start of simulation. Each component (x, y) of the result is
@@ -537,7 +554,7 @@ namespace swarm
     /// person. The direction is computed once at simulation start. If
     /// the simulation environment has no BOO or lost_person, a value of
     /// 0,0 is returned.
-    protected: ignition::math::Vector2d LostPersonDir() const;
+    public: ignition::math::Vector2d LostPersonDir() const;
 
     /// \brief Update the plugin.
     ///
@@ -844,6 +861,17 @@ namespace swarm
 
     /// \brief Store the forest and building bounding boxes.
     private: std::vector<ignition::math::Box> boundingBoxes;
+
+    /// \brief Mutex to protect access to common Python-related variables
+    private: static std::mutex pMutex;
+
+    /// \brief Have we initialized Python yet?
+    private: static bool pInitialized;
+
+    /// \brief Various pointers used in the Python API
+    /// They're declared as void* here to allow this file to be compiled without
+    //  including Python.h
+    private: static void *pModule, *pDict, *pUpdateFunc, *pOnDataReceivedFunc;
 
     /// \brief BooPlugin needs access to some of the private member variables.
     friend class BooPlugin;

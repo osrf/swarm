@@ -629,11 +629,15 @@ class Runner
       end
 
       summaryData = File.read(jsonFilename)
-      RestClient.post('http://swarm.gazebosim.org/swarm/result', {
-        :pass => _pass,
-        :result => JSON.parse(summaryData),
-        :upload => { :comms => File.new(commsFilename, "rb"),
-                     :log => File.new(logFilename, "rb")}
+      RestClient::Request.execute(:method => :post,
+                         :url =>'http://swarm.gazebosim.org/swarm/result',
+                         :timeout => 90000000,
+                         :payload => {
+                           :pass => _pass,
+                           :result => JSON.parse(summaryData),
+                           :upload => { :comms => File.new(commsFilename, "rb"),
+                                        :log => File.new(logFilename, "rb")
+                         }
       })
     end
   end
