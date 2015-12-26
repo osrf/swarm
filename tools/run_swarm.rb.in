@@ -767,6 +767,10 @@ class Runner
 
     reports.each do |report|
       stateLog = "#{report}/gzserver/state.log"
+      if !File.exist?(stateLog)
+        puts "Error, missing log: #{stateLog}"
+        next
+      end
 
       # Read the log data
       doc = Nokogiri::XML(File.read(stateLog))
