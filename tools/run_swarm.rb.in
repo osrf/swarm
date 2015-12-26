@@ -579,36 +579,25 @@ class Runner
   def upload_reports(_dir, _pass)
     gazeboDirs = Dir.entries(File.join(_dir, "gazebo")).select{ |entry|
       File.directory?(File.join(_dir, "gazebo", entry)) && entry != '.' && entry != '..'
-    }
+    }.sort
+
 
     # Get an array of all the swarm reports
-    reports = Dir.entries(File.join(_dir, "swarm")).select{ |entry|
+    swarmDirs = Dir.entries(File.join(_dir, "swarm")).select{ |entry|
       File.directory?(File.join(_dir, "swarm", entry)) && entry != '.' && entry != '..'
-    }.collect{ |entry|
-      # Convert dir name to time
-      t = Time.parse(entry)
+    }.sort
+    
 
-      minDelta = 1000000
-      gazeboDir = ""
-
-      # Find the matching gazebo directory
-      gazeboDirs.each do |d|
-        gt = Time.parse(d)
-        delta = t - gt
-        if delta > 0 and delta < minDelta
-          minDelta = delta
-          gazeboDir = d
-        end
-      end
-
+    # combine the swarm and gazebo logs
+    reports = swarmDirs.collect.each.with_index{ |entry, index|
       {:swarm => File.join(_dir, "swarm", entry),
-       :gazebo => File.join(_dir, "gazebo", gazeboDir)}
+       :gazebo => File.join(_dir, "gazebo", gazeboDirs[index])}
     }
 
-
     puts "Upload reports for #{_dir}"
-    reports.each do |report|
-      puts report[:gazebo]
+    reports.each_with_index do |report, index|
+      puts "Upload #{index}"
+
       jsonFilename = File.join(report[:swarm], "summary.json")
       commsFilename = File.join(report[:swarm], "swarm_comms.json.zip")
       logFilename = File.join(report[:gazebo], "gzserver", "filtered.json.zip")
@@ -629,11 +618,15 @@ class Runner
       end
 
       summaryData = File.read(jsonFilename)
-      RestClient.post('http://swarm.gazebosim.org/swarm/result', {
-        :pass => _pass,
-        :result => JSON.parse(summaryData),
-        :upload => { :comms => File.new(commsFilename, "rb"),
-                     :log => File.new(logFilename, "rb")}
+      RestClient::Request.execute(:method => :post,
+                         :url =>'http://swarm.gazebosim.org/swarm/result',
+                         :timeout => 90000000,
+                         :payload => {
+                           :pass => _pass,
+                           :result => JSON.parse(summaryData),
+                           :upload => { :comms => File.new(commsFilename, "rb"),
+                                        :log => File.new(logFilename, "rb")
+                         }
       })
     end
   end
@@ -767,6 +760,10 @@ class Runner
 
     reports.each do |report|
       stateLog = "#{report}/gzserver/state.log"
+      if !File.exist?(stateLog)
+        puts "Error, missing log: #{stateLog}"
+        next
+      end
 
       # Read the log data
       doc = Nokogiri::XML(File.read(stateLog))
