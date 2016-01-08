@@ -85,7 +85,7 @@ bool RobotPlugin::LoadPython(const std::string &_module,
     "can't initialize Python for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   if(!this->pInitialized)
   {
     gzmsg << "Initializing Python" << std::endl;
@@ -158,7 +158,7 @@ void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
     "can't call Python Update for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   if(!this->pInitialized)
     return;
   PyObject *pArgs = PyTuple_New(4);
@@ -190,7 +190,7 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
 #else
   if(!this->pInitialized)
     return;
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   PyObject *pArgs = PyTuple_New(5);
   PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyTuple_SetItem(pArgs, 1, PyString_FromString(_srcAddress.c_str()));

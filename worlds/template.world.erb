@@ -41,6 +41,7 @@
 
 <sdf version="1.5">
   <world name="default">
+
     <!-- Common parameters -->
     <%= ERB.new(File.read('common.sdf.erb'),
                 nil, nil, "_sub01").result(binding)%>
@@ -62,6 +63,12 @@
     <!-- The vegetation -->
     <%= if !$vegetation_file.empty?
           ERB.new(File.read($vegetation_file),
+                  nil, nil, "_sub01").result(binding)
+        end%>
+
+    <!-- Buildings -->
+    <%= if !$buildings_file.empty?
+          ERB.new(File.read($buildings_file),
                   nil, nil, "_sub01").result(binding)
         end%>
 

@@ -20,6 +20,11 @@ set (other_erb_files
   vegetation_camp_roberts_low.sdf.erb
   vegetation_camp_roberts_med.sdf.erb
   vegetation_camp_roberts_high.sdf.erb
+  vegetation_flat_low.sdf.erb
+  vegetation_flat_med.sdf.erb
+  vegetation_flat_high.sdf.erb
+  buildings_camp_roberts.sdf.erb
+  buildings_flat.sdf.erb
 )
 
 # World files that need to be processed with erb
@@ -61,6 +66,15 @@ set (generated_master_world_files
   final_01_20_low.world
   final_01_20_medium.world
   final_01_20_high.world
+  flat_01_02_low.world
+  flat_01_02_medium.world
+  flat_01_02_high.world
+  flat_01_10_low.world
+  flat_01_10_medium.world
+  flat_01_10_high.world
+  flat_01_20_low.world
+  flat_01_20_medium.world
+  flat_01_20_high.world
 )
 
 # Process the erb files
