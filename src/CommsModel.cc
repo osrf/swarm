@@ -463,7 +463,7 @@ bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
 
   _entities.clear();
 
-  this->ray->SetPoints(start, end);
+   this->ray->SetPoints(start, end);
   // Get the first obstacle from _p1 to _p2.
   this->ray->GetIntersection(dist, firstEntity);
   _entities.push_back(firstEntity);

@@ -68,8 +68,8 @@
     <!-- Create the ground vehicles  -->
     <% for x in 0..$ground_count-1 %>
       <%name = "ground_#{x}" %>
-      <%x_pos = x * 6%>
-      <%y_pos = 0%>
+      <%x_pos = -500 + x * 6%>
+      <%y_pos = -500 + 0%>
       <%yaw = 0%>
       <%ip = "192.168.1.#{x+1}"%>
       <%= ERB.new(File.read('ground_vehicle.sdf.erb'),

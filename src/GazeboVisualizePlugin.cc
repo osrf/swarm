@@ -197,13 +197,40 @@ void GazeboVisualizePlugin::VisualizeSearchArea()
   this->markerPub->Publish(markerMsg);
 
   // get lat/lon bounds
-  double stepLon = (this->searchMaxLongitude - this->searchMinLongitude) / 90.0;
-  double stepLat = (this->searchMaxLatitude - this->searchMinLatitude) / 90.0;
+  double stepLon = (this->searchMaxLongitude - this->searchMinLongitude) / 500.0;
+  double stepLat = (this->searchMaxLatitude - this->searchMinLatitude) / 500.0;
 
   double elevation;
   GazeboVisualizePlugin::TerrainType terrainType;
 
   int index = 10;
+  gazebo::msgs::Marker gridMsg;
+  gridMsg.set_ns(markerNS);
+  gridMsg.set_id(index++);
+  gridMsg.set_action(gazebo::msgs::Marker::ADD_MODIFY);
+  gridMsg.set_type(gazebo::msgs::Marker::LINE_STRIP);
+  for (double lat = this->searchMinLatitude; lat < this->searchMaxLatitude;
+      lat += stepLat)
+  {
+    for (double lon = this->searchMinLongitude;
+         lon < this->searchMaxLongitude; lon += stepLon)
+    {
+      this->MapQuery(lat, lon, elevation, terrainType);
+
+      ignition::math::Vector3d local =
+        this->world->GetSphericalCoordinates()->LocalFromSpherical(
+            ignition::math::Vector3d(lat, lon, 0));
+      local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
+      local.Z(elevation -
+              this->world->GetSphericalCoordinates()->GetElevationReference());
+
+      gazebo::msgs::Set(gridMsg.add_point(), local);
+
+    }
+    gazebo::msgs::Set(gridMsg.add_point(), ignition::math::Vector3d(0, 0, -10000));
+  }
+  this->markerPub->Publish(gridMsg);
+  /*int index = 10;
   for (double lat = this->searchMinLatitude; lat < this->searchMaxLatitude;
       lat += stepLat)
   {
@@ -239,7 +266,7 @@ void GazeboVisualizePlugin::VisualizeSearchArea()
 
       this->markerPub->Publish(elevMsg);
     }
-  }
+  }*/
   std::cout << "done!\n";
 
 
@@ -477,6 +504,7 @@ void GazeboVisualizePlugin::Update()
 /////////////////////////////////////////////////
 void GazeboVisualizePlugin::CreateLostPersonMarker()
 {
+  return;
 #if GAZEBO_MAJOR_VERSION >= 7
   gazebo::msgs::Marker markerMsg;
   markerMsg.set_ns("lost_person");
@@ -737,12 +765,12 @@ GazeboVisualizePlugin::TerrainType GazeboVisualizePlugin::TerrainAtPos(
       gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
           gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
 
-      if (rayModel->GetName().find("tree") != std::string::npos)
+      if (rayModel && rayModel->GetName().find("tree") != std::string::npos)
       {
         result = FOREST;
         break;
       }
-      else if (rayModel->GetName().find("building") != std::string::npos)
+      else if (rayModel && rayModel->GetName().find("building") != std::string::npos)
       {
         result = BUILDING;
         break;

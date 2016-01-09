@@ -85,7 +85,7 @@ bool RobotPlugin::LoadPython(const std::string &_module,
     "can't initialize Python for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   if(!this->pInitialized)
   {
     gzmsg << "Initializing Python" << std::endl;
@@ -158,7 +158,7 @@ void RobotPlugin::UpdatePython(const gazebo::common::UpdateInfo & _info)
     "can't call Python Update for robot " << this->address << std::endl;
   return false;
 #else
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   if(!this->pInitialized)
     return;
   PyObject *pArgs = PyTuple_New(4);
@@ -190,7 +190,7 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
 #else
   if(!this->pInitialized)
     return;
-  std::lock_guard<std::mutex> lock(this->pMutex); 
+  std::lock_guard<std::mutex> lock(this->pMutex);
   PyObject *pArgs = PyTuple_New(5);
   PyTuple_SetItem(pArgs, 0, PyString_FromString(this->Name().c_str()));
   PyTuple_SetItem(pArgs, 1, PyString_FromString(_srcAddress.c_str()));
@@ -199,7 +199,9 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
   PyTuple_SetItem(pArgs, 4, PyString_FromString(_data.c_str()));
 
   // Call UPDATE function in python.
-  PyObject *res = PyObject_CallObject((PyObject*)this->pOnDataReceivedFunc, pArgs);
+  PyObject *res = PyObject_CallObject((PyObject*)this->pOnDataReceivedFunc,
+      pArgs);
+
   if(res == NULL)
       PyErr_Print();
 #endif
@@ -209,6 +211,8 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
 bool RobotPlugin::SendTo(const std::string &_data,
     const std::string &_dstAddress, const uint32_t _port)
 {
+  return true;
+
   // Restrict the maximum size of a message.
   if (_data.size() > this->kMtu)
   {
@@ -905,7 +909,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     if (_sdf->HasElement("camera"))
     {
       this->camera =
-        boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
+        std::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("camera")));
 
@@ -927,7 +931,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     if (_sdf->HasElement("gps"))
     {
       this->gps =
-        boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+        std::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("gps")));
     }
@@ -942,7 +946,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     if (_sdf->HasElement("imu"))
     {
       this->imu =
-        boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
+        std::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("imu")));
     }

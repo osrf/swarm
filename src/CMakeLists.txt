@@ -102,5 +102,7 @@ ign_install_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME})
 # target_link_libraries(GazeboVisualizePlugin 
 #   ${PROJECT_LIB_MSGS_NAME}
 #   ${PROTOBUF_LIBRARY}
-#   ${IGNITION-TRANSPORT_LIBRARIES})
+#   ${IGNITION-TRANSPORT_LIBRARIES}
+#   ${GAZEBO_LIBRARIES})
+# 
 # ign_install_library(GazeboVisualizePlugin )
