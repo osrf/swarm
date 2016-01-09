@@ -98,6 +98,13 @@ target_link_libraries(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME})
 
+ign_add_library(VisibilityPlugin VisibilityPlugin.cc)
+target_link_libraries(VisibilityPlugin 
+  ${PROJECT_LIB_MSGS_NAME}
+  ${PROTOBUF_LIBRARY}
+  ${IGNITION-TRANSPORT_LIBRARIES})
+ign_install_library(VisibilityPlugin)
+
 # ign_add_library(GazeboVisualizePlugin GazeboVisualizePlugin.cc)
 # target_link_libraries(GazeboVisualizePlugin 
 #   ${PROJECT_LIB_MSGS_NAME}
