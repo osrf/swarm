@@ -727,7 +727,7 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
   // Update based on controllerUpdateRate.
   if (dt >= (1.0 / this->controllerUpdateRate))
   {
-    this->lastSensorUpdateTime = curTime;
+    this->lastControllerUpdateTime = curTime;
     this->Update(_info);
   }
 
