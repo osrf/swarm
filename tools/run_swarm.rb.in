@@ -662,13 +662,13 @@ class Runner
 
             # Generate the shell command
             world = "#{@@worldPrefix}_#{searchArea.to_s.rjust(2, '0')}_" +
-                    "#{@@densityStrings[density]}_#{vehicleCount}"
+                    "#{@@densityStrings[density]}"
 
             if @flatTerrain
               world = world + "_flat"
             end
 
-            world = world + ".world"
+            world = world + "_#{vehicleCount}.world"
 
             @runs.push("SWARM_LOG=1 SWARM_TEAMNAME=#{@team} " +
                        "GAZEBO_MASTER_URI=http://localhost:#{port} " +
