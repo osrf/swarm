@@ -164,17 +164,11 @@ void VisibilityPlugin::Update()
     // Iterate over the possible y values.
     for (int y = range[0]; y <= range[1]; y += stepSize)
     {
-      //startPos.Y(y);
       // Iterate over the possible x values.
       for (int x = range[0]; x <= range[1]; x += stepSize)
       {
+        std::cout << "X[" << x << "]\n";
         int index = this->Index(x, y, range[1], stepSize, rowSize);
-        //startPos.X(x);
-
-        // Get the height at the start pos, plus some offset so that it
-        // is not in the terrain
-        //startPos.Z(this->HeightAt(x, y) + heightOffset);
-        // double z =
 
         // The inner loops checks visibility from startPos to endPos
         for (int y2 = y; y2 <= range[1]; y2 += stepSize)
@@ -182,7 +176,6 @@ void VisibilityPlugin::Update()
           int rx = range[0];
           if (y2 == y)
             rx = x;
-          //endPos.Y(y2);
           for (int x2 = rx; x2 <= range[1]; x2 += stepSize)
           {
             int index2 = this->Index(x2, y2, range[1], stepSize, rowSize);
