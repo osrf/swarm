@@ -28,6 +28,8 @@
 #include "gazebo/transport/transport.hh"
 #include "swarm/VisibilityPlugin.hh"
 
+#include "tbb/tbb.h"
+
 using namespace gazebo;
 namespace po = boost::program_options;
 
@@ -87,6 +89,15 @@ void VisibilityPlugin::OnWorldCreated()
   this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
     this->world->GetPhysicsEngine()->CreateShape("ray",
       gazebo::physics::CollisionPtr()));
+
+  // The version of multiray shape only works with ODE>
+  if (this->world->GetPhysicsEngine()->GetType() == "ode")
+  {
+    this->multiRay =
+      boost::dynamic_pointer_cast<gazebo::physics::MultiRayShape>(
+          this->world->GetPhysicsEngine()->CreateShape("multiray",
+            gazebo::physics::CollisionPtr()));
+  }
 }
 
 /////////////////////////////////////////////
@@ -105,48 +116,171 @@ void VisibilityPlugin::Update()
         this->terrain->GetSize().y /
         (this->terrain->GetVertexCount().y-1));
 
-    int rowSize = 100;
+    double heightOffset = 1.0;
+    int stepSize = 10;
+    int range[2] = {-1000, 1000};
+    int rowSize = (range[1] / stepSize) - (range[0] / stepSize) + 1;
 
-    ignition::math::Vector3 startPos;
-    ignition::math::Vector3 endPos;
+    ignition::math::Vector3d startPos;
+    ignition::math::Vector3d endPos;
 
-    for (int y=-100; y < 100; y+=10)
+    std::map<uint64_t, int> visibilityMap;
+    std::map<uint64_t, double> heights;
+
+    int rayCount = 0;
+
+    // TODO: Check that rowSize is divisible by 2.
+
+    int maxRays = 1000;
+
+    // Create all the rays up front
+
+    if (this->multiRay)
     {
-      startPos.Y(y);
-      for (int x = -100; x < 100; x+= 10)
+      for (int i = 0; i < maxRays; i++)
       {
-        int index = y*rowSize+x;
-        startPos.X(x);
-        startPos.Z(this->HeightAt(x, y));
-
-
-        for (int y2 = -100; y2 < 100; y2 += 10)
-        {
-          endPos.Y(y2);
-          for (int x2 = -100; x2 < 100; x2 += 10)
-          {
-            int visible = 1;
-
-            if (index != index2)
-            {
-              int index2 = y2*row2Size+x2;
-              endPos.X(x2);
-              endPos.Z(this->HeightAt(x2, y2));
-              visibile = this->LineOfSight(startPos, endPos);
-            }
-
-            std::cout << "S[" << x << " " << y << " " << index << "] "
-              << "E[" << x2 << " " << y2 << " " << index2 << "] "
-              << "V[" << visible << "]\n";
-          }
-        }
-
+        this->multiRay->AddRay(ignition::math::Vector3d::Zero,
+            ignition::math::Vector3d::Zero);
       }
     }
 
-    std::cout << "TerrainSize[" << this->terrainSize << "] Scal[" << this->terrainScaling << "]\n";
+    // Store height values.
+    for (int y = range[0]; y <= range[1]; y += stepSize)
+    {
+      for (int x = range[0]; x <= range[1]; x += stepSize)
+      {
+        int index = ((y + range[1])/stepSize) * rowSize +
+          ((x + range[1])/stepSize);
+
+        heights[index] =  this->HeightAt(x, y) + heightOffset;
+      }
+    }
+
+    int testCount = 0;
+
+    auto startTime =
+      std::chrono::system_clock::now().time_since_epoch();
+
+    // Iterate over the possible y values.
+    for (int y = range[0]; y <= range[1]; y += stepSize)
+    {
+      //startPos.Y(y);
+      // Iterate over the possible x values.
+      for (int x = range[0]; x <= range[1]; x += stepSize)
+      {
+        int index = this->Index(x, y, range[1], stepSize, rowSize);
+        //startPos.X(x);
+
+        // Get the height at the start pos, plus some offset so that it
+        // is not in the terrain
+        //startPos.Z(this->HeightAt(x, y) + heightOffset);
+        // double z =
+
+        // The inner loops checks visibility from startPos to endPos
+        for (int y2 = y; y2 <= range[1]; y2 += stepSize)
+        {
+          int rx = range[0];
+          if (y2 == y)
+            rx = x;
+          //endPos.Y(y2);
+          for (int x2 = rx; x2 <= range[1]; x2 += stepSize)
+          {
+            int index2 = this->Index(x2, y2, range[1], stepSize, rowSize);
+            double dist = sqrt((x2-x)*(x2-x) + (y2-y)*(y2-y));
+
+            // Skip values that are too far away
+            if (dist > 280)
+              continue;
+
+            // The same location is always visible
+            if (index != index2)
+            {
+              if (this->multiRay)
+              {
+                this->multiRay->SetRay(rayCount++,
+                    ignition::math::Vector3d(x, y, heights[index]),
+                    ignition::math::Vector3d(x2, y2, heights[index2]));
+                if (rayCount >= maxRays)
+                {
+                  this->multiRay->UpdateRays();
+                  rayCount = 0;
+                }
+              }
+              else
+              {
+                int visible = this->LineOfSight(
+                    ignition::math::Vector3d(x, y, heights[index]),
+                    ignition::math::Vector3d(x2, y2, heights[index2]));
+
+                std::cout << "V[" << visible << "]\n";
+                // Only store values that are not visible
+                if (visible < 1)
+                {
+                  visibilityMap[this->Key(index, index2)] = visible;
+                }
+              }
+            }
+
+            // Only store values that are not visible
+
+            // std::cout << "S[" << x << " " << y << " " << startPos.Z() << " "
+            //   << index << "] "
+            //   << "E[" << x2 << " " << y2 << " " << endPos.Z() << " "
+            //   << index2 << "] V[" << visible << "]  K[" << key << "]\n";
+          }
+        }
+      }
+    }
+    auto endTime = std::chrono::system_clock::now().time_since_epoch();
+
+    auto duration = endTime - startTime;
+    std::cout << "Duration["
+      << std::chrono::duration_cast<std::chrono::seconds>(duration).count()
+      << "]\n";
+
+    std::cout << "TestCount[" << testCount << "]\n";
+    std::cout << "Size[" << visibilityMap.size() << "] Bytes[" <<
+      (sizeof(uint64_t) + sizeof(int)) * visibilityMap.size() << "]\n";
+
+    /*for (double i = -100; i < 100; i +=10)
+    {
+      int lu = this->Lookup(
+          ignition::math::Vector3d(0, i, 0),
+          ignition::math::Vector3d(50, i, 0));
+      lu = lu;
+    }*/
     first = false;
   }
+}
+
+//////////////////////////////////////////////////
+int VisibilityPlugin::Lookup(const ignition::math::Vector3d &_start,
+    const ignition::math::Vector3d &_end)
+{
+  int stepSize = 100;
+  int range[2] = {-100, 100};
+  int rowSize = (range[1] / stepSize) - (range[0] / stepSize) + 1;
+
+  int startX = std::round(_start.X() / 100.0) * 100;
+  int startY = std::round(_start.Y() / 100.0) * 100;
+
+  int endX = std::round(_end.X() / 100.0) * 100;
+  int endY = std::round(_end.Y() / 100.0) * 100;
+
+  int index = ((startY + range[1])/stepSize) * rowSize +
+    ((startX + range[1])/stepSize);
+
+  int index2 = ((endY + range[1])/stepSize) * rowSize +
+    ((endX + range[1])/stepSize);
+
+  // Szudzik's function
+  uint64_t key = this->Key(index, index2);
+
+  std::cout << "Start[" << startX << " " << startY << "] End["
+            << endX << " " << endY << "] I[" << index << "] I2[" << index2
+            << "] K[" << key << "]\n";
+
+  return 0;
 }
 
 //////////////////////////////////////////////////
@@ -431,18 +565,28 @@ int VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
 }
 
 /////////////////////////////////////////////////
-double VisibilityPlugin::HeightAt(double _x, double _y)
+double VisibilityPlugin::HeightAt(const double _x, const double _y) const
 {
   double dist;
   std::string ent;
 
-  startPos.Z(1000);
-
   this->ray->SetPoints(
-      ignition::math::Vector3d(_x, _y, 1000,
+      ignition::math::Vector3d(_x, _y, 1000),
       ignition::math::Vector3d(_x, _y, 0));
   this->ray->GetIntersection(dist, ent);
 
   return 1000 - dist;
 }
 
+/////////////////////////////////////////////////
+uint64_t VisibilityPlugin::Key(int _a, int _b)
+{
+  // Szudzik's function
+  return _a >= _b ?  _a * _a + _a + _b : _a + _b * _b;
+}
+
+/////////////////////////////////////////////////
+int VisibilityPlugin::Index(int _x, int _y, int _maxY, int _stepSize, int _rowSize)
+{
+  return ((_y + _maxY)/_stepSize) * _rowSize + ((_x + _maxY)/_stepSize);
+}

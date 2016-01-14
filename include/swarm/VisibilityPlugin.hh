@@ -84,8 +84,27 @@ namespace gazebo
     /// \return Type of terrain at the location.
     private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
 
+    private: int Lookup(const ignition::math::Vector3d &_start,
+                 const ignition::math::Vector3d &_end);
+
+    private: double HeightAt(const double _x, const double _y) const;
+
+    private: int LineOfSight(const ignition::math::Vector3d &_p1,
+                             const ignition::math::Vector3d &_p2);
+
+    private: uint64_t Key(int _a, int _b);
+
+    private: int Index(int _x, int _y, int _maxY, int _stepSize, int _rowSize);
+
     /// \brief Pointer to the world.
     private: physics::WorldPtr world;
+
+    /// \brief The world created connection.
+    private: event::ConnectionPtr worldCreatedConn;
+
+    /// \brief The update connection.
+    private: event::ConnectionPtr updateConn;
+
     /// \brief Pointer to the terrain
     private: gazebo::physics::HeightmapShapePtr terrain;
 
@@ -100,6 +119,9 @@ namespace gazebo
     private: double searchMinLatitude, searchMaxLatitude,
                     searchMinLongitude, searchMaxLongitude;
 
+    // \brief Ray used to test for line of sight between vehicles.
+    private: gazebo::physics::RayShapePtr ray;
+    private: gazebo::physics::MultiRayShapePtr multiRay;
   };
 }
 #endif
