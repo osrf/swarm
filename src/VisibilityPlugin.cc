@@ -93,6 +93,7 @@ void VisibilityPlugin::OnWorldCreated()
   // The version of multiray shape only works with ODE>
   if (this->world->GetPhysicsEngine()->GetType() == "ode")
   {
+    std::cout << "Creating multiray\n";
     this->multiRay =
       boost::dynamic_pointer_cast<gazebo::physics::MultiRayShape>(
           this->world->GetPhysicsEngine()->CreateShape("multiray",
@@ -137,6 +138,7 @@ void VisibilityPlugin::Update()
 
     if (this->multiRay)
     {
+    std::cout << "populating multiray\n";
       for (int i = 0; i < maxRays; i++)
       {
         this->multiRay->AddRay(ignition::math::Vector3d::Zero,
@@ -162,12 +164,13 @@ void VisibilityPlugin::Update()
       std::chrono::system_clock::now().time_since_epoch();
 
     // Iterate over the possible y values.
+    //for (int y = range[0]; y <= range[1]; y += stepSize)
     for (int y = range[0]; y <= range[1]; y += stepSize)
     {
+        std::cout << "Y[" << y << "]\n";
       // Iterate over the possible x values.
       for (int x = range[0]; x <= range[1]; x += stepSize)
       {
-        std::cout << "X[" << x << "]\n";
         int index = this->Index(x, y, range[1], stepSize, rowSize);
 
         // The inner loops checks visibility from startPos to endPos
@@ -193,9 +196,29 @@ void VisibilityPlugin::Update()
                 this->multiRay->SetRay(rayCount++,
                     ignition::math::Vector3d(x, y, heights[index]),
                     ignition::math::Vector3d(x2, y2, heights[index2]));
+
                 if (rayCount >= maxRays)
                 {
                   this->multiRay->UpdateRays();
+                  for (unsigned int r = 0 ; r < this->multiRay->RayCount(); ++r)
+                  {
+                    if (!this->multiRay->Ray(r)->CollisionName().empty())
+                    {
+                      index = this->Index(this->multiRay->Ray(r)->Start().X(),
+                          this->multiRay->Ray(r)->Start().Y(),
+                          range[1], stepSize, rowSize);
+
+                      index2 = this->Index(this->multiRay->Ray(r)->End().X(),
+                          this->multiRay->Ray(r)->End().Y(),
+                          range[1], stepSize, rowSize);
+
+                      visibilityMap[this->Key(index, index2)] = 0;
+                      std::cout << "R[" << r << "] Z[" <<
+                        this->multiRay->Ray(r)->CollisionName() << "]\n";
+                    }
+                    // Clear the collision name
+                    this->multiRay->Ray(r)->SetCollisionName("");
+                  }
                   rayCount = 0;
                 }
               }
@@ -234,6 +257,11 @@ void VisibilityPlugin::Update()
     std::cout << "TestCount[" << testCount << "]\n";
     std::cout << "Size[" << visibilityMap.size() << "] Bytes[" <<
       (sizeof(uint64_t) + sizeof(int)) * visibilityMap.size() << "]\n";
+
+    for (auto vm : visibilityMap)
+    {
+      std::cout << vm.first << " " << vm.second << std::endl;
+    }
 
     /*for (double i = -100; i < 100; i +=10)
     {
