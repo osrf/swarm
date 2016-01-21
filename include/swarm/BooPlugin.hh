@@ -119,18 +119,18 @@ namespace swarm
     private: virtual void OnUpdateEnd();
 
     // Documentation inherited.
-    private: virtual void Load(gazebo::physics::ModelPtr _model,
-                               sdf::ElementPtr _sdf);
+    protected: virtual void Load(gazebo::physics::ModelPtr _model,
+                                 sdf::ElementPtr _sdf);
 
     /// \brief Callback executed when a new message is received.
     /// \param[in] _srcAddress Source address of the message.
     /// \param[in] _dstAddress Destination address of the message.
     /// \param[in] _dstPort Destination port.
     /// \param[in] _data Message payload.
-    private: void OnDataReceived(const std::string &_srcAddress,
-                                 const std::string &_dstAddress,
-                                 const uint32_t _dstPort,
-                                 const std::string &_data);
+    protected: void OnDataReceived(const std::string &_srcAddress,
+                                   const std::string &_dstAddress,
+                                   const uint32_t _dstPort,
+                                   const std::string &_data);
 
     /// \brief Converts from a world position to a cell in the 3D grid.
     /// \param[in] _pos Position in world coordinates.

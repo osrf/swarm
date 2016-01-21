@@ -21,6 +21,7 @@
 #include <vector>
 #include <ignition/math/Helpers.hh>
 
+#include <gazebo/gazebo_config.h>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Plugin.hh>
@@ -287,7 +288,11 @@ void RobotPlugin::UpdateSensors()
   {
     this->observedLatitude = this->gps->Latitude().Degree();
     this->observedLongitude = this->gps->Longitude().Degree();
+#if GAZEBO_MAJOR_VERSION >= 7
+    this->observedAltitude = this->gps->Altitude();
+#else
     this->observedAltitude = this->gps->GetAltitude();
+#endif
   }
 
   if (this->imu)
@@ -922,10 +927,17 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     // Get the camera sensor
     if (_sdf->HasElement("camera"))
     {
+#if GAZEBO_MAJOR_VERSION >= 7
+      this->camera =
+        std::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("camera")));
+#else
       this->camera =
         boost::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("camera")));
+#endif
 
       if (!this->camera)
       {
@@ -944,10 +956,17 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     // Get the gps sensor
     if (_sdf->HasElement("gps"))
     {
+#if GAZEBO_MAJOR_VERSION >= 7
+      this->gps =
+        std::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("gps")));
+#else
       this->gps =
         boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("gps")));
+#endif
     }
 
     if (!this->gps)
@@ -959,10 +978,17 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
     // Get the IMU sensor
     if (_sdf->HasElement("imu"))
     {
+#if GAZEBO_MAJOR_VERSION >= 7
+      this->imu =
+        std::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
+          gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+            _sdf->Get<std::string>("imu")));
+#else
       this->imu =
         boost::dynamic_pointer_cast<gazebo::sensors::ImuSensor>(
           gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
             _sdf->Get<std::string>("imu")));
+#endif
     }
 
     if (!this->imu)

@@ -16,6 +16,7 @@
 */
 
 #include <functional>
+#include <gazebo/gazebo_config.h>
 #include <gazebo/math/Vector2i.hh>
 #include <gazebo/physics/physics.hh>
 #include "swarm/LostPersonPlugin.hh"
@@ -88,10 +89,17 @@ void LostPersonPlugin::Load(gazebo::physics::ModelPtr _model,
   // Get the gps sensor
   if (_sdf->HasElement("gps"))
   {
+#if GAZEBO_MAJOR_VERSION >= 7
+    this->gps =
+      std::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
+        gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
+          _sdf->Get<std::string>("gps")));
+#else
     this->gps =
       boost::dynamic_pointer_cast<gazebo::sensors::GpsSensor>(
         gazebo::sensors::get_sensor(this->model->GetScopedName(true) + "::" +
           _sdf->Get<std::string>("gps")));
+#endif
   }
 
   if (!this->gps)
@@ -202,6 +210,10 @@ void LostPersonPlugin::UpdateSensors()
   {
     this->latitude = this->gps->Latitude().Degree();
     this->longitude = this->gps->Longitude().Degree();
+#if GAZEBO_MAJOR_VERSION >= 7
+    this->altitude = this->gps->Altitude();
+#else
     this->altitude = this->gps->GetAltitude();
+#endif
   }
 }
