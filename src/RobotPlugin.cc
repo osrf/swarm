@@ -714,8 +714,22 @@ void RobotPlugin::Loop(const gazebo::common::UpdateInfo &_info)
     this->SetAngularVelocity(0, 0, 0);
   }
 
-  // Always give the team controller an update.
-  this->Update(_info);
+  // Check whether give the team controller an update.
+  gazebo::common::Time curTime = this->world->GetSimTime();
+  auto dt = (curTime - this->lastControllerUpdateTime).Double();
+  if (dt < 0)
+  {
+    // Probably we had a reset.
+    this->lastControllerUpdateTime = curTime;
+    return;
+  }
+
+  // Update based on controllerUpdateRate.
+  if (dt >= (1.0 / this->controllerUpdateRate))
+  {
+    this->lastControllerUpdateTime = curTime;
+    this->Update(_info);
+  }
 
   // Apply the controller's actions to the simulation.
   this->UpdateLinearVelocity();
@@ -884,6 +898,10 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     gzerr << "No vehicle type specified, using ground.\n";
   }
+
+  // Load the controller's update rate
+  if (_sdf->HasElement("controller_update_rate"))
+    this->controllerUpdateRate = _sdf->Get<float>("controller_update_rate");
 
   // Collide with nothing
   for (auto &link : this->model->GetLinks())
