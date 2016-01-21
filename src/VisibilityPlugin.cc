@@ -20,6 +20,7 @@
   #include <Winsock2.h>
 #endif
 
+#include <fstream>
 #include <boost/program_options.hpp>
 
 #include "gazebo/gazebo_config.h"
@@ -91,14 +92,14 @@ void VisibilityPlugin::OnWorldCreated()
       gazebo::physics::CollisionPtr()));
 
   // The version of multiray shape only works with ODE>
-  if (this->world->GetPhysicsEngine()->GetType() == "ode")
+  /*if (this->world->GetPhysicsEngine()->GetType() == "ode")
   {
     std::cout << "Creating multiray\n";
     this->multiRay =
       boost::dynamic_pointer_cast<gazebo::physics::MultiRayShape>(
           this->world->GetPhysicsEngine()->CreateShape("multiray",
             gazebo::physics::CollisionPtr()));
-  }
+  }*/
 }
 
 /////////////////////////////////////////////
@@ -119,7 +120,7 @@ void VisibilityPlugin::Update()
 
     double heightOffset = 1.0;
     int stepSize = 10;
-    int range[2] = {-1000, 1000};
+    int range[2] = {-20000, 20000};
     int rowSize = (range[1] / stepSize) - (range[0] / stepSize) + 1;
 
     ignition::math::Vector3d startPos;
@@ -128,15 +129,15 @@ void VisibilityPlugin::Update()
     std::map<uint64_t, int> visibilityMap;
     std::map<uint64_t, double> heights;
 
-    int rayCount = 0;
+    // int rayCount = 0;
 
     // TODO: Check that rowSize is divisible by 2.
 
-    int maxRays = 1000;
+    // int maxRays = 1000;
 
     // Create all the rays up front
 
-    if (this->multiRay)
+    /*if (this->multiRay)
     {
     std::cout << "populating multiray\n";
       for (int i = 0; i < maxRays; i++)
@@ -144,21 +145,25 @@ void VisibilityPlugin::Update()
         this->multiRay->AddRay(ignition::math::Vector3d::Zero,
             ignition::math::Vector3d::Zero);
       }
-    }
+    }*/
 
     // Store height values.
     for (int y = range[0]; y <= range[1]; y += stepSize)
     {
       for (int x = range[0]; x <= range[1]; x += stepSize)
       {
-        int index = ((y + range[1])/stepSize) * rowSize +
-          ((x + range[1])/stepSize);
-
+        int index = this->Index(x, y, range[1], stepSize, rowSize);
         heights[index] =  this->HeightAt(x, y) + heightOffset;
       }
     }
 
-    int testCount = 0;
+    std::fstream out("/tmp/visibility.txt", std::ios::out | std::ios::binary);
+
+    out.write(reinterpret_cast<const char*>(&range[1]), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&stepSize), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&rowSize), sizeof(int));
+
+    // int testCount = 0;
 
     auto startTime =
       std::chrono::system_clock::now().time_since_epoch();
@@ -167,31 +172,30 @@ void VisibilityPlugin::Update()
     //for (int y = range[0]; y <= range[1]; y += stepSize)
     for (int y = range[0]; y <= range[1]; y += stepSize)
     {
-        std::cout << "Y[" << y << "]\n";
       // Iterate over the possible x values.
       for (int x = range[0]; x <= range[1]; x += stepSize)
       {
         int index = this->Index(x, y, range[1], stepSize, rowSize);
 
         // The inner loops checks visibility from startPos to endPos
-        for (int y2 = y; y2 <= range[1]; y2 += stepSize)
+        for (int y2 = y; y2 <= range[1] && y2 <= y+250; y2 += stepSize)
         {
           int rx = range[0];
           if (y2 == y)
             rx = x;
-          for (int x2 = rx; x2 <= range[1]; x2 += stepSize)
+          for (int x2 = rx; x2 <= range[1] && x2 <= rx+250; x2 += stepSize)
           {
             int index2 = this->Index(x2, y2, range[1], stepSize, rowSize);
             double dist = sqrt((x2-x)*(x2-x) + (y2-y)*(y2-y));
 
             // Skip values that are too far away
-            if (dist > 280)
+            if (dist > 250)
               continue;
 
             // The same location is always visible
             if (index != index2)
             {
-              if (this->multiRay)
+              /*if (this->multiRay)
               {
                 this->multiRay->SetRay(rayCount++,
                     ignition::math::Vector3d(x, y, heights[index]),
@@ -224,17 +228,23 @@ void VisibilityPlugin::Update()
               }
               else
               {
-                int visible = this->LineOfSight(
+              */
+                bool visible = this->LineOfSight(
                     ignition::math::Vector3d(x, y, heights[index]),
                     ignition::math::Vector3d(x2, y2, heights[index2]));
 
-                std::cout << "V[" << visible << "]\n";
                 // Only store values that are not visible
-                if (visible < 1)
+                if (!visible)
                 {
-                  visibilityMap[this->Key(index, index2)] = visible;
+                  std::cout << x << " " << y << " "
+                            << x2 << " " << y2 << std::endl;
+
+                  uint64_t value = this->Key(index, index2);
+                  out.write(reinterpret_cast<const char*>(&value),
+                      sizeof(uint64_t));
+                  //visibilityMap[this->Key(index, index2)] = visible;
                 }
-              }
+              //}
             }
 
             // Only store values that are not visible
@@ -254,14 +264,13 @@ void VisibilityPlugin::Update()
       << std::chrono::duration_cast<std::chrono::seconds>(duration).count()
       << "]\n";
 
-    std::cout << "TestCount[" << testCount << "]\n";
-    std::cout << "Size[" << visibilityMap.size() << "] Bytes[" <<
-      (sizeof(uint64_t) + sizeof(int)) * visibilityMap.size() << "]\n";
+    std::cout << "Size[" << visibilityMap.size() << "]\n";
 
-    for (auto vm : visibilityMap)
+
+    /*for (auto vm : visibilityMap)
     {
-      std::cout << vm.first << " " << vm.second << std::endl;
-    }
+    }*/
+    out.close();
 
     /*for (double i = -100; i < 100; i +=10)
     {
@@ -554,7 +563,7 @@ VisibilityPlugin::TerrainType VisibilityPlugin::TerrainAtPos(
 }
 
 //////////////////////////////////////////////////
-int VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
+bool VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
                              const ignition::math::Vector3d &_p2)
                              //std::vector<std::string> &_entities)
 {
@@ -580,9 +589,9 @@ int VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
   }*/
 
   if (firstEntity.empty())
-    return 1;
+    return true;
   else
-    return 0;
+    return false;
 }
 
 /////////////////////////////////////////////////
@@ -607,7 +616,8 @@ uint64_t VisibilityPlugin::Key(int _a, int _b)
 }
 
 /////////////////////////////////////////////////
-int VisibilityPlugin::Index(int _x, int _y, int _maxY, int _stepSize, int _rowSize)
+int VisibilityPlugin::Index(int _x, int _y, int _maxY,
+    int _stepSize, int _rowSize)
 {
   return ((_y + _maxY)/_stepSize) * _rowSize + ((_x + _maxY)/_stepSize);
 }

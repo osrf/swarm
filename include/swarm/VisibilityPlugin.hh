@@ -89,7 +89,7 @@ namespace gazebo
 
     private: double HeightAt(const double _x, const double _y) const;
 
-    private: int LineOfSight(const ignition::math::Vector3d &_p1,
+    private: bool LineOfSight(const ignition::math::Vector3d &_p1,
                              const ignition::math::Vector3d &_p2);
 
     private: uint64_t Key(int _a, int _b);
