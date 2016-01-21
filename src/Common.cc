@@ -184,6 +184,9 @@ void Common::TerrainLookup(const ignition::math::Vector3d &_pos,
     ignition::math::Vector3d &_terrainPos,
     ignition::math::Vector3d &_norm) const
 {
+  if (!this->terrain)
+    return;
+
   // The robot position in the coordinate frame of the terrain
   ignition::math::Vector3d robotPos(
       (this->terrainSize.X() * 0.5 + _pos.X()) / this->terrainScaling.X(),

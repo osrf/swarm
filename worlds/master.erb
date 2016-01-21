@@ -48,6 +48,7 @@ def default()
   # Terrain and environment
   $terrain_file = ''
   $vegetation_file = ''
+  $buildings_file = ''
 
   # Comms model parameters
   $neighbor_distance_min = 0.0
@@ -87,6 +88,16 @@ def final_01_02_low()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+end
+
+# final_01_02_low_flat.world
+def final_01_02_low_flat()
+  # Load default parameters.
+  default()
+
+  $vegetation_file = 'vegetation_flat_low.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 end
 
 # final_01_02_medium.world
@@ -96,6 +107,16 @@ def final_01_02_medium()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+end
+
+# final_01_02_medium_flat.world
+def final_01_02_medium_flat()
+  # Load default parameters.
+  default()
+
+  $vegetation_file = 'vegetation_flat_med.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 end
 
 # final_01_02_high.world
@@ -105,6 +126,16 @@ def final_01_02_high()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+end
+
+# final_01_02_high_flat.world
+def final_01_02_high_flat()
+  # Load default parameters.
+  default()
+
+  $vegetation_file = 'vegetation_flat_high.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 end
 
 # final_01_10_low.world
@@ -124,6 +155,28 @@ def final_01_10_low()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 2400.0
+end
+
+# final_01_10_low_flat.world
+def final_01_10_low_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+  $search_area = '10 x 10 km'
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $vegetation_file = 'vegetation_flat_low.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 2400.0
 end
@@ -145,6 +198,28 @@ def final_01_10_medium()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 2400.0
+end
+
+# final_01_10_medium_flat.world
+def final_01_10_medium_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+  $search_area = '10 x 10 km'
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $vegetation_file = 'vegetation_flat_med.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 2400.0
 end
@@ -166,6 +241,28 @@ def final_01_10_high()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 2400.0
+end
+
+# final_01_10_high_flat.world
+def final_01_10_high_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (10km x 10km)
+  $min_relative_latitude_deg = -0.05
+  $max_relative_latitude_deg = 0.05
+  $min_relative_longitude_deg = -0.05
+  $max_relative_longitude_deg = 0.05
+  $search_area = '10 x 10 km'
+
+  $lost_person_x = 3500
+  $lost_person_y = 3500
+
+  $vegetation_file = 'vegetation_flat_high.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 2400.0
 end
@@ -187,6 +284,28 @@ def final_01_20_low()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_low.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 7200.0
+end
+
+# final_01_20_low_flat.world
+def final_01_20_low_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+  $search_area = '20 x 20 km'
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $vegetation_file = 'vegetation_flat_low.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 7200.0
 end
@@ -208,6 +327,28 @@ def final_01_20_medium()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_med.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 7200.0
+end
+
+# final_01_20_medium_flat.world
+def final_01_20_medium_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+  $search_area = '20 x 20 km'
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $vegetation_file = 'vegetation_flat_med.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 7200.0
 end
@@ -229,6 +370,28 @@ def final_01_20_high()
 
   $terrain_file = 'terrain_camp_roberts.sdf.erb'
   $vegetation_file = 'vegetation_camp_roberts_high.sdf.erb'
+  $buildings_file = 'buildings_camp_roberts.sdf.erb'
+
+  $max_time_allowed = 7200.0
+end
+
+# final_01_20_high_flat.world
+def final_01_20_high_flat()
+  # Load default parameters.
+  default()
+
+  # Search area (20km x 20km)
+  $min_relative_latitude_deg = -0.1
+  $max_relative_latitude_deg = 0.1
+  $min_relative_longitude_deg = -0.1
+  $max_relative_longitude_deg = 0.1
+  $search_area = '20 x 20 km'
+
+  $lost_person_x = 7500
+  $lost_person_y = 7500
+
+  $vegetation_file = 'vegetation_flat_high.sdf.erb'
+  $buildings_file = 'buildings_flat.sdf.erb'
 
   $max_time_allowed = 7200.0
 end
@@ -264,14 +427,23 @@ def generate_worlds(_world_file)
   h = Hash.new
   h["complete.world"] = method(:complete)
   h["final_01_02_low.world"] = method(:final_01_02_low)
+  h["final_01_02_low_flat.world"] = method(:final_01_02_low_flat)
   h["final_01_02_medium.world"] = method(:final_01_02_medium)
+  h["final_01_02_medium_flat.world"] = method(:final_01_02_medium_flat)
   h["final_01_02_high.world"] = method(:final_01_02_high)
+  h["final_01_02_high_flat.world"] = method(:final_01_02_high_flat)
   h["final_01_10_low.world"] = method(:final_01_10_low)
+  h["final_01_10_low_flat.world"] = method(:final_01_10_low_flat)
   h["final_01_10_medium.world"] = method(:final_01_10_medium)
+  h["final_01_10_medium_flat.world"] = method(:final_01_10_medium_flat)
   h["final_01_10_high.world"] = method(:final_01_10_high)
+  h["final_01_10_high_flat.world"] = method(:final_01_10_high_flat)
   h["final_01_20_low.world"] = method(:final_01_20_low)
+  h["final_01_20_low_flat.world"] = method(:final_01_20_low_flat)
   h["final_01_20_medium.world"] = method(:final_01_20_medium)
+  h["final_01_20_medium_flat.world"] = method(:final_01_20_medium_flat)
   h["final_01_20_high.world"] = method(:final_01_20_high)
+  h["final_01_20_high_flat.world"] = method(:final_01_20_high_flat)
 
   f = h[_world_file]
   f.call
