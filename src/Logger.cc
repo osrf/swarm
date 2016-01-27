@@ -210,8 +210,11 @@ void Logger::FillHeader(const double _maxStepSize, sdf::ElementPtr _sdf)
     }
     if (logElem->HasElement("terrain_name"))
     {
-      this->header.set_terrain_name(
-        logElem->Get<std::string>("terrain_name"));
+      std::string terrainName = logElem->Get<std::string>("terrain_name");
+      if (terrainName.empty())
+        this->header.set_terrain_name("None");
+      else
+        this->header.set_terrain_name(terrainName);
     }
     if (logElem->HasElement("vegetation_name"))
     {

@@ -849,11 +849,17 @@ namespace swarm
     /// \brief For computing terrain update times.
     private: gazebo::common::Time lastTerrainUpdateTime;
 
+    /// \brief For computing controller update times.
+    private: gazebo::common::Time lastControllerUpdateTime;
+
     /// \brief Rate at which the sensors should update.
     private: double sensorsUpdateRate = 20.0;
 
     /// \brief Rate at which the terrain type should update.
     private: double terrainUpdateRate = 5.0;
+
+    /// \brief Rate at which the vehicle's controller should update (Hz).
+    private: double controllerUpdateRate = 10.0;
 
     /// \brief Common attributes and functions that are used by multiple
     /// plugins
