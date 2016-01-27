@@ -179,12 +179,12 @@ robot_pose(PyObject *, PyObject *args)
   {
     double latitude, longitude, altitude;
     robot->Pose(latitude, longitude, altitude);
-  
+
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
     PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", altitude));
-  
+
     return pArgs;
   }
   else
@@ -207,11 +207,11 @@ robot_boo_pose(PyObject *, PyObject *args)
   {
     double latitude, longitude;
     robot->BooPose(latitude, longitude);
-  
+
     PyObject *pArgs = PyTuple_New(2);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", latitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", longitude));
-  
+
     return pArgs;
   }
   else
@@ -233,11 +233,11 @@ robot_lost_person_dir(PyObject *, PyObject *args)
   if(robot)
   {
     ignition::math::Vector2d dir = robot->LostPersonDir();
-  
+
     PyObject *pArgs = PyTuple_New(2);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("i", dir.X()));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", dir.Y()));
-  
+
     return pArgs;
   }
   else
@@ -261,7 +261,7 @@ robot_imu(PyObject *, PyObject *args)
     ignition::math::Vector3d linVel, angVel;
     ignition::math::Quaterniond orient;
     robot->Imu(linVel, angVel, orient);
-  
+
     // Return
     PyObject *pArgs = PyTuple_New(9);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("f", linVel.X()));
@@ -273,7 +273,7 @@ robot_imu(PyObject *, PyObject *args)
     PyTuple_SetItem(pArgs, 6, Py_BuildValue("f", orient.X()));
     PyTuple_SetItem(pArgs, 7, Py_BuildValue("f", orient.Y()));
     PyTuple_SetItem(pArgs, 8, Py_BuildValue("f", orient.Z()));
-  
+
     return pArgs;
   }
   else
@@ -320,13 +320,13 @@ robot_search_area(PyObject *, PyObject *args)
     // Get pose and altitude.
     double minLatitude, maxLatitude, minLongitude, maxLongitude;
     robot->SearchArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-  
+
     PyObject *pArgs = PyTuple_New(4);
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("d", minLatitude));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("d", maxLatitude));
     PyTuple_SetItem(pArgs, 2, Py_BuildValue("d", minLongitude));
     PyTuple_SetItem(pArgs, 3, Py_BuildValue("d", maxLongitude));
-  
+
     return pArgs;
   }
   else
