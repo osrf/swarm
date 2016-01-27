@@ -635,7 +635,7 @@ class Runner
   ###############################################
   # Generate all the runs based on the provided parameters
   def generate_runs
-    port = 11345
+    port = 11346
     @runs = []
 
     # Create all the runs. The outer loop is the number of repetitions to

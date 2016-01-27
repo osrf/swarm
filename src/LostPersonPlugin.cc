@@ -202,6 +202,6 @@ void LostPersonPlugin::UpdateSensors()
   {
     this->latitude = this->gps->Latitude().Degree();
     this->longitude = this->gps->Longitude().Degree();
-    this->altitude = this->gps->GetAltitude();
+    this->altitude = this->gps->Altitude();
   }
 }

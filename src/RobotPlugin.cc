@@ -289,7 +289,7 @@ void RobotPlugin::UpdateSensors()
   {
     this->observedLatitude = this->gps->Latitude().Degree();
     this->observedLongitude = this->gps->Longitude().Degree();
-    this->observedAltitude = this->gps->GetAltitude();
+    this->observedAltitude = this->gps->Altitude();
   }
 
   if (this->imu)
