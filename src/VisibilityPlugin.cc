@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Open Source Robotics Foundation
+ * Copyright (C) 2016 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,13 @@
  * limitations under the License.
  *
 */
-#ifdef _WIN32
-  // Ensure that Winsock2.h is included before Windows.h, which can get
-  // pulled in by anybody (e.g., Boost).
-  #include <Winsock2.h>
-#endif
-
 #include <fstream>
-#include <boost/program_options.hpp>
 
 #include "gazebo/gazebo_config.h"
 #include "gazebo/physics/physics.hh"
-#include "gazebo/msgs/msgs.hh"
-#include "gazebo/transport/transport.hh"
 #include "swarm/VisibilityPlugin.hh"
 
-#include "tbb/tbb.h"
-
 using namespace gazebo;
-namespace po = boost::program_options;
 
 // Register this plugin with the simulator
 GZ_REGISTER_SYSTEM_PLUGIN(VisibilityPlugin)
@@ -45,15 +33,10 @@ VisibilityPlugin::~VisibilityPlugin()
 /////////////////////////////////////////////
 void VisibilityPlugin::Load(int /*_argc*/, char ** /*_argv*/)
 {
-  std::cout << "VisibilityPlugin::Load\n";
-
-  this->searchMinLatitude = 35.6653;
-  this->searchMaxLatitude = 35.8853;
-
-  this->searchMinLongitude = -120.884;
-  this->searchMaxLongitude = -120.664;
-
-  // std::string outFile = "/home/nkoenig/visibility.txt";
+  this->range = {-20000, 20000};
+  this->stepSize = 10;
+  this->maxY = this->range[1];
+  this->rowSize = (this->range[1] - this->range[0]) / stepSize + 1;
 }
 
 /////////////////////////////////////////////
@@ -69,529 +52,125 @@ void VisibilityPlugin::OnWorldCreated()
   this->updateConn = event::Events::ConnectWorldUpdateBegin(
       std::bind(&VisibilityPlugin::Update, this));
 
-  this->world = physics::get_world();
-
-  // Get the terrain, if it's present
-  gazebo::physics::ModelPtr terrainModel = this->world->GetModel("terrain");
-
-  // Load some info about the terrain.
-  if (terrainModel)
-  {
-    this->terrain =
-      boost::dynamic_pointer_cast<gazebo::physics::HeightmapShape>(
-          terrainModel->GetLink()->GetCollision("collision")->GetShape());
-
-  }
-  else
-    gzerr << "Invalid terrain\n";
+  physics::WorldPtr world = physics::get_world();
 
   // This ray will be used in LineOfSight() for checking obstacles
   // between a pair of vehicles.
   this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
-    this->world->GetPhysicsEngine()->CreateShape("ray",
+      world->GetPhysicsEngine()->CreateShape("ray",
       gazebo::physics::CollisionPtr()));
-
-  // The version of multiray shape only works with ODE>
-  /*if (this->world->GetPhysicsEngine()->GetType() == "ode")
-  {
-    std::cout << "Creating multiray\n";
-    this->multiRay =
-      boost::dynamic_pointer_cast<gazebo::physics::MultiRayShape>(
-          this->world->GetPhysicsEngine()->CreateShape("multiray",
-            gazebo::physics::CollisionPtr()));
-  }*/
 }
 
 /////////////////////////////////////////////
 void VisibilityPlugin::Update()
 {
-  static bool first = true;
+  std::map<uint64_t, int> visibilityMap;
+  std::map<uint64_t, double> heights;
 
-  if (first)
+  // Cache height values for efficiency.
+  for (int y = this->range[0]; y <= this->range[1]; y += this->stepSize)
   {
-    // Get the size of the terrain
-    this->terrainSize = this->terrain->GetSize().Ign();
-
-    // Set the terrain scaling.
-    this->terrainScaling.Set(this->terrain->GetSize().x /
-        (this->terrain->GetVertexCount().x-1),
-        this->terrain->GetSize().y /
-        (this->terrain->GetVertexCount().y-1));
-
-    double heightOffset = 1.0;
-    int stepSize = 10;
-    int range[2] = {-20000, 20000};
-    int rowSize = (range[1] / stepSize) - (range[0] / stepSize) + 1;
-
-    ignition::math::Vector3d startPos;
-    ignition::math::Vector3d endPos;
-
-    std::map<uint64_t, int> visibilityMap;
-    std::map<uint64_t, double> heights;
-
-    // int rayCount = 0;
-
-    // TODO: Check that rowSize is divisible by 2.
-
-    // int maxRays = 1000;
-
-    // Create all the rays up front
-
-    /*if (this->multiRay)
+    for (int x = this->range[0]; x <= this->range[1]; x += this->stepSize)
     {
-    std::cout << "populating multiray\n";
-      for (int i = 0; i < maxRays; i++)
-      {
-        this->multiRay->AddRay(ignition::math::Vector3d::Zero,
-            ignition::math::Vector3d::Zero);
-      }
-    }*/
-
-    // Store height values.
-    for (int y = range[0]; y <= range[1]; y += stepSize)
-    {
-      for (int x = range[0]; x <= range[1]; x += stepSize)
-      {
-        int index = this->Index(x, y, range[1], stepSize, rowSize);
-        heights[index] =  this->HeightAt(x, y) + heightOffset;
-      }
+      heights[this->Index(x, y)] =  this->HeightAt(x, y);
     }
+  }
 
-    std::fstream out("/tmp/visibility.txt", std::ios::out | std::ios::binary);
+  std::string outFilename = "/tmp/visibility.dat";
+  std::fstream out(outFilename, std::ios::out | std::ios::binary);
 
-    out.write(reinterpret_cast<const char*>(&range[1]), sizeof(int));
-    out.write(reinterpret_cast<const char*>(&stepSize), sizeof(int));
-    out.write(reinterpret_cast<const char*>(&rowSize), sizeof(int));
+  // Save info about the visibility table
+  out.write(reinterpret_cast<const char*>(&this->range[1]), sizeof(int));
+  out.write(reinterpret_cast<const char*>(&this->stepSize), sizeof(int));
+  out.write(reinterpret_cast<const char*>(&this->rowSize), sizeof(int));
 
-    // int testCount = 0;
+  // Used to compute time required to compute the visibility table
+  auto startTime =
+    std::chrono::system_clock::now().time_since_epoch();
 
-    auto startTime =
-      std::chrono::system_clock::now().time_since_epoch();
+  ignition::math::Vector3d startPos, endPos;
 
-    // Iterate over the possible y values.
-    //for (int y = range[0]; y <= range[1]; y += stepSize)
-    for (int y = range[0]; y <= range[1]; y += stepSize)
+  // These two variables are used to compute percent complete
+  double div = std::pow(this->rowSize, 2);
+  uint64_t count = 0;
+
+  // Iterate over the possible y values.
+  for (int y = this->range[0]; y <= this->range[1]; y += this->stepSize)
+  {
+    // Iterate over the possible x values.
+    for (int x = this->range[0]; x <= this->range[1];
+         x += this->stepSize, count++)
     {
-      // Iterate over the possible x values.
-      for (int x = range[0]; x <= range[1]; x += stepSize)
+      // Output percent complete
+      printf("\r%04.2f %% ", (count/div)*100);
+
+      // Get the  index of the (x, y) coordinate
+      unsigned int index = this->Index(x, y);
+
+      startPos.Set(x, y, heights[index]);
+
+      // The inner loops checks visibility from startPos to endPos
+      for (int y2 = y; y2 <= this->range[1] && y2 <= y+250;
+           y2 += this->stepSize)
       {
-        int index = this->Index(x, y, range[1], stepSize, rowSize);
+        endPos.Y(y2);
+        int rx = this->range[0];
+        if (y2 == y)
+          rx = x;
 
-        // The inner loops checks visibility from startPos to endPos
-        for (int y2 = y; y2 <= range[1] && y2 <= y+250; y2 += stepSize)
+        for (int x2 = rx; x2 <= this->range[1] && x2 <= rx+250;
+             x2 += this->stepSize)
         {
-          int rx = range[0];
-          if (y2 == y)
-            rx = x;
-          for (int x2 = rx; x2 <= range[1] && x2 <= rx+250; x2 += stepSize)
+
+          // Get the index of the (x2, y2) coordinate
+          unsigned int index2 = this->Index(x2, y2);
+          double dist = sqrt((x2-x)*(x2-x) + (y2-y)*(y2-y));
+
+          // Skip values that are too far away, of if x,y == x2,y2
+          if (dist > 250 || index == index2)
+            continue;
+
+          endPos.X(x2);
+          endPos.Z(heights[index2]);
+
+          bool visible = this->LineOfSight(startPos, endPos);
+
+          // Only store values that are not visible
+          if (!visible)
           {
-            int index2 = this->Index(x2, y2, range[1], stepSize, rowSize);
-            double dist = sqrt((x2-x)*(x2-x) + (y2-y)*(y2-y));
-
-            // Skip values that are too far away
-            if (dist > 250)
-              continue;
-
-            // The same location is always visible
-            if (index != index2)
-            {
-              /*if (this->multiRay)
-              {
-                this->multiRay->SetRay(rayCount++,
-                    ignition::math::Vector3d(x, y, heights[index]),
-                    ignition::math::Vector3d(x2, y2, heights[index2]));
-
-                if (rayCount >= maxRays)
-                {
-                  this->multiRay->UpdateRays();
-                  for (unsigned int r = 0 ; r < this->multiRay->RayCount(); ++r)
-                  {
-                    if (!this->multiRay->Ray(r)->CollisionName().empty())
-                    {
-                      index = this->Index(this->multiRay->Ray(r)->Start().X(),
-                          this->multiRay->Ray(r)->Start().Y(),
-                          range[1], stepSize, rowSize);
-
-                      index2 = this->Index(this->multiRay->Ray(r)->End().X(),
-                          this->multiRay->Ray(r)->End().Y(),
-                          range[1], stepSize, rowSize);
-
-                      visibilityMap[this->Key(index, index2)] = 0;
-                      std::cout << "R[" << r << "] Z[" <<
-                        this->multiRay->Ray(r)->CollisionName() << "]\n";
-                    }
-                    // Clear the collision name
-                    this->multiRay->Ray(r)->SetCollisionName("");
-                  }
-                  rayCount = 0;
-                }
-              }
-              else
-              {
-              */
-                bool visible = this->LineOfSight(
-                    ignition::math::Vector3d(x, y, heights[index]),
-                    ignition::math::Vector3d(x2, y2, heights[index2]));
-
-                // Only store values that are not visible
-                if (!visible)
-                {
-                  std::cout << x << " " << y << " "
-                            << x2 << " " << y2 << std::endl;
-
-                  uint64_t value = this->Key(index, index2);
-                  out.write(reinterpret_cast<const char*>(&value),
-                      sizeof(uint64_t));
-                  //visibilityMap[this->Key(index, index2)] = visible;
-                }
-              //}
-            }
-
-            // Only store values that are not visible
-
-            // std::cout << "S[" << x << " " << y << " " << startPos.Z() << " "
-            //   << index << "] "
-            //   << "E[" << x2 << " " << y2 << " " << endPos.Z() << " "
-            //   << index2 << "] V[" << visible << "]  K[" << key << "]\n";
+            uint64_t value = this->Pair(index, index2);
+            out.write(reinterpret_cast<const char*>(&value),
+                sizeof(uint64_t));
           }
         }
       }
     }
-    auto endTime = std::chrono::system_clock::now().time_since_epoch();
-
-    auto duration = endTime - startTime;
-    std::cout << "Duration["
-      << std::chrono::duration_cast<std::chrono::seconds>(duration).count()
-      << "]\n";
-
-    std::cout << "Size[" << visibilityMap.size() << "]\n";
-
-
-    /*for (auto vm : visibilityMap)
-    {
-    }*/
-    out.close();
-
-    /*for (double i = -100; i < 100; i +=10)
-    {
-      int lu = this->Lookup(
-          ignition::math::Vector3d(0, i, 0),
-          ignition::math::Vector3d(50, i, 0));
-      lu = lu;
-    }*/
-    first = false;
   }
-}
+  auto endTime = std::chrono::system_clock::now().time_since_epoch();
 
-//////////////////////////////////////////////////
-int VisibilityPlugin::Lookup(const ignition::math::Vector3d &_start,
-    const ignition::math::Vector3d &_end)
-{
-  int stepSize = 100;
-  int range[2] = {-100, 100};
-  int rowSize = (range[1] / stepSize) - (range[0] / stepSize) + 1;
+  auto duration = endTime - startTime;
+  std::cout << "\nLookup table created in "
+    << std::chrono::duration_cast<std::chrono::seconds>(duration).count()
+    << " seconds\n";
+  std::cout << "Visibility table at: " << outFilename << std::endl;
 
-  int startX = std::round(_start.X() / 100.0) * 100;
-  int startY = std::round(_start.Y() / 100.0) * 100;
+  out.close();
 
-  int endX = std::round(_end.X() / 100.0) * 100;
-  int endY = std::round(_end.Y() / 100.0) * 100;
-
-  int index = ((startY + range[1])/stepSize) * rowSize +
-    ((startX + range[1])/stepSize);
-
-  int index2 = ((endY + range[1])/stepSize) * rowSize +
-    ((endX + range[1])/stepSize);
-
-  // Szudzik's function
-  uint64_t key = this->Key(index, index2);
-
-  std::cout << "Start[" << startX << " " << startY << "] End["
-            << endX << " " << endY << "] I[" << index << "] I2[" << index2
-            << "] K[" << key << "]\n";
-
-  return 0;
-}
-
-//////////////////////////////////////////////////
-void VisibilityPlugin::TerrainLookup(const ignition::math::Vector3d &_pos,
-    ignition::math::Vector3d &_terrainPos,
-    ignition::math::Vector3d &_norm) const
-{
-  // The robot position in the coordinate frame of the terrain
-  ignition::math::Vector3d robotPos(
-      (this->terrainSize.X() * 0.5 + _pos.X()) / this->terrainScaling.X(),
-      (this->terrainSize.Y() * 0.5 - _pos.Y()) / this->terrainScaling.Y(), 0);
-
-  // Three vertices that define the triangle on which the vehicle rests
-  // The first vertex is closest point on the terrain
-  ignition::math::Vector3d v1(std::round(robotPos.X()),
-      std::round(robotPos.Y()), 0);
-  ignition::math::Vector3d v2 = v1;
-  ignition::math::Vector3d v3 = v1;
-
-  // The second and third vertices are chosen based on how OGRE layouts
-  // the triangle strip.
-  if (static_cast<int>(v1.X()) == static_cast<int>(std::ceil(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      v2.Y(v1.Y()-1);
-      v3.X(v1.X()-1);
-    }
-    else
-    {
-      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v3 = b;
-        v2.X(v1.X()-1);
-        v2.Y(v1.Y()-1);
-      }
-      else
-      {
-        v2 = c;
-        v3.X(v1.X()-1);
-        v3.Y(v1.Y()-1);
-      }
-    }
-  }
-  else if (static_cast<int>(v1.X()) ==
-      static_cast<int>(std::floor(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::ceil(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()-1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2 = b;
-        v3.X(v1.X()+1);
-        v3.Y(v1.Y()-1);
-      }
-      else
-      {
-        v3 = c;
-        v2.X(v1.X()+1);
-        v2.Y(v1.Y()-1);
-      }
-    }
-    else
-    {
-      v2.X(v1.X()+1);
-      v3.Y(v1.Y()-1);
-    }
-  }
-  else if (static_cast<int>(v1.X()) ==
-      static_cast<int>(std::floor(robotPos.X())) &&
-      static_cast<int>(v1.Y()) == static_cast<int>(std::floor(robotPos.Y())))
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      ignition::math::Vector3d b(v1.X()+1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2.X(v1.X()+1);
-        v2.Y(v1.Y()+1);
-        v3 = b;
-      }
-      else
-      {
-        v2 = c;
-        v3.X(v1.X()+1);
-        v3.Y(v1.Y()+1);
-      }
-    }
-    else
-    {
-      v2.Y(v1.Y()+1);
-      v3.X(v1.X()+1);
-    }
-  }
-  else
-  {
-    if (static_cast<int>(v1.Y()) % 2 == 0)
-    {
-      v2.X() -= 1;
-      v3.Y() += 1;
-    }
-    else
-    {
-      ignition::math::Vector3d b(v1.X()-1, v1.Y(), 0);
-      ignition::math::Vector3d c(v1.X(), v1.Y()+1, 0);
-      if (robotPos.Distance(b) < robotPos.Distance(c))
-      {
-        v2 = b;
-        v3.X(v1.X()-1);
-        v3.Y(v1.Y()+1);
-      }
-      else
-      {
-        v2.X(v1.X()-1);
-        v2.Y(v1.Y()+1);
-        v3 = c;
-      }
-    }
-  }
-
-  // Get the height at each vertex
-  v1.Z(this->terrain->GetHeight(v1.X(), v1.Y()));
-  v2.Z(this->terrain->GetHeight(v2.X(), v2.Y()));
-  v3.Z(this->terrain->GetHeight(v3.X(), v3.Y()));
-
-  // Display a marker that highlights the vertices currently used to
-  // compute the vehicles height. This is debug code that is very useful
-  // but it requires a version of gazebo with visual markers.
-  //
-  // gazebo::msgs::Marker markerMsg;
-  // markerMsg.set_layer("default");
-  // markerMsg.set_id(0);
-  // markerMsg.set_action(gazebo::msgs::Marker::MODIFY);
-  // markerMsg.set_type(gazebo::msgs::Marker::LINE_STRIP);
-
-
-  // v1a.Z() += 0.1;
-  // v2a.Z() += 0.1;
-  // v3a.Z() += 0.1;
-  // gazebo::msgs::Set(markerMsg.add_point(), v1a);
-  // gazebo::msgs::Set(markerMsg.add_point(), v2a);
-  // gazebo::msgs::Set(markerMsg.add_point(), v3a);
-  // if (this->markerPub)
-  //   this->markerPub->Publish(markerMsg);
-  // END DEBUG CODE
-
-  ignition::math::Vector3d v1a = v1;
-  ignition::math::Vector3d v2a = v2;
-  ignition::math::Vector3d v3a = v3;
-  v1a.X(v1a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v1a.Y(this->terrainSize.Y()*0.5 - v1a.Y()*this->terrainScaling.Y());
-
-  v2a.X(v2a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v2a.Y(this->terrainSize.Y()*0.5 - v2a.Y()*this->terrainScaling.Y());
-
-  v3a.X(v3a.X()*this->terrainScaling.X() - this->terrainSize.X()*0.5);
-  v3a.Y(this->terrainSize.Y()*0.5 - v3a.Y()*this->terrainScaling.Y());
-
-  _norm = ignition::math::Vector3d::Normal(v1a, v2a, v3a);
-
-  // Triangle normal
-  ignition::math::Vector3d norm = ignition::math::Vector3d::Normal(v1, v2, v3);
-
-  // Ray direction to intersect with triangle
-  ignition::math::Vector3d rayDir(0, 0, -1);
-
-  // Ray start point
-  ignition::math::Vector3d rayPt(robotPos.X(), robotPos.Y(), 1000);
-
-  // Distance from ray start to triangle intersection
-  double intersection = -norm.Dot(rayPt - v1) / norm.Dot(rayDir);
-
-  // Height of the terrain
-  _terrainPos = rayPt + intersection * rayDir;
-}
-
-//////////////////////////////////////////////////
-bool VisibilityPlugin::MapQuery(const double _lat, const double _lon,
-    double &_height, TerrainType &_type)
-{
-  // Check that the lat and lon is in the search area
-  if (_lat < this->searchMinLatitude  ||
-      _lat > this->searchMaxLatitude ||
-      _lon < this->searchMinLongitude ||
-      _lon > this->searchMaxLongitude)
-  {
-    return false;
-  }
-
-  // Get the location in the local coordinate frame
-  ignition::math::Vector3d local =
-    this->world->GetSphericalCoordinates()->LocalFromSpherical(
-        ignition::math::Vector3d(_lat, _lon, 0));
-
-  local = this->world->GetSphericalCoordinates()->GlobalFromLocal(local);
-
-  ignition::math::Vector3d pos, norm;
-
-  // Reuse the terrain lookup function.
-  this->TerrainLookup(local, pos, norm);
-
-  // Add in the reference elevation.
-  _height = pos.Z() +
-    this->world->GetSphericalCoordinates()->GetElevationReference();
-  local.Z(pos.Z());
-
-  _type = this->TerrainAtPos(local);
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-VisibilityPlugin::TerrainType VisibilityPlugin::TerrainAtPos(
-    const ignition::math::Vector3d &_pos)
-{
-  TerrainType result = PLAIN;
-
-  for (auto const &mdl : this->world->GetModels())
-  {
-    if (mdl->GetBoundingBox().Contains(_pos))
-    {
-      // The bounding box of a model is aligned to the global axis, and can
-      // lead to incorrect results.
-      // If a point is in the bounding box, then we use a ray-cast to see
-      // if the point is actually within the model.
-      gazebo::physics::ModelPtr rayModel = this->world->GetModelBelowPoint(
-          gazebo::math::Vector3(_pos.X(), _pos.Y(), 1000));
-
-      if (rayModel->GetName().find("tree") != std::string::npos)
-      {
-        result = FOREST;
-        break;
-      }
-      else if (rayModel->GetName().find("building") != std::string::npos)
-      {
-        result = BUILDING;
-        break;
-      }
-    }
-  }
-
-  return result;
+  // Only run once
+  event::Events::DisconnectWorldUpdateBegin(this->updateConn);
 }
 
 //////////////////////////////////////////////////
 bool VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
-                             const ignition::math::Vector3d &_p2)
-                             //std::vector<std::string> &_entities)
+                                   const ignition::math::Vector3d &_p2)
 {
   std::string firstEntity;
-  std::string lastEntity;
   double dist;
 
-  // _entities.clear();
-
   this->ray->SetPoints(_p1, _p2);
-  // Get the first obstacle from _p1 to _p2.
   this->ray->GetIntersection(dist, firstEntity);
-  /*_entities.push_back(firstEntity);
 
-  if (!firstEntity.empty())
-  {
-    this->ray->SetPoints(end, start);
-    // Get the last obstacle from _p1 to _p2.
-    this->ray->GetIntersection(dist, lastEntity);
-
-    if (firstEntity != lastEntity)
-      _entities.push_back(lastEntity);
-  }*/
-
-  if (firstEntity.empty())
-    return true;
-  else
-    return false;
+  return firstEntity.empty();
 }
 
 /////////////////////////////////////////////////
@@ -600,24 +179,27 @@ double VisibilityPlugin::HeightAt(const double _x, const double _y) const
   double dist;
   std::string ent;
 
+  // Get the height of the terrain at the specified point
   this->ray->SetPoints(
       ignition::math::Vector3d(_x, _y, 1000),
       ignition::math::Vector3d(_x, _y, 0));
   this->ray->GetIntersection(dist, ent);
 
-  return 1000 - dist;
+  // Add a little offset so that the ray test don't start/end in the
+  // terrain.
+  return 1000 - dist + 1;
 }
 
 /////////////////////////////////////////////////
-uint64_t VisibilityPlugin::Key(int _a, int _b)
+uint64_t VisibilityPlugin::Pair(uint64_t _a, uint64_t _b)
 {
   // Szudzik's function
   return _a >= _b ?  _a * _a + _a + _b : _a + _b * _b;
 }
 
 /////////////////////////////////////////////////
-int VisibilityPlugin::Index(int _x, int _y, int _maxY,
-    int _stepSize, int _rowSize)
+uint64_t VisibilityPlugin::Index(int _x, int _y)
 {
-  return ((_y + _maxY)/_stepSize) * _rowSize + ((_x + _maxY)/_stepSize);
+  return ((_y + this->maxY)/this->stepSize) * this->rowSize +
+    ((_x + this->maxY)/this->stepSize);
 }

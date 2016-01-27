@@ -18,30 +18,37 @@
 #define _SWARM_VISIBILITY_PLUGIN_HH_
 
 #include <string>
+#include <array>
 
 #include "gazebo/common/Plugin.hh"
-#include "gazebo/rendering/rendering.hh"
 #include "gazebo/util/system.hh"
-
-#include "swarm/LogParser.hh"
 
 namespace gazebo
 {
+  /// \brief This plugin generates a visibility lookup table with the
+  /// following contents:
+  ///
+  /// int max_y_value
+  /// int step_size
+  /// int row_size
+  /// uint64_t keys
+  ///
+  /// Data is stored in binary, and keys is a list of unique uint64_t values
+  /// that represent two coordinates that *do not* have visiblity. It is
+  /// assumed that any two coordiantes separated by more than 250m are not
+  /// visible.
+  ///
+  /// Keys are generated using a combination of an Index and Pair function.
+  ///
+  /// We assume a terrain, without any other objects, is used to generate
+  /// the visibility lookup table.
+  ///
+  /// Example usage:
+  ///   gzserver -s libVisibilityPlugin.so --iters 1 --verbose swarm_vis.world
+  ///
+  /// The visibility table will be located at /tmp/visibility.txt
   class GAZEBO_VISIBLE VisibilityPlugin : public SystemPlugin
   {
-    /// \brief The types of terrain.
-    public: enum TerrainType
-            {
-              /// \brief Open terrain
-              PLAIN     = 0,
-
-              /// \brief Terrain with forest
-              FOREST    = 1,
-
-              /// \brief Terrain with a building
-              BUILDING  = 2
-            };
-
     /// \brief Destructor
     public: virtual ~VisibilityPlugin();
 
@@ -53,51 +60,48 @@ namespace gazebo
     /// \brief Initialize the plugin.
     private: void Init();
 
+    /// \brief World update callback
     private: void Update();
 
+    /// \brief World created callback
     private: void OnWorldCreated();
 
-    /// \brief Query the map to get the height and terrain type
-    /// at a specific latitude and longitude.
-    ///
-    /// \param[in] _lat Latitude of the query (degrees).
-    /// \param[in] _lon Longitude of the query (degrees).
-    /// \param[out] _elev Elevation at the query point (meters).
-    /// \param[out] _type Type of terrain at the query point.
-    /// \return True if the latitude and longitude specify a valid point.
-    /// False otherwise.
-    protected: bool MapQuery(const double _lat, const double _lon,
-                             double &_height, TerrainType &_type);
-
-
-    /// \brief Get terrain information at the specified location.
-    /// \param[in] _pos Reference position.
-    /// \param[out] _terrainPos The 3d point on the terrain.
-    /// \param[out] _norm Normal to the terrain.
-    private: void TerrainLookup(const ignition::math::Vector3d &_pos,
-                                ignition::math::Vector3d &_terrainPos,
-                                ignition::math::Vector3d &_norm) const;
-
-    /// \brief Helper function to get a terrain type at a position in
-    /// Gazebo's world coordinate frame.
-    /// \param[in] _pos Position to query.
-    /// \return Type of terrain at the location.
-    private: TerrainType TerrainAtPos(const ignition::math::Vector3d &_pos);
-
-    private: int Lookup(const ignition::math::Vector3d &_start,
-                 const ignition::math::Vector3d &_end);
-
+    /// \brief Get the height at a coordinate
+    /// \param[in] _x X world coordinate
+    /// \param[in] _y Y world coordinate
+    /// \return Height at the coordinate
     private: double HeightAt(const double _x, const double _y) const;
 
+    /// \brief Get whether two points have line of sight.
+    /// \param[in] _p1 First coordinate
+    /// \param[in] _p1 Second coordinate
+    /// \return True if the two points are visible
     private: bool LineOfSight(const ignition::math::Vector3d &_p1,
-                             const ignition::math::Vector3d &_p2);
+                              const ignition::math::Vector3d &_p2);
 
-    private: uint64_t Key(int _a, int _b);
+    /// \brief A pairing function that maps two values to a unique third
+    /// value.
+    /// \param[in] _a First value
+    /// \param[in] _b Second value
+    /// \return A unique key value
+    private: uint64_t Pair(const uint64_t _a, uint64_t _b);
 
-    private: int Index(int _x, int _y, int _maxY, int _stepSize, int _rowSize);
+    /// \brief Generate an index from a coordinate.
+    /// \param[in] _x X coordinate
+    /// \param[in] _y Y coordinate
+    private: uint64_t Index(int _x, int _y);
 
-    /// \brief Pointer to the world.
-    private: physics::WorldPtr world;
+    /// \brief XY range, or size of the swarm search area
+    private: std::array<int, 2> range;
+
+    /// \brief Maximum Y value of the range
+    private: int maxY;
+
+    /// \brief The granularity of the visibility table
+    private: int stepSize;
+
+    /// \brief Number of values in each row of the visibility table.
+    private: int rowSize;
 
     /// \brief The world created connection.
     private: event::ConnectionPtr worldCreatedConn;
@@ -105,23 +109,8 @@ namespace gazebo
     /// \brief The update connection.
     private: event::ConnectionPtr updateConn;
 
-    /// \brief Pointer to the terrain
-    private: gazebo::physics::HeightmapShapePtr terrain;
-
-    /// \brief This is the scaling from world coordinates to heightmap
-    /// coordinates.
-    private: ignition::math::Vector2d terrainScaling;
-
-    /// \brief Size of the terrain
-    private: ignition::math::Vector3d terrainSize;
-
-    /// \brief Min/max lat/long of search area.
-    private: double searchMinLatitude, searchMaxLatitude,
-                    searchMinLongitude, searchMaxLongitude;
-
-    // \brief Ray used to test for line of sight between vehicles.
+    // \brief Ray used to test for line of sight.
     private: gazebo::physics::RayShapePtr ray;
-    private: gazebo::physics::MultiRayShapePtr multiRay;
   };
 }
 #endif

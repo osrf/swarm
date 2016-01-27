@@ -107,12 +107,28 @@ namespace swarm
     /// contain all combinations of two different elements (not permutations).
     private: void CacheVisibilityPairs();
 
-    private: uint64_t Key(const int _a, const int _b);
+    /// \brief A pairing function that maps two values to a unique third
+    /// value.
+    /// \param[in] _a First value
+    /// \param[in] _b Second value
+    /// \return A unique key value
+    private: uint64_t Pair(const int _a, const int _b);
 
+    /// \brief Generate an index from a coordinate.
+    /// \param[in] _x X coordinate
+    /// \param[in] _y Y coordinate
     private: int Index(const ignition::math::Vector3d &_p);
+
+    /// \brief Check for building and tree obstacles between two points.
+    /// \param[in] _posA Start point
+    /// \param[in] _posB End point
+    /// \param[out] _visible True if the two points are visible
+    /// \param[out] _treesBlocking True if trees are blocking
+    /// \param[out] _dist Distance to a blocking tree or building
     private: void CheckObstacles(const ignition::math::Vector3d &_posA,
-    const ignition::math::Vector3d &_posB,
-    bool &_visible, bool &_treesBlocking, double &_dist);
+                                 const ignition::math::Vector3d &_posB,
+                                 bool &_visible, bool &_treesBlocking,
+                                 double &_dist);
 
     /// \brief Minimum free-space distance (m) between two nodes to be
     /// neighbors. Set to <0 for no limit.
@@ -216,9 +232,16 @@ namespace swarm
     /// Update rate of the comms model.
     private: double updateRate = 0.5;
 
+    /// \brief Visibility lookup table
     private: std::set<uint64_t> visibilityTable;
+
+    /// \brief Maximum Y value of the visibility table
     private: uint64_t visibilityTableMaxY;
+
+    /// \brief The granularity of the visibility table
     private: uint64_t visibilityTableStepSize;
+
+    /// \brief Number of values in each row of the visibility table.
     private: uint64_t visibilityTableRowSize;
   };
 }  // namespace

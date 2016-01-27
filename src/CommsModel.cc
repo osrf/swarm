@@ -98,27 +98,31 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   }
 
   // Read the visibility table information
-  std::ifstream tableIn("/tmp/visibility.txt", std::ios::binary | std::ios::in);
-  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableMaxY),
-      sizeof(int));
-  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableStepSize),
-      sizeof(int));
-  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableRowSize),
-      sizeof(int));
-
-  while (true)
+  std::ifstream tableIn("/tmp/visibility.dat", std::ios::binary | std::ios::in);
+  if (tableIn)
   {
-    uint64_t data;
-    tableIn.read((char*)(&data), sizeof(uint64_t));
-    if (!tableIn.eof())
-      this->visibilityTable.emplace(data);
-    else
-      break;
+    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableMaxY),
+        sizeof(int));
+    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableStepSize),
+        sizeof(int));
+    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableRowSize),
+        sizeof(int));
+
+    while (true)
+    {
+      uint64_t data;
+      tableIn.read((char*)(&data), sizeof(uint64_t));
+      if (!tableIn.eof())
+        this->visibilityTable.emplace(data);
+      else
+        break;
+    }
   }
-  std::cout << "VisibilityTable Size[" << this->visibilityTable.size() << "]\n";
-  std::cout << "  Step[" << this->visibilityTableStepSize << "]\n";
-  std::cout << "  MaxY[" << this->visibilityTableMaxY << "]\n";
-  std::cout << "  RowSize[" << this->visibilityTableRowSize << "]\n";
+  else
+  {
+    gzerr << "No visibility table[/tmp/visibility.dat]. Run:\n\t"
+      << "gzserver -s libVisibilityPlugin.so --iters 1 swarm_vis.world\n";
+  }
 }
 
 //////////////////////////////////////////////////
@@ -486,7 +490,10 @@ void CommsModel::UpdateVisibility()
 
     auto poseA = (*swarm)[addressA]->model->GetWorldPose().Ign();
     auto poseB = (*swarm)[addressB]->model->GetWorldPose().Ign();
-    this->visibility[keyA] = this->LineOfSight(poseA, poseB);
+    if (poseA.Pos().Distance(poseB.Pos()) <= this->commsDistanceMax)
+      this->visibility[keyA] = this->LineOfSight(poseA, poseB);
+    else
+      this->visibility[keyA] = false;
 
     // Update the symmetric case.
     this->visibility[keyB] = this->visibility[keyA];
@@ -501,28 +508,10 @@ bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
   int index2 = this->Index(_p2.Pos());
 
   return
-    this->visibilityTable.find(this->Key(index1, index2))
-    != this->visibilityTable.end() &&
-    this->visibilityTable.find(this->Key(index2, index1))
-    != this->visibilityTable.end();
-
-  /*this->ray->SetPoints(start, end);
-  // Get the first obstacle from _p1 to _p2.
-  this->ray->GetIntersection(dist, firstEntity);
-  _entities.push_back(firstEntity);
-
-  if (!firstEntity.empty())
-  {
-    this->ray->SetPoints(end, start);
-    // Get the last obstacle from _p1 to _p2.
-    this->ray->GetIntersection(dist, lastEntity);
-
-    if (firstEntity != lastEntity)
-      _entities.push_back(lastEntity);
-  }
-
-  return firstEntity.empty();
-  */
+    this->visibilityTable.find(this->Pair(index1, index2))
+    == this->visibilityTable.end() &&
+    this->visibilityTable.find(this->Pair(index2, index1))
+    == this->visibilityTable.end();
 }
 
 //////////////////////////////////////////////////
@@ -602,7 +591,7 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
 }
 
 /////////////////////////////////////////////////
-uint64_t CommsModel::Key(const int _a, const int _b)
+uint64_t CommsModel::Pair(const int _a, const int _b)
 {
   // Szudzik's function
   return _a >= _b ?  _a * _a + _a + _b : _a + _b * _b;
