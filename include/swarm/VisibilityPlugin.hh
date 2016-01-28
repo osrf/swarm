@@ -44,7 +44,7 @@ namespace gazebo
   /// the visibility lookup table.
   ///
   /// Example usage:
-  ///   gzserver -s libVisibilityPlugin.so --iters 1 --verbose swarm_vis.world
+  ///   gzserver -s libVisibilityPlugin.so --iters 1 worlds/swarm_vis.world
   ///
   /// The visibility table will be located at /tmp/visibility.txt
   class GAZEBO_VISIBLE VisibilityPlugin : public SystemPlugin
