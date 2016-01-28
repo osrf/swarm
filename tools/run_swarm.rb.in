@@ -552,6 +552,7 @@ class Runner
     @maxDensity = options[:maxDensity]
     @clearLogs = options[:clear]
     @flatTerrain = options[:flat]
+    @groundOnly = options[:ground]
 
     @timeout = options[:timeout]
     @team = options[:team]
@@ -664,7 +665,9 @@ class Runner
             world = "#{@@worldPrefix}_#{searchArea.to_s.rjust(2, '0')}_" +
                     "#{@@densityStrings[density]}"
 
-            if @flatTerrain
+            if @groundOnly
+              world = world + "_ground"
+            elsif @flatTerrain
               world = world + "_flat"
             end
 
@@ -695,6 +698,7 @@ class Runner
     puts " Timeout:           #{@timeout}"
     puts " Clear logs:        #{@clearLogs ? "true" : "false"}"
     puts " Flat terrain:      #{@flatTerrain ? "true" : "false"}"
+    puts " Ground only:       #{@groundOnly ? "true" : "false"}"
     puts " Processes:         #{@jobs}"
     puts " Output dir:        #{@dir}"
     puts " Team:              #{@team}"
@@ -931,7 +935,8 @@ if __FILE__ == $0
              :minVehicle => 0, :maxVehicle => 50,
              :minDensity => 0, :maxDensity => 2,
              :clear => false, :flat => false, :timeout => 3600, :jobs => 1,
-             :dir => "/tmp", :team => "OSRF", :reps => 1, :pass => ""}
+             :dir => "/tmp", :team => "OSRF", :reps => 1, :pass => "",
+             :ground => false}
 
   # Process command line options
   OptionParser.new do |opts|
@@ -939,6 +944,10 @@ if __FILE__ == $0
 
     opts.on("-c", "--clear-logs", "Clear log directory") do |n|
       options[:clear] = n
+    end
+
+    opts.on("--ground", "Only ground vehicles") do |n|
+      options[:ground] = n
     end
 
     opts.on("--flat", "Use flat terrain") do |n|
