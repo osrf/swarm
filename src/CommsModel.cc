@@ -121,7 +121,8 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   else
   {
     gzerr << "No visibility table[/tmp/visibility.dat]. Run:\n\t"
-      << "gzserver -s libVisibilityPlugin.so --iters 1 swarm_vis.world\n";
+      << "gzserver -s libVisibilityPlugin.so --iters 1 "
+      << "worlds/swarm_vis.world\n";
   }
 }
 
