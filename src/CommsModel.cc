@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <sys/stat.h>
 #include <string>
 #include <utility>
 #include <gazebo/common/Assert.hh>
@@ -97,32 +98,31 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     }
   }
 
-  // Read the visibility table information
-  std::ifstream tableIn("/tmp/visibility.dat", std::ios::binary | std::ios::in);
-  if (tableIn)
+  std::string tableFilename = "/tmp/visibility.dat";
+  struct stat buffer;
+  if (stat(tableFilename.c_str(), &buffer) != 0)
   {
-    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableMaxY),
-        sizeof(int));
-    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableStepSize),
-        sizeof(int));
-    tableIn.read(reinterpret_cast<char*>(&this->visibilityTableRowSize),
-        sizeof(int));
-
-    while (true)
-    {
-      uint64_t data;
-      tableIn.read((char*)(&data), sizeof(uint64_t));
-      if (!tableIn.eof())
-        this->visibilityTable.emplace(data);
-      else
-        break;
-    }
+    std::cout << "Generating visibility table[/tmp/visibility.dat]\n.";
+    table.Generate();
   }
-  else
+
+  // Read the visibility table information
+  std::ifstream tableIn(tableFilename, std::ios::binary | std::ios::in);
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableMaxY),
+      sizeof(int));
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableStepSize),
+      sizeof(int));
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableRowSize),
+      sizeof(int));
+
+  while (true)
   {
-    gzerr << "No visibility table[/tmp/visibility.dat]. Run:\n\t"
-      << "gzserver -s libVisibilityPlugin.so --iters 1 "
-      << "worlds/swarm_vis.world\n";
+    uint64_t data;
+    tableIn.read((char*)(&data), sizeof(uint64_t));
+    if (!tableIn.eof())
+      this->visibilityTable.emplace(data);
+    else
+      break;
   }
 }
 

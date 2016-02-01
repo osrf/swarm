@@ -12,6 +12,7 @@ set (common_sources ${common_sources}
 set (broker_plugin_sources
   BrokerPlugin.cc
   CommsModel.cc
+  VisibilityTable.cc
 )
 
 set (robot_plugin_sources
@@ -98,7 +99,7 @@ target_link_libraries(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME}
                       ${IGNITION-TRANSPORT_LIBRARIES})
 ign_install_library(${PROJECT_LIB_LOST_PERSON_CONTROLLER_NAME})
 
-ign_add_library(VisibilityPlugin VisibilityPlugin.cc)
+ign_add_library(VisibilityPlugin VisibilityPlugin.cc VisibilityTable.cc)
 target_link_libraries(VisibilityPlugin 
   ${PROJECT_LIB_MSGS_NAME}
   ${PROTOBUF_LIBRARY}

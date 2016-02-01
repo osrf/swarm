@@ -22,6 +22,7 @@
 
 #include "gazebo/common/Plugin.hh"
 #include "gazebo/util/system.hh"
+#include "swarm/VisibilityTable.hh"
 
 namespace gazebo
 {
@@ -46,7 +47,7 @@ namespace gazebo
   /// Example usage:
   ///   gzserver -s libVisibilityPlugin.so --iters 1 worlds/swarm_vis.world
   ///
-  /// The visibility table will be located at /tmp/visibility.txt
+  /// The visibility table will be located at /tmp/visibility.dat
   class GAZEBO_VISIBLE VisibilityPlugin : public SystemPlugin
   {
     /// \brief Destructor
@@ -66,51 +67,14 @@ namespace gazebo
     /// \brief World created callback
     private: void OnWorldCreated();
 
-    /// \brief Get the height at a coordinate
-    /// \param[in] _x X world coordinate
-    /// \param[in] _y Y world coordinate
-    /// \return Height at the coordinate
-    private: double HeightAt(const double _x, const double _y) const;
-
-    /// \brief Get whether two points have line of sight.
-    /// \param[in] _p1 First coordinate
-    /// \param[in] _p1 Second coordinate
-    /// \return True if the two points are visible
-    private: bool LineOfSight(const ignition::math::Vector3d &_p1,
-                              const ignition::math::Vector3d &_p2);
-
-    /// \brief A pairing function that maps two values to a unique third
-    /// value.
-    /// \param[in] _a First value
-    /// \param[in] _b Second value
-    /// \return A unique key value
-    private: uint64_t Pair(const uint64_t _a, uint64_t _b);
-
-    /// \brief Generate an index from a coordinate.
-    /// \param[in] _x X coordinate
-    /// \param[in] _y Y coordinate
-    private: uint64_t Index(int _x, int _y);
-
-    /// \brief XY range, or size of the swarm search area
-    private: std::array<int, 2> range;
-
-    /// \brief Maximum Y value of the range
-    private: int maxY;
-
-    /// \brief The granularity of the visibility table
-    private: int stepSize;
-
-    /// \brief Number of values in each row of the visibility table.
-    private: int rowSize;
-
     /// \brief The world created connection.
     private: event::ConnectionPtr worldCreatedConn;
 
     /// \brief The update connection.
     private: event::ConnectionPtr updateConn;
 
-    // \brief Ray used to test for line of sight.
-    private: gazebo::physics::RayShapePtr ray;
+    /// \brief Class that generates the visibilty table
+    private: swarm::VisibilityTable table;
   };
 }
 #endif

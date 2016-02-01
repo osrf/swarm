@@ -32,11 +32,12 @@
 
 #include "msgs/log_entry.pb.h"
 #include "swarm/SwarmTypes.hh"
+#include "swarm/VisibilityTable.hh"
 
 namespace swarm
 {
   /// \brief Class used to store information about the communication model.
-  class IGNITION_VISIBLE CommsModel
+  class CommsModel
   {
     /// \brief Class constructor.
     ///
@@ -243,6 +244,9 @@ namespace swarm
 
     /// \brief Number of values in each row of the visibility table.
     private: uint64_t visibilityTableRowSize;
+
+    /// \brief Class that generates the visibilty table
+    private: VisibilityTable table;
   };
 }  // namespace
 #endif

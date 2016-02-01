@@ -17,67 +17,45 @@
 #include <fstream>
 #include <sys/stat.h>
 
-#include "gazebo/gazebo_config.h"
 #include "gazebo/physics/physics.hh"
-#include "swarm/VisibilityPlugin.hh"
+#include "swarm/VisibilityTable.hh"
 
-using namespace gazebo;
-
-// Register this plugin with the simulator
-GZ_REGISTER_SYSTEM_PLUGIN(VisibilityPlugin)
+using namespace swarm;
 
 /////////////////////////////////////////////
-VisibilityPlugin::~VisibilityPlugin()
+VisibilityTable::VisibilityTable()
 {
-}
-
-/////////////////////////////////////////////
-void VisibilityPlugin::Load(int /*_argc*/, char ** /*_argv*/)
-{
-/*  this->range = {-20000, 20000};
+  this->range = {-20000, 20000};
   this->stepSize = 10;
   this->maxY = this->range[1];
-  this->rowSize = (this->range[1] - this->range[0]) / stepSize + 1;
-  */
+  this->rowSize = (this->range[1] - this->range[0]) / this->stepSize + 1;
 }
 
 /////////////////////////////////////////////
-void VisibilityPlugin::Init()
+void VisibilityTable::Generate()
 {
-  this->worldCreatedConn = event::Events::ConnectWorldCreated(
-        boost::bind(&VisibilityPlugin::OnWorldCreated, this));
-}
-
-/////////////////////////////////////////////
-void VisibilityPlugin::OnWorldCreated()
-{
-  this->updateConn = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&VisibilityPlugin::Update, this));
-
-  /*physics::WorldPtr world = physics::get_world();
-
-  // This ray will be used in LineOfSight() for checking obstacles
-  // between a pair of vehicles.
-  this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
-      world->GetPhysicsEngine()->CreateShape("ray",
-      gazebo::physics::CollisionPtr()));
-      */
-}
-
-/////////////////////////////////////////////
-void VisibilityPlugin::Update()
-{
-  /*std::map<uint64_t, int> visibilityMap;
-  std::map<uint64_t, double> heights;
-
   std::string outFilename = "/tmp/visibility.dat";
-  std::fstream out(outFilename, std::ios::out | std::ios::binary);
 
   struct stat buffer;
   if (stat(outFilename.c_str(), &buffer) == 0)
   {
     printf("/tmp/visibility.dat already exists, skipping\n");
     return;
+  }
+
+  std::map<uint64_t, int> visibilityMap;
+  std::map<uint64_t, double> heights;
+
+  std::fstream out(outFilename, std::ios::out | std::ios::binary);
+
+  // This ray will be used in LineOfSight() for checking obstacles
+  // between a pair of vehicles.
+  if (!this->ray)
+  {
+    gazebo::physics::WorldPtr world = gazebo::physics::get_world();
+    this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
+        world->GetPhysicsEngine()->CreateShape("ray",
+          gazebo::physics::CollisionPtr()));
   }
 
   // Cache height values for efficiency.
@@ -165,17 +143,10 @@ void VisibilityPlugin::Update()
   std::cout << "Visibility table at: " << outFilename << std::endl;
 
   out.close();
-
-  */
-
-  this->table.Generate();
-
-  // Only run once
-  event::Events::DisconnectWorldUpdateBegin(this->updateConn);
 }
 
 //////////////////////////////////////////////////
-/*bool VisibilityPlugin::LineOfSight(const ignition::math::Vector3d &_p1,
+bool VisibilityTable::LineOfSight(const ignition::math::Vector3d &_p1,
                                    const ignition::math::Vector3d &_p2)
 {
   std::string firstEntity;
@@ -188,7 +159,7 @@ void VisibilityPlugin::Update()
 }
 
 /////////////////////////////////////////////////
-double VisibilityPlugin::HeightAt(const double _x, const double _y) const
+double VisibilityTable::HeightAt(const double _x, const double _y) const
 {
   double dist;
   std::string ent;
@@ -205,15 +176,15 @@ double VisibilityPlugin::HeightAt(const double _x, const double _y) const
 }
 
 /////////////////////////////////////////////////
-uint64_t VisibilityPlugin::Pair(uint64_t _a, uint64_t _b)
+uint64_t VisibilityTable::Pair(uint64_t _a, uint64_t _b)
 {
   // Szudzik's function
   return _a >= _b ?  _a * _a + _a + _b : _a + _b * _b;
 }
 
 /////////////////////////////////////////////////
-uint64_t VisibilityPlugin::Index(int _x, int _y)
+uint64_t VisibilityTable::Index(int _x, int _y)
 {
   return ((_y + this->maxY)/this->stepSize) * this->rowSize +
     ((_x + this->maxY)/this->stepSize);
-}*/
+}
