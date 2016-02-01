@@ -885,6 +885,9 @@ namespace swarm
     /// \brief BrokerPlugin needs access to some of the private member
     /// functions.
     friend class BrokerPlugin;
+
+    /// \brief the maximum physics step-size
+    protected: double maxStepSize;
   };
 }
 #endif
