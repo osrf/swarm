@@ -30,6 +30,7 @@
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
+#include "swarm/VisibilityTable.hh"
 #include "swarm/CommsModel.hh"
 #include "swarm/SwarmTypes.hh"
 
@@ -68,13 +69,6 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
               << std::endl;
   }
 
-  // This ray will be used in LineOfSight() for checking obstacles
-  // between a pair of vehicles.
-  /*this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
-    this->world->GetPhysicsEngine()->CreateShape("ray",
-      gazebo::physics::CollisionPtr()));
-      */
-
   this->CacheVisibilityPairs();
 
   // Initialize visibility.
@@ -103,6 +97,7 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
   if (stat(tableFilename.c_str(), &buffer) != 0)
   {
     std::cout << "Generating visibility table[/tmp/visibility.dat]\n.";
+    VisibilityTable table;
     table.Generate();
   }
 
@@ -318,34 +313,6 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
       continue;
     }
 
-    /*
-    auto entities = this->visibility[key];
-    GZ_ASSERT(!entities.empty(), "Found a visibility element empty");
-    bool visible = (entities.size() == 1) && (entities.at(0).empty());
-
-    // There's no communication allowed between two vehicles that have more
-    // than one obstacle in between.
-    if (!visible && entities.size() > 1)
-    {
-      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
-      continue;
-    }
-
-    auto obstacle = entities.at(0);
-    if (!visible && ((obstacle.find("building") != std::string::npos) ||
-                     (obstacle.find("terrain") != std::string::npos)))
-    {
-      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
-      continue;
-    }
-
-    auto otherPose = other->model->GetWorldPose().Ign();
-
-    bool treesBlocking = !visible && obstacle.find("tree") != std::string::npos;
-
-    // How far away is it from me?
-    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
-    */
     auto neighborDist = dist;
     auto commsDist = dist;
 

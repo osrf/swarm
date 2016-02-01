@@ -32,7 +32,6 @@
 
 #include "msgs/log_entry.pb.h"
 #include "swarm/SwarmTypes.hh"
-#include "swarm/VisibilityTable.hh"
 
 namespace swarm
 {
@@ -244,9 +243,6 @@ namespace swarm
 
     /// \brief Number of values in each row of the visibility table.
     private: uint64_t visibilityTableRowSize;
-
-    /// \brief Class that generates the visibilty table
-    private: VisibilityTable table;
   };
 }  // namespace
 #endif

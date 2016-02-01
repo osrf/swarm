@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Open Source Robotics Foundation
+ * Copyright (C) 2016 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,11 @@
  * limitations under the License.
  *
 */
-#ifndef _SWARM_VISIBILITY_PLUGIN_HH_
-#define _SWARM_VISIBILITY_PLUGIN_HH_
-
-#include <string>
-#include <array>
+#ifndef _SWARM_VISIBILITYPLUGIN_HH_
+#define _SWARM_VISIBILITYPLUGIN_HH_
 
 #include "gazebo/common/Plugin.hh"
 #include "gazebo/util/system.hh"
-#include "swarm/VisibilityTable.hh"
 
 namespace gazebo
 {
@@ -61,20 +57,11 @@ namespace gazebo
     /// \brief Initialize the plugin.
     private: void Init();
 
-    /// \brief World update callback
-    private: void Update();
-
     /// \brief World created callback
     private: void OnWorldCreated();
 
     /// \brief The world created connection.
     private: event::ConnectionPtr worldCreatedConn;
-
-    /// \brief The update connection.
-    private: event::ConnectionPtr updateConn;
-
-    /// \brief Class that generates the visibilty table
-    private: swarm::VisibilityTable table;
   };
 }
 #endif

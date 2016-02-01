@@ -43,7 +43,7 @@ namespace swarm
   /// We assume a terrain, without any other objects, is used to generate
   /// the visibility lookup table.
   ///
-  /// Example usage:
+  /// To generate the lookup table:
   ///   gzserver -s libVisibilityPlugin.so --iters 1 worlds/swarm_vis.world
   ///
   /// The visibility table will be located at /tmp/visibility.dat
