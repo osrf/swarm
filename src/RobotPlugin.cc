@@ -1065,7 +1065,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // Register this plugin in the logger.
   char *robotLogEnableEnv = std::getenv("SWARM_ROBOT_LOG");
   if (this->type == BOO ||
-      ((logEnableEnv) && (std::string(logEnableEnv) == "1")))
+      ((robotLogEnableEnv) && (std::string(robotLogEnableEnv) == "1")))
   {
     this->logger->Register(this->Host(), this);
   }

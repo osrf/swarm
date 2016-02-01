@@ -15,6 +15,7 @@
  *
 */
 #include <termios.h>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -32,12 +33,17 @@ void usage()
   std::cerr << "Introspect and manipulate a Swarm log file.\n\n"
             << " swarmlog [options]\n\n"
             << "Options:\n"
-            << " -h, --help\tShow this help message.\n"
-            << " -e, --echo\tOutput the content of a log file to screen.\n"
-            << " -i, --info\tOutput information about a log file. Log "
-            << "filename\n   \t\tshould be specified using the --file option.\n"
-            << " -s, --step\tStep through the content of a log file.\n"
-            << " -f, --file\tPath to a Swarm log file."
+            << " -h, --help             Show this help message.\n"
+            << " -e, --echo             Output the content of a log file to"
+            <<                          " screen.\n"
+            << " -i, --info             Output information about a log file."
+            <<                          " Log filename\n"
+            << "                        should be specified using the --file "
+            <<                          "option.\n"
+            << " -s, --step             Step through the content of a log "
+            <<                          "file.\n"
+            << " -f, --file   <input>   Path to a Swarm log file.\n"
+            << "     --filter <output>  Filter only broker and BOO entries."
             << std::endl;
 }
 
@@ -83,6 +89,8 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm)
     ("info,i" , "Output information about a log file. Log filename "
                 "should be specified using the --file option.")
     ("step,s" , "Step through the content of a log file.")
+    ("filter" , po::value<std::string>(),
+         "Filter only broker and BOO entries.")
     ("file,f" , po::value<std::string>()->required(),
          "Path to a Swarm log file.");
 
@@ -92,7 +100,8 @@ bool parseArguments(int argc, char **argv, po::variables_map &_vm)
 
     // We require to specify echo or step.
     if ((_vm.count("help")) ||
-        (!_vm.count("echo") && !_vm.count("info") && !_vm.count("step")))
+        (!_vm.count("echo") && !_vm.count("info") && !_vm.count("step") &&
+         !_vm.count("filter")))
       return false;
 
     po::notify(_vm);
@@ -192,6 +201,48 @@ int main(int argc, char **argv)
     auto fileSize = fileSizeStr(boost::filesystem::file_size(p));
     std::cout << "Size:                  " << fileSize << std::endl;
     std::cout << std::endl;
+    return 0;
+  }
+
+  if (vm.count("filter"))
+  {
+    // Output file.
+    std::string filteredFile = vm["filter"].as<std::string>();
+    std::fstream output(filteredFile,
+        std::ios::out | std::ios::trunc | std::ios::binary);
+
+    swarm::msgs::LogHeader header;
+    if (!parser.Header(header))
+    {
+      std::cerr << "Error parsing header from [" << logfile << "]" << std::endl;
+      return 1;
+    }
+
+    // Write the length of the header to be serialized.
+    int32_t headerSize = header.ByteSize();
+    output.write(reinterpret_cast<char*>(&headerSize), sizeof(headerSize));
+
+    if (!header.SerializeToOstream(&output))
+    {
+      std::cerr << "Failed to serialize to file." << std::endl;
+      return -1;
+    }
+
+    while (parser.Next(logEntry) && c != 'q')
+    {
+      if (logEntry.id() == "broker" || logEntry.id() == "boo")
+      {
+        // Write the length of the message to be serialized.
+        int32_t entrySize = logEntry.ByteSize();
+        output.write(reinterpret_cast<char*>(&entrySize), sizeof(entrySize));
+
+        if (!logEntry.SerializeToOstream(&output))
+        {
+          std::cerr << "Failed to serialize to file." << std::endl;
+          return -1;
+        }
+      }
+    }
     return 0;
   }
 
