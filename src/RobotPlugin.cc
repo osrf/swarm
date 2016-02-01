@@ -850,6 +850,7 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   // We assume that the physics step size will not change during simulation.
   this->world = this->model->GetWorld();
   this->common.SetWorld(this->world);
+  this->maxStepSize = this->world->GetPhysicsEngine()->GetMaxStepSize();
 
   // We assume the BOO is named "boo".
   this->boo = this->world->GetModel("boo");
