@@ -2,6 +2,7 @@ add_subdirectory(terrains)
 
 # Non-erb world files
 set (world_files
+  swarm_vis.world
 )
 
 # Non-world erb files
@@ -59,22 +60,31 @@ set (generated_master_world_files
   complete.world
   final_01_02_low.world
   final_01_02_low_flat.world
+  final_01_02_low_ground.world
   final_01_02_medium.world
   final_01_02_medium_flat.world
+  final_01_02_medium_ground.world
   final_01_02_high.world
   final_01_02_high_flat.world
+  final_01_02_high_ground.world
   final_01_10_low.world
   final_01_10_low_flat.world
+  final_01_10_low_ground.world
   final_01_10_medium.world
   final_01_10_medium_flat.world
+  final_01_10_medium_ground.world
   final_01_10_high.world
   final_01_10_high_flat.world
+  final_01_10_high_ground.world
   final_01_20_low.world
   final_01_20_low_flat.world
+  final_01_20_low_ground.world
   final_01_20_medium.world
   final_01_20_medium_flat.world
+  final_01_20_medium_ground.world
   final_01_20_high.world
   final_01_20_high_flat.world
+  final_01_20_high_ground.world
 )
 
 # Process the erb files

@@ -80,7 +80,9 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     }
 
     if(MapQuery(latitude, longitude, altitude, curType) == false)
-     printf("\n\n We're NOT inside the search area.\n\n");
+    {
+     // printf("\n\n We're NOT inside the search area.\n\n");
+    }
 
     //Figure out the distance we have travelled here:
     //double distance = .................
@@ -102,7 +104,7 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     {
       if(!MapQuery(neighborLats[i], neighborLongs[i], neighborHeights[i], neighborTypes[i]))
      {
-        printf("\nNeighbor queried outside of search area.\n");
+        //printf("\nNeighbor queried outside of search area.\n");
         neighborLats[i] = neighborLongs[i] = 0;//throw away this data. When we calculate our probabilities we will ignore these points.
       }
     }
@@ -154,21 +156,21 @@ void LostPersonControllerPlugin::Update(const gazebo::common::UpdateInfo &_info)
     if (!gazebo::common::Console::GetQuiet())
     {
       //Print the transitional matrix for debugging purposes and the occasional sanity check.
-      printf("\n\n");
-      printf("            ______                 \n");
-      printf("           /      \\               \n");
-      printf("    ______/  %.2f  \\______        \n", transitionalProbabilities[0]);
-      printf("   /      \\        /      \\      \n");
-      printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[5], transitionalProbabilities[1]);
-      printf("  \\        /      \\        /     \n");
-      printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[6]);
-      printf("   /      \\        /      \\      \n");
-      printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[4], transitionalProbabilities[2]);
-      printf("  \\        /      \\        /     \n");
-      printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[3]);
-      printf("          \\        /              \n");
-      printf("           \\______/               \n");
-      printf("\n\n");
+      // printf("\n\n");
+      // printf("            ______                 \n");
+      // printf("           /      \\               \n");
+      // printf("    ______/  %.2f  \\______        \n", transitionalProbabilities[0]);
+      // printf("   /      \\        /      \\      \n");
+      // printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[5], transitionalProbabilities[1]);
+      // printf("  \\        /      \\        /     \n");
+      // printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[6]);
+      // printf("   /      \\        /      \\      \n");
+      // printf("  /  %.2f  \\______/  %.2f  \\     \n", transitionalProbabilities[4], transitionalProbabilities[2]);
+      // printf("  \\        /      \\        /     \n");
+      // printf("   \\______/  %.2f  \\______/      \n", transitionalProbabilities[3]);
+      // printf("          \\        /              \n");
+      // printf("           \\______/               \n");
+      // printf("\n\n");
     }
 
     /*******************************/
@@ -202,7 +204,7 @@ void LostPersonControllerPlugin::MoveToPosition(double currentX, double currentY
   else if (ignition::math::equal(targetX, 0.0) &&
            ignition::math::equal(targetY, 0.0))
   {
-    printf("\nGoal is outside of search area.\n");
+    // printf("\nGoal is outside of search area.\n");
     this->velocity *= 0;
   }
   else

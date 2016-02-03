@@ -36,7 +36,7 @@
 namespace swarm
 {
   /// \brief Class used to store information about the communication model.
-  class IGNITION_VISIBLE CommsModel
+  class CommsModel
   {
     /// \brief Class constructor.
     ///
@@ -94,8 +94,7 @@ namespace swarm
     /// not only the first and last.
     /// \return True if the points have line of sight or false otherwise.
     private: bool LineOfSight(const ignition::math::Pose3d &_p1,
-                              const ignition::math::Pose3d &_p2,
-                              std::vector<std::string> &_entities);
+                              const ignition::math::Pose3d &_p2);
 
     /// \brief Check if a "comms_model" block exists in the SDF element of the
     /// plugin. If so, update the value of the default parameters with the one
@@ -107,6 +106,29 @@ namespace swarm
     /// checked in UpdateVisibility() each iteration. Note that the vector will
     /// contain all combinations of two different elements (not permutations).
     private: void CacheVisibilityPairs();
+
+    /// \brief A pairing function that maps two values to a unique third
+    /// value.
+    /// \param[in] _a First value
+    /// \param[in] _b Second value
+    /// \return A unique key value
+    private: uint64_t Pair(const int _a, const int _b);
+
+    /// \brief Generate an index from a coordinate.
+    /// \param[in] _x X coordinate
+    /// \param[in] _y Y coordinate
+    private: int Index(const ignition::math::Vector3d &_p);
+
+    /// \brief Check for building and tree obstacles between two points.
+    /// \param[in] _posA Start point
+    /// \param[in] _posB End point
+    /// \param[out] _visible True if the two points are visible
+    /// \param[out] _treesBlocking True if trees are blocking
+    /// \param[out] _dist Distance to a blocking tree or building
+    private: void CheckObstacles(const ignition::math::Vector3d &_posA,
+                                 const ignition::math::Vector3d &_posB,
+                                 bool &_visible, bool &_treesBlocking,
+                                 double &_dist);
 
     /// \brief Minimum free-space distance (m) between two nodes to be
     /// neighbors. Set to <0 for no limit.
@@ -177,8 +199,7 @@ namespace swarm
     /// that stores the entity names of the first and last obstacles between the
     /// vehicles. If there is line of sight the value contains a vector of one
     /// element (empty string).
-    private: std::map<std::pair<std::string, std::string>,
-               std::vector<std::string>> visibility;
+    private: std::map<std::pair<std::string, std::string>, bool> visibility;
 
     /// \brief Visibility between all the robots.
     private: msgs::VisibilityMap visibilityMsg;
@@ -210,6 +231,24 @@ namespace swarm
 
     /// Update rate of the comms model.
     private: double updateRate = 0.5;
+
+    /// \brief Visibility lookup table
+    private: std::set<uint64_t> visibilityTable;
+
+    /// \brief Maximum Y value of the visibility table
+    private: uint64_t visibilityTableMaxY;
+
+    /// \brief The granularity of the visibility table
+    private: uint64_t visibilityTableStepSize;
+
+    /// \brief Number of values in each row of the visibility table.
+    private: uint64_t visibilityTableRowSize;
+
+    /// \brief Bounding boxes for all the trees
+    private: std::vector<ignition::math::Box> trees;
+
+    /// \brief Bounding boxes for all the buildings
+    private: std::vector<ignition::math::Box> buildings;
   };
 }  // namespace
 #endif

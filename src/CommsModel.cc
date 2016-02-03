@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <sys/stat.h>
 #include <string>
 #include <utility>
 #include <gazebo/common/Assert.hh>
@@ -29,6 +30,7 @@
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
+#include "swarm/VisibilityTable.hh"
 #include "swarm/CommsModel.hh"
 #include "swarm/SwarmTypes.hh"
 
@@ -67,12 +69,6 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
               << std::endl;
   }
 
-  // This ray will be used in LineOfSight() for checking obstacles
-  // between a pair of vehicles.
-  this->ray = boost::dynamic_pointer_cast<gazebo::physics::RayShape>(
-    this->world->GetPhysicsEngine()->CreateShape("ray",
-      gazebo::physics::CollisionPtr()));
-
   this->CacheVisibilityPairs();
 
   // Initialize visibility.
@@ -85,8 +81,7 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     for (auto const &robotB : (*this->swarm))
     {
       auto addressB = robotB.second->address;
-      this->visibility[
-        std::make_pair(addressA, addressB)] = {""};
+      this->visibility[std::make_pair(addressA, addressB)] = false;
 
       // Create a new visibility entry for logging with a VISIBLE status.
       auto visibilityEntry = row->add_entry();
@@ -94,6 +89,47 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
       visibilityEntry->set_status(msgs::CommsStatus::VISIBLE);
 
       this->visibilityMsgStatus[addressA][addressB] = visibilityEntry;
+    }
+  }
+
+  std::string tableFilename = "/tmp/visibility.dat";
+  struct stat buffer;
+  if (stat(tableFilename.c_str(), &buffer) != 0)
+  {
+    std::cout << "Generating visibility table[/tmp/visibility.dat]\n.";
+    VisibilityTable table;
+    table.Generate();
+  }
+
+  // Read the visibility table information
+  std::ifstream tableIn(tableFilename, std::ios::binary | std::ios::in);
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableMaxY),
+      sizeof(int));
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableStepSize),
+      sizeof(int));
+  tableIn.read(reinterpret_cast<char*>(&this->visibilityTableRowSize),
+      sizeof(int));
+
+  while (true)
+  {
+    uint64_t data;
+    tableIn.read((char*)(&data), sizeof(uint64_t));
+    if (!tableIn.eof())
+      this->visibilityTable.emplace(data);
+    else
+      break;
+  }
+
+  // Get all the trees
+  for (auto const &model : this->world->GetModels())
+  {
+    if (model->GetName().find("tree") != std::string::npos)
+    {
+      this->trees.push_back(model->GetBoundingBox().Ign());
+    }
+    else if (model->GetName().find("building") != std::string::npos)
+    {
+      this->buildings.push_back(model->GetBoundingBox().Ign());
     }
   }
 }
@@ -268,32 +304,28 @@ void CommsModel::UpdateNeighborList(const std::string &_address)
     auto key = std::make_pair(_address, other->address);
     GZ_ASSERT(this->visibility.find(key) != this->visibility.end(),
       "vehicle key not found in visibility");
-    auto entities = this->visibility[key];
-    GZ_ASSERT(!entities.empty(), "Found a visibility element empty");
-    bool visible = (entities.size() == 1) && (entities.at(0).empty());
 
-    // There's no communication allowed between two vehicles that have more
-    // than one obstacle in between.
-    if (!visible && entities.size() > 1)
-    {
-      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
-      continue;
-    }
-
-    auto obstacle = entities.at(0);
-    if (!visible && ((obstacle.find("building") != std::string::npos) ||
-                     (obstacle.find("terrain") != std::string::npos)))
+    bool visible = this->visibility[key];
+    if (!visible)
     {
       visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
       continue;
     }
 
     auto otherPose = other->model->GetWorldPose().Ign();
+    bool treesBlocking;
+    double dist;
 
-    bool treesBlocking = !visible && obstacle.find("tree") != std::string::npos;
+    // Check tree and building interference
+    this->CheckObstacles(myPose.Pos(), otherPose.Pos(),
+                         visible, treesBlocking, dist);
 
-    // How far away is it from me?
-    auto dist = (myPose.Pos() - otherPose.Pos()).Length();
+    if (!visible)
+    {
+      visibilityEntry->set_status(msgs::CommsStatus::OBSTACLE);
+      continue;
+    }
+
     auto neighborDist = dist;
     auto commsDist = dist;
 
@@ -439,46 +471,28 @@ void CommsModel::UpdateVisibility()
 
     auto poseA = (*swarm)[addressA]->model->GetWorldPose().Ign();
     auto poseB = (*swarm)[addressB]->model->GetWorldPose().Ign();
-    std::vector<std::string> entities;
-    this->LineOfSight(poseA, poseB, entities);
-    this->visibility[keyA] = entities;
+    if (poseA.Pos().Distance(poseB.Pos()) <= this->commsDistanceMax)
+      this->visibility[keyA] = this->LineOfSight(poseA, poseB);
+    else
+      this->visibility[keyA] = false;
 
     // Update the symmetric case.
-    auto v = this->visibility[keyA];
-    std::reverse(v.begin(), v.end());
-    this->visibility[keyB] = v;
+    this->visibility[keyB] = this->visibility[keyA];
   }
 }
 
 //////////////////////////////////////////////////
 bool CommsModel::LineOfSight(const ignition::math::Pose3d& _p1,
-                             const ignition::math::Pose3d& _p2,
-                             std::vector<std::string> &_entities)
+                             const ignition::math::Pose3d& _p2)
 {
-  std::string firstEntity;
-  std::string lastEntity;
-  double dist;
-  ignition::math::Vector3d start = _p1.Pos();
-  ignition::math::Vector3d end = _p2.Pos();
+  int index1 = this->Index(_p1.Pos());
+  int index2 = this->Index(_p2.Pos());
 
-  _entities.clear();
-
-  this->ray->SetPoints(start, end);
-  // Get the first obstacle from _p1 to _p2.
-  this->ray->GetIntersection(dist, firstEntity);
-  _entities.push_back(firstEntity);
-
-  if (!firstEntity.empty())
-  {
-    this->ray->SetPoints(end, start);
-    // Get the last obstacle from _p1 to _p2.
-    this->ray->GetIntersection(dist, lastEntity);
-
-    if (firstEntity != lastEntity)
-      _entities.push_back(lastEntity);
-  }
-
-  return firstEntity.empty();
+  return
+    this->visibilityTable.find(this->Pair(index1, index2))
+    == this->visibilityTable.end() &&
+    this->visibilityTable.find(this->Pair(index2, index1))
+    == this->visibilityTable.end();
 }
 
 //////////////////////////////////////////////////
@@ -553,6 +567,68 @@ void CommsModel::LoadParameters(sdf::ElementPtr _sdf)
     if (commsModelElem->HasElement("update_rate"))
     {
       this->updateRate = commsModelElem->Get<double>("update_rate");
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+uint64_t CommsModel::Pair(const int _a, const int _b)
+{
+  // Szudzik's function
+  return _a >= _b ?  _a * _a + _a + _b : _a + _b * _b;
+}
+
+/////////////////////////////////////////////////
+int CommsModel::Index(const ignition::math::Vector3d &_p)
+{
+  int x = std::round(_p.X() / this->visibilityTableStepSize) *
+    this->visibilityTableStepSize;
+
+  int y = std::round(_p.Y() / this->visibilityTableStepSize) *
+    this->visibilityTableStepSize;
+
+  return ((y + this->visibilityTableMaxY)/ this->visibilityTableStepSize) *
+    this->visibilityTableRowSize +
+    ((x + this->visibilityTableMaxY)/this->visibilityTableStepSize);
+}
+
+/////////////////////////////////////////////////
+void CommsModel::CheckObstacles(const ignition::math::Vector3d &_posA,
+    const ignition::math::Vector3d &_posB,
+    bool &_visible, bool &_treesBlocking, double &_dist)
+{
+  ignition::math::Vector3d origin = _posA.Pos();
+  ignition::math::Vector3d dir = (_posB.Pos() - _posA.Pos()).Normalize();
+
+  _treesBlocking = false;
+  bool intersects = false;
+  double dist = 0;
+
+  for (auto const &building : this->buildings)
+  {
+    std::tie(intersects, dist) = building.Intersects(origin, dir);
+    if (intersects)
+    {
+      _visible = false;
+      _dist = dist;
+      return;
+    }
+  }
+
+  for (auto const &tree : this->trees)
+  {
+    std::tie(intersects, dist) = tree.Intersects(origin, dir);
+    if (intersects)
+    {
+      _dist = dist;
+
+      // Not visible if two trees are blocking visibility
+      if (_treesBlocking)
+      {
+        _visible = false;
+        return;
+      }
+      _treesBlocking = true;
     }
   }
 }

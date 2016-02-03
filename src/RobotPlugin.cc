@@ -200,7 +200,9 @@ void RobotPlugin::OnDataReceivedPython(const std::string &_srcAddress,
   PyTuple_SetItem(pArgs, 4, PyString_FromString(_data.c_str()));
 
   // Call UPDATE function in python.
-  PyObject *res = PyObject_CallObject((PyObject*)this->pOnDataReceivedFunc, pArgs);
+  PyObject *res = PyObject_CallObject(
+      (PyObject*)this->pOnDataReceivedFunc, pArgs);
+
   if(res == NULL)
       PyErr_Print();
 #endif
@@ -1061,7 +1063,12 @@ void RobotPlugin::Load(gazebo::physics::ModelPtr _model,
   this->broker->Register(this->Host(), this);
 
   // Register this plugin in the logger.
-  this->logger->Register(this->Host(), this);
+  char *robotLogEnableEnv = std::getenv("SWARM_ROBOT_LOG");
+  if (this->type == BOO ||
+      ((robotLogEnableEnv) && (std::string(robotLogEnableEnv) == "1")))
+  {
+    this->logger->Register(this->Host(), this);
+  }
 
   // Call the Load() method from the derived plugin.
   this->Load(_sdf);
