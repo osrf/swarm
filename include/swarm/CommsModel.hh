@@ -243,6 +243,12 @@ namespace swarm
 
     /// \brief Number of values in each row of the visibility table.
     private: uint64_t visibilityTableRowSize;
+
+    /// \brief Bounding boxes for all the trees
+    private: std::vector<ignition::math::Box> trees;
+
+    /// \brief Bounding boxes for all the buildings
+    private: std::vector<ignition::math::Box> buildings;
   };
 }  // namespace
 #endif

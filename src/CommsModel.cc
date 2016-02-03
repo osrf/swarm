@@ -119,6 +119,19 @@ CommsModel::CommsModel(SwarmMembershipPtr _swarm,
     else
       break;
   }
+
+  // Get all the trees
+  for (auto const &model : this->world->GetModels())
+  {
+    if (model->GetName().find("tree") != std::string::npos)
+    {
+      this->trees.push_back(model->GetBoundingBox().Ign());
+    }
+    else if (model->GetName().find("building") != std::string::npos)
+    {
+      this->buildings.push_back(model->GetBoundingBox().Ign());
+    }
+  }
 }
 
 //////////////////////////////////////////////////
@@ -580,11 +593,42 @@ int CommsModel::Index(const ignition::math::Vector3d &_p)
 }
 
 /////////////////////////////////////////////////
-void CommsModel::CheckObstacles(const ignition::math::Vector3d & /*_posA*/,
-    const ignition::math::Vector3d &/*_posB*/,
+void CommsModel::CheckObstacles(const ignition::math::Vector3d &_posA,
+    const ignition::math::Vector3d &_posB,
     bool &_visible, bool &_treesBlocking, double &_dist)
 {
-  _visible = _visible;
-  _treesBlocking = _treesBlocking;
-  _dist = _dist;
+  ignition::math::Vector3d origin = _posA.Pos();
+  ignition::math::Vector3d dir = (_posB.Pos() - _posA.Pos()).Normalize();
+
+  _treesBlocking = false;
+  bool intersects = false;
+  double dist = 0;
+
+  for (auto const &building : this->buildings)
+  {
+    std::tie(intersects, dist) = building.Intersects(origin, dir);
+    if (intersects)
+    {
+      _visible = false;
+      _dist = dist;
+      return;
+    }
+  }
+
+  for (auto const &tree : this->trees)
+  {
+    std::tie(intersects, dist) = tree.Intersects(origin, dir);
+    if (intersects)
+    {
+      _dist = dist;
+
+      // Not visible if two trees are blocking visibility
+      if (_treesBlocking)
+      {
+        _visible = false;
+        return;
+      }
+      _treesBlocking = true;
+    }
+  }
 }

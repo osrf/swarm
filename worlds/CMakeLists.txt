@@ -65,6 +65,7 @@ set (generated_master_world_files
   final_01_02_medium_flat.world
   final_01_02_medium_ground.world
   final_01_02_high.world
+  final_01_02_high_flat.world
   final_01_02_high_ground.world
   final_01_10_low.world
   final_01_10_low_flat.world
