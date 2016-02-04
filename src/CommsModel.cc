@@ -597,8 +597,8 @@ void CommsModel::CheckObstacles(const ignition::math::Vector3d &_posA,
     const ignition::math::Vector3d &_posB,
     bool &_visible, bool &_treesBlocking, double &_dist)
 {
-  ignition::math::Vector3d origin = _posA.Pos();
-  ignition::math::Vector3d dir = (_posB.Pos() - _posA.Pos()).Normalize();
+  ignition::math::Vector3d origin = _posA;
+  ignition::math::Vector3d dir = (_posB - _posA).Normalize();
 
   _treesBlocking = false;
   bool intersects = false;
@@ -606,7 +606,7 @@ void CommsModel::CheckObstacles(const ignition::math::Vector3d &_posA,
 
   for (auto const &building : this->buildings)
   {
-    std::tie(intersects, dist) = building.Intersects(origin, dir);
+    std::tie(intersects, dist) = building.IntersectDist(origin, dir, 0, 250);
     if (intersects)
     {
       _visible = false;
@@ -617,7 +617,7 @@ void CommsModel::CheckObstacles(const ignition::math::Vector3d &_posA,
 
   for (auto const &tree : this->trees)
   {
-    std::tie(intersects, dist) = tree.Intersects(origin, dir);
+    std::tie(intersects, dist) = tree.IntersectDist(origin, dir, 0, 250);
     if (intersects)
     {
       _dist = dist;
