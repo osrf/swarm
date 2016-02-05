@@ -602,7 +602,7 @@ class Runner
 
       jsonFilename = File.join(report[:swarm], "summary.json")
       commsFilename = File.join(report[:swarm], "swarm_comms.json.zip")
-      logFilename = File.join(report[:gazebo], "gzserver", "filtered.json.zip")
+      logFilename = File.join(report[:gazebo], "filtered.json.zip")
 
       if !File.exist?(jsonFilename)
         puts "Error: JSON Summary file doesn't exist: #{jsonFilename}"
@@ -635,7 +635,7 @@ class Runner
 
   ###############################################
   # Generate all the runs based on the provided parameters
-  def generate_runs
+  def generate_runs(logDir)
     port = 11346
     @runs = []
 
@@ -673,9 +673,11 @@ class Runner
 
             world = world + "_#{vehicleCount}.world"
 
-            @runs.push("SWARM_LOG=1 SWARM_TEAMNAME=#{@team} " +
+            @runs.push("SWARM_LOG=1 SWARM_LOG_PATH=#{logDir}/swarm/#{port} " +
+                       "SWARM_TEAMNAME=#{@team} " +
                        "GAZEBO_MASTER_URI=http://localhost:#{port} " +
-                       "gzserver -r #{world}")
+                       "gzserver --record_path #{logDir}/gazebo/#{port} " +
+                       "-r #{world}")
             port += 1
           end
         end
@@ -687,7 +689,11 @@ class Runner
   # \brief Run all the tests
   def run_tests
 
-    generate_runs
+    # Get the current time.
+    time = Time.now.strftime("%Y-%m-%dT%H:%M:%S")
+    logDir = "#{@dir}/#{time}"
+
+    generate_runs(logDir)
 
     # Output some useful information
     puts "Parameters:"
@@ -716,15 +722,19 @@ class Runner
       return
     end
 
-    # Get the current time.
-    time = Time.now.strftime("%Y-%m-%dT%H:%M:%S")
-
     # Clear the log directories, if specified on the command line.
     if @clearLogs
       puts "Clearing logs"
       FileUtils.rm_rf("#{ENV['HOME']}/.swarm/log")
       FileUtils.rm_rf("#{ENV['HOME']}/.gazebo/log")
+
+      FileUtils.rm_rf("#{logDir}/swarm")
+      FileUtils.rm_rf("#{logDir}/gazebo")
     end
+
+    # Log file directory into common location
+    FileUtils.mkdir_p("#{logDir}/swarm")
+    FileUtils.mkdir_p("#{logDir}/gazebo")
 
     puts "Starting tests..."
 
@@ -743,18 +753,13 @@ class Runner
        end
     end
 
-    # Gather log files into common location
-    FileUtils.mkdir("#{@dir}/#{time}")
-    FileUtils.cp_r("#{ENV['HOME']}/.swarm/log", "#{@dir}/#{time}/swarm")
-    FileUtils.cp_r("#{ENV['HOME']}/.gazebo/log", "#{@dir}/#{time}/gazebo")
-
     # Generate the reports
-    generate_reports("#{@dir}/#{time}")
+    generate_reports(logDir)
 
-    filter_gazebo_logs("#{@dir}/#{time}")
+    filter_gazebo_logs(logDIr)
 
     # Upload the reports
-    upload_reports("#{@dir}/#{time}", @pass)
+    upload_reports(logDir, @pass)
   end
 
   #################################################
@@ -772,7 +777,7 @@ class Runner
     puts reports
 
     reports.each do |report|
-      stateLog = "#{report}/gzserver/state.log"
+      stateLog = "#{report}/state.log"
       if !File.exist?(stateLog)
         puts "Error, missing log: #{stateLog}"
         next
@@ -868,7 +873,7 @@ class Runner
       z.close
 
       # Write compressed file
-      File.open("#{report}/gzserver/filtered.json.zip", 'w') do |file|
+      File.open("#{report}/filtered.json.zip", 'w') do |file|
         file.write(deflated)
       end
     end
