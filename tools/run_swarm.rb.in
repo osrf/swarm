@@ -842,7 +842,7 @@ class Runner
     # Generate the reports
     generate_reports(logDir)
 
-    filter_gazebo_logs(logDIr)
+    filter_gazebo_logs(logDir)
 
     # Upload the reports
     upload_reports(logDir, @pass)
