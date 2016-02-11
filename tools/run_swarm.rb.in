@@ -5,6 +5,7 @@ $LOAD_PATH.push("@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm")
 # $ gem install protobuf
 require 'protobuf'
 require '@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm/log_entry.pb'
+require '@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm/log_entry_min.pb'
 require '@CMAKE_INSTALL_PREFIX@/@RUBY_INSTALL_DIR@/swarm/log_header.pb'
 
 require 'timeout'
@@ -194,7 +195,7 @@ class LogParser
       return nextMsg
     end
 
-    pbmsg = Swarm::Msgs::LogEntry.new
+    pbmsg = Swarm::Msgs::LogEntryMin.new
     pbmsg.decode(msg)
 
     return pbmsg
