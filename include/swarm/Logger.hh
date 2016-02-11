@@ -24,6 +24,7 @@
 #include <string>
 #include <sdf/sdf.hh>
 
+#include "msgs/log_entry_min.pb.h"
 #include "msgs/log_entry.pb.h"
 #include "msgs/log_header.pb.h"
 #include "swarm/Helpers.hh"
@@ -40,6 +41,13 @@ namespace swarm
     /// \param[out] _logEntry Protobuf data structure that the client should
     /// partially fill.
     public: virtual void OnLog(msgs::LogEntry &/*_logEntry*/) const
+    {
+    };
+
+    /// \brief Collect the logging information from a client.
+    /// \param[out] _logEntry Protobuf data structure that the client should
+    /// partially fill.
+    public: virtual void OnLogMin(msgs::LogEntryMin &/*_logEntry*/) const
     {
     };
   };
@@ -125,6 +133,10 @@ namespace swarm
     /// client ID and the value is the last logEntry stored for this client.
     private: std::map<std::string, msgs::LogEntry> log;
 
+    /// \brief Current list of log entries stored in memory. The key is the
+    /// client ID and the value is the last logEntry stored for this client.
+    private: std::map<std::string, msgs::LogEntryMin> logMin;
+
     /// \brief Stream object to operate on a log file.
     private: std::fstream output;
 
@@ -136,6 +148,9 @@ namespace swarm
 
     /// \brief The log header.
     private: msgs::LogHeader header;
+
+    /// \brief Minimal logging flag.
+    private: bool min = true;
   };
 }  // namespace
 #endif

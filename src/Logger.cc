@@ -45,6 +45,9 @@ Logger::Logger()
   char *logEnableEnv = std::getenv("SWARM_LOG");
   this->enabled = ((logEnableEnv) && (std::string(logEnableEnv) == "1"));
 
+  char *logMinEnv = std::getenv("SWARM_LOG_MIN");
+  this->min = ((logMinEnv) && (std::string(logMinEnv) == "1"));
+  std::cout << "Min[" << this->min << "]\n";
 }
 
 /////////////////////////////////////////////////
@@ -146,38 +149,82 @@ void Logger::Update(const double _simTime)
   {
     auto id = kv.first;
     auto client = kv.second;
-    msgs::LogEntry logEntryMsg;
 
-    // The logger sets some fields.
-    logEntryMsg.set_id(id);
-    logEntryMsg.set_time(_simTime);
-
-    if (!client)
+    if (this->min)
     {
-      std::cerr << "Logger::Update() error: Client [" << id
-                << "] has been destroyed. Removing client." << std::endl;
-      this->log.erase(id);
-      continue;
+      msgs::LogEntryMin logEntryMsg;
+
+      // The logger sets some fields.
+      logEntryMsg.set_time(_simTime);
+
+      if (!client)
+      {
+        std::cerr << "Logger::Update() error: Client [" << id
+          << "] has been destroyed. Removing client." << std::endl;
+        this->logMin.erase(id);
+        continue;
+      }
+
+      // The client sets some fields.
+      client->OnLogMin(logEntryMsg);
+
+      // We save the logEntry in memory.
+      this->logMin[id] = logEntryMsg;
     }
+    else
+    {
+      msgs::LogEntry logEntryMsg;
 
-    // The client sets some fields.
-    client->OnLog(logEntryMsg);
+      // The logger sets some fields.
+      logEntryMsg.set_id(id);
+      logEntryMsg.set_time(_simTime);
 
-    // We save the logEntry in memory.
-    this->log[id] = logEntryMsg;
+      if (!client)
+      {
+        std::cerr << "Logger::Update() error: Client [" << id
+          << "] has been destroyed. Removing client." << std::endl;
+        this->log.erase(id);
+        continue;
+      }
+
+      // The client sets some fields.
+      client->OnLog(logEntryMsg);
+
+      // We save the logEntry in memory.
+      this->log[id] = logEntryMsg;
+    }
   }
 
   // Flush the log into disk.
-  for (const auto &logPair : this->log)
+  if (this->min)
   {
-    // Write the length of the message to be serialized.
-    int32_t size = logPair.second.ByteSize();
-    this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
-
-    if (!logPair.second.SerializeToOstream(&this->output))
+    std::cout << "flush\n";
+    for (const auto &logPair : this->logMin)
     {
-      std::cerr << "Failed to write log into disk." << std::endl;
-      return;
+      // Write the length of the message to be serialized.
+      int32_t size = logPair.second.ByteSize();
+      this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+      if (!logPair.second.SerializeToOstream(&this->output))
+      {
+        std::cerr << "Failed to write log into disk." << std::endl;
+        return;
+      }
+    }
+  }
+  else
+  {
+    for (const auto &logPair : this->log)
+    {
+      // Write the length of the message to be serialized.
+      int32_t size = logPair.second.ByteSize();
+      this->output.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+      if (!logPair.second.SerializeToOstream(&this->output))
+      {
+        std::cerr << "Failed to write log into disk." << std::endl;
+        return;
+      }
     }
   }
 

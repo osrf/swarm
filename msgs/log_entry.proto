@@ -7,6 +7,7 @@ package swarm.msgs;
 import "vector3d.proto";
 import "quaternion.proto";
 import "pose.proto";
+import "boo_report.proto";
 
 message Gps
 {
@@ -143,19 +144,6 @@ message VisibilityMap
   /// \brief Collection of visibility rows. Each visibility row represents the
   /// connectivity between one robot and the rest of the swarm.
   repeated VisibilityRow row = 1;
-}
-
-message BooReport
-{
-  /// \brief Time at which the lost person was seen.
-  required double time_seen              = 1;
-
-  /// \brief Position at which the lost person was seen.
-  required gazebo.msgs.Vector3d pos_seen = 2;
-
-  /// \brief Success of the reported command. True if the BOO considered the
-  /// command correct or false otherwise.
-  required bool succeed                  = 3;
 }
 
 message LogEntry

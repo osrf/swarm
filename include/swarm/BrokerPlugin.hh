@@ -85,6 +85,9 @@ namespace swarm
     private: void DispatchMessages();
 
     // Documentation inherited.
+    private: void OnLogMin(msgs::LogEntryMin &_logEntry) const;
+
+    // Documentation inherited.
     private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
     /// \brief World pointer.
@@ -119,6 +122,24 @@ namespace swarm
 
     /// \brief Random engine used to shuffle the messages.
     private: std::default_random_engine rndEngine;
+
+    /// \brief Number of unicast messages sent in the current iteration
+    private: int numUnicast = 0;
+
+    /// \brief Number of broadcast messages sent in the current iteration
+    private: int numBroadcast = 0;
+
+    /// \brief Number of multicast messages sent in the current iteration
+    private: int numMulticast = 0;
+
+    /// \brief Number of bytes sent in the current iteration
+    private: int bytesSent = 0;
+
+    /// \brief Number of messages delivered in the current iteration
+    private: int msgsDelivered = 0;
+
+    /// \brief Number of potential recipients in the current iteration
+    private: int potentialRecipients = 0;
   };
 }
 #endif

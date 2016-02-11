@@ -202,6 +202,90 @@ class LogParser
 
   ###############################################
   # Convert swarm comms log file to csv and zipped json files
+  def to_comms_min(_csvFile, _jsonFile)
+    csvFile = File.open(_csvFile, 'w')
+    csvFile.print "# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors\n"
+
+    json = []
+
+    # Process each message in the logfile
+    self.each do |entry|
+
+      msgSent = entry.num_unicast + entry.num_broadcast + entry.num_multicast
+      if entry.potential_recipients > 0
+        dropRatio = (entry.potential_recipients -
+          entry.msgs_delivered)/entry.potential_recipients.to_f
+      else
+        dropRatio = 0
+      end
+
+      entryData = {
+        :time => entry.time.to_f, # In
+        :msg_sent => msgSent, # Compute
+        :num_unicast => entry.num_unicast, #In
+        :num_broadcast => entry.num_broadcast, #In
+        :num_multicast => entry.num_multicast, #In
+        :msg_freq => msgSent / @timeStep, #Compute
+        :potential_recipients => entry.potential_recipients, #In
+        :msgs_delivered => entry.msgs_delivered, #In
+        :drop_ratio => dropRatio, #Compute
+        :bytes_sent => entry.bytes_sent, #In
+        :data_rate => (entry.bytes_sent * 8) / @timeStep, #Compute
+        :avg_neighbors => entry.avg_neighbors, #In
+        :msgs => [] #Drop
+      }
+
+      json.push(entryData)
+
+      csvFile.print "%f,%d,%f,%d,%d,%d,%d,%d,%f,%d,%f,%f\n" %
+          [entryData[:time], entryData[:msg_sent], entryData[:msg_freq],
+           entryData[:num_unicast], entryData[:num_broadcast],
+           entryData[:num_multicast], entryData[:potential_recipients],
+           entryData[:msgs_delivered], entryData[:drop_ratio],
+           entryData[:bytes_sent], entryData[:data_rate],
+           entryData[:avg_neighbors]]
+
+      # Update global variables.
+      @totalMsgsSent += entryData[:msg_sent]
+      @totalMsgsUnicast += entryData[:num_unicast]
+      @totalMsgsBroadcast += entryData[:num_broadcast]
+      @totalMsgsMulticast += entryData[:num_multicast]
+      @totalMsgsSentFreq += entryData[:msg_freq]
+
+      @counterMsgsSentFreq += 1
+      @totalDropRatio += entryData[:drop_ratio]
+      @counterDropRatio += 1
+      @totalDataRate += entryData[:data_rate]
+      @counterDataRate += 1
+      @totalNeighbors += entryData[:avg_neighbors]
+      @counterTotalNeighbors += 1
+
+      entry.boo_report.each do |booReport|
+        if booReport.succeed
+          @succeed = true
+        else
+          @wrongBooReports += 1
+        end
+      end
+
+      if !@succeed
+        @duration = entry.time
+      end
+    end
+    csvFile.close
+
+    z = Zlib::Deflate.new
+    deflated = z.deflate(json.to_json.to_s, Zlib::FINISH)
+    z.close
+
+    # Write compressed file
+    File.open(_jsonFile, 'w') do |file|
+      file.write(deflated)
+    end
+  end
+
+  ###############################################
+  # Convert swarm comms log file to csv and zipped json files
   def to_comms(_csvFile, _jsonFile)
     csvFile = File.open(_csvFile, 'w')
     csvFile.print "# time, msg_sent, msg_freq, num_unicast, num_broadcast, num_multicast, potential_recipients, msgs_delivered, drop_ratio, bytes_sent, data_rate, avg_num_neighbors\n"
@@ -220,19 +304,19 @@ class LogParser
       if entry.field?(:incoming_msgs) and entry.field?(:time) and
          entry.field?(:visibility)
         entryData = {
-          :time => entry.time.to_f,
-          :msg_sent => 0,
-          :num_unicast => 0,
-          :num_broadcast => 0,
-          :num_multicast => 0,
-          :msg_freq => 0,
-          :potential_recipients => 0,
-          :msgs_delivered => 0,
-          :drop_ratio => 0,
-          :bytes_sent => 0,
-          :data_rate => 0,
-          :avg_neighbors => 0,
-          :msgs => []
+          :time => entry.time.to_f, # In
+          :msg_sent => 0, # Compute
+          :num_unicast => 0, #In
+          :num_broadcast => 0, #In
+          :num_multicast => 0, #In
+          :msg_freq => 0, #Compute
+          :potential_recipients => 0, #In
+          :msgs_delivered => 0, #In
+          :drop_ratio => 0, #Compute
+          :bytes_sent => 0, #In
+          :data_rate => 0, #Compute
+          :avg_neighbors => 0, #In
+          :msgs => [] #Drop
         }
 
         numRobots = 0
@@ -673,7 +757,8 @@ class Runner
 
             world = world + "_#{vehicleCount}.world"
 
-            @runs.push("SWARM_LOG=1 SWARM_LOG_PATH=#{logDir}/swarm/#{port} " +
+            @runs.push("SWARM_LOG=1 SWARM_LOG_MIN=1 "+
+                       "SWARM_LOG_PATH=#{logDir}/swarm/#{port} " +
                        "SWARM_TEAMNAME=#{@team} " +
                        "GAZEBO_MASTER_URI=http://localhost:#{port} " +
                        "gzserver --record_path #{logDir}/gazebo/#{port} " +
@@ -910,7 +995,7 @@ class Runner
       parser = LogParser.new(swarmLog)
 
       # Step 1: Create csv file
-      parser.to_comms(swarmCSV, swarmJson)
+      parser.to_comms_min(swarmCSV, swarmJson)
 
       # Step 2: Create the summary files
       parser.to_summary(swarmSummaryTex, swarmSummaryJson)
