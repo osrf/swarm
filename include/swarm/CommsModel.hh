@@ -66,6 +66,10 @@ namespace swarm
     /// \return The overhead in bytes.
     public: uint16_t UdpOverhead() const;
 
+    /// \brief Get the ratio of visible neighbors to robot count
+    /// \return Average number of neighbors per robot.
+    public: double AvgNeighbors() const;
+
     /// \brief Decide if each member of the swarm enters into a comms outage.
     private: void UpdateOutages();
 

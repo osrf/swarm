@@ -358,6 +358,20 @@ void BooPlugin::OnData(const std::string &_srcAddress,
 }
 
 //////////////////////////////////////////////////
+void BooPlugin::OnLogMin(msgs::LogEntryMin &_logEntry) const
+{
+  if (!this->lastReports.empty())
+  {
+    for (const auto &msg : this->lastReports)
+    {
+      msgs::BooReport *report = _logEntry.add_boo_report();
+      report->CopyFrom(msg);
+    }
+    this->lastReports.clear();
+  }
+}
+
+//////////////////////////////////////////////////
 void BooPlugin::OnLog(msgs::LogEntry &_logEntry) const
 {
   if (!this->lastReports.empty())

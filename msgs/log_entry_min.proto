@@ -1,0 +1,29 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface LogEntry
+/// \brief A message containing an entry for a log.
+
+import "boo_report.proto";
+
+message LogEntryMin
+{
+  /// \brief Simulation time.
+  optional double time          = 1;
+
+  optional int32 num_unicast    = 2;
+
+  optional int32 num_broadcast  = 3;
+
+  optional int32 num_multicast  = 4;
+
+  optional int32 bytes_sent     = 5;
+
+  optional int32 msgs_delivered = 6;
+
+  optional double avg_neighbors = 7;
+
+  optional int32 potential_recipients = 8;
+
+  repeated BooReport boo_report       = 9;
+}

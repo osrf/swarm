@@ -180,6 +180,13 @@ void BrokerPlugin::NotifyNeighbors()
 //////////////////////////////////////////////////
 void BrokerPlugin::DispatchMessages()
 {
+  this->numUnicast = 0;
+  this->numBroadcast = 0;
+  this->numMulticast = 0;
+  this->bytesSent = 0;
+  this->msgsDelivered = 0;
+  this->potentialRecipients = 0;
+
   // Create a copy of the incoming message queue, then release the mutex, to
   // avoid the potential for a deadlock later if a robot calls SendTo() inside
   // its message callback.
@@ -224,6 +231,15 @@ void BrokerPlugin::DispatchMessages()
     logMsg->set_dst_port(msg.dst_port());
     logMsg->set_size(msg.data().size());
 
+    if (msg.dst_address() == "broadcast")
+      this->numBroadcast += 1;
+    else if (msg.dst_address() == "multicast")
+      this->numMulticast += 1;
+    else
+      this->numUnicast += 1;
+
+    this->bytesSent += msg.data().size() + 56;
+
     // Get the list of neighbors of the sender.
     const Neighbors_M &neighbors = (*this->swarm)[msg.src_address()]->neighbors;
 
@@ -253,6 +269,7 @@ void BrokerPlugin::DispatchMessages()
 
         auto neighborEntryLog = logMsg->add_neighbor();
         neighborEntryLog->set_dst(client.address);
+        this->potentialRecipients += 1;
 
         // Check if the maximum data rate has been reached in the destination.
         if ((*this->swarm)[client.address]->dataRateUsage >
@@ -278,6 +295,7 @@ void BrokerPlugin::DispatchMessages()
           //       << ")" << std::endl;
           client.handler->OnMsgReceived(msg);
           neighborEntryLog->set_status(msgs::CommsStatus::DELIVERED);
+          this->msgsDelivered += 1;
         }
         else
         {
@@ -290,6 +308,18 @@ void BrokerPlugin::DispatchMessages()
       }
     }
   }
+}
+
+//////////////////////////////////////////////////
+void BrokerPlugin::OnLogMin(msgs::LogEntryMin &_logEntry) const
+{
+  _logEntry.set_num_unicast(this->numUnicast);
+  _logEntry.set_num_broadcast(this->numBroadcast);
+  _logEntry.set_num_multicast(this->numMulticast);
+  _logEntry.set_bytes_sent(this->bytesSent);
+  _logEntry.set_msgs_delivered(this->msgsDelivered);
+  _logEntry.set_avg_neighbors(this->commsModel->AvgNeighbors());
+  _logEntry.set_potential_recipients(this->potentialRecipients);
 }
 
 //////////////////////////////////////////////////

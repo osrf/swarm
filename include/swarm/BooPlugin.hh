@@ -138,6 +138,9 @@ namespace swarm
     private: ignition::math::Vector3i PosToGrid(ignition::math::Vector3d _pos);
 
     // Documentation inherited.
+    private: void OnLogMin(msgs::LogEntryMin &_logEntry) const;
+
+    // Documentation inherited.
     private: virtual void OnLog(msgs::LogEntry &_logEntry) const;
 
     /// \brief True when the lost person has been found.

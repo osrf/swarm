@@ -155,6 +155,30 @@ const msgs::VisibilityMap &CommsModel::VisibilityMap() const
   return this->visibilityMsg;
 }
 
+/////////////////////////////////////////////////
+double CommsModel::AvgNeighbors() const
+{
+  int numRobots = 0;
+  int numNeighbors = 0;
+  for (int i = 0; i < this->visibilityMsg.row_size(); ++i)
+  {
+    const msgs::VisibilityRow &row = this->visibilityMsg.row(i);
+    if (row.src() == "boo")
+      continue;
+
+    numRobots += 1;
+    for (int j = 0; j < row.entry_size(); ++j)
+    {
+      if (row.entry(j).status() == msgs::CommsStatus::VISIBLE)
+      {
+        numNeighbors += 1;
+      }
+    }
+  }
+
+  return numNeighbors / static_cast<double>(numRobots);
+}
+
 //////////////////////////////////////////////////
 uint32_t CommsModel::MaxDataRate() const
 {

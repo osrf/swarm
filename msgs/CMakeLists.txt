@@ -1,6 +1,8 @@
 set(msgs
+  boo_report.proto
   datagram.proto
   log_entry.proto
+  log_entry_min.proto
   log_header.proto
 )
 

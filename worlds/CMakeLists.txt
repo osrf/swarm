@@ -51,8 +51,14 @@ set (_robot_members
   50
   100
   200
+  300
   400
+  500
+  600
+  700
   800
+  900
+  1000
 )
 
 # World files that are automatically generated based on master.erb

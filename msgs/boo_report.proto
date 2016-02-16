@@ -1,0 +1,20 @@
+package swarm.msgs;
+
+/// \ingroup swarm_msgs
+/// \interface BooReport
+/// \brief A boo report message.
+
+import "vector3d.proto";
+
+message BooReport
+{
+  /// \brief Time at which the lost person was seen.
+  required double time_seen              = 1;
+
+  /// \brief Position at which the lost person was seen.
+  required gazebo.msgs.Vector3d pos_seen = 2;
+
+  /// \brief Success of the reported command. True if the BOO considered the
+  /// command correct or false otherwise.
+  required bool succeed                  = 3;
+}
